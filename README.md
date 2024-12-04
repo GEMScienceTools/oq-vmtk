@@ -46,7 +46,5 @@ By default, you will see the files in the repository in the `main` branch. Each 
 Note that the `main` branch could contain the work-in-progress of the next version of the model.
 
 # 📑 References
-[^1]: Nafeh, A.M.B., Al-Jawhari, K., Silva, V, (202X). Title Pending. Journal
-[^2]: Nafeh, A.M.B., Al-Jawhari, K., Silva, V, (202X). Title Pending. COMPDYN
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14273144.svg)](https://doi.org/10.5281/zenodo.14273144)
+TBD
