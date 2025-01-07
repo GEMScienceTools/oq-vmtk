@@ -207,7 +207,9 @@ class postprocessor():
     def get_building_vulnerability(self,
                                    structural_loss,
                                    nonstructural_loss,
-                                   occupancy_type):
+                                   occupancy_type,
+                                   intensities = np.round(np.geomspace(0.05, 10.0, 50), 3),
+                                   uncertainty=True):
         """
         Function to calculate the building expected loss ratio associated via a factor-based combination of
         the structural and non-structural expected losses given an occupancy type (i.e., residential, commercial 
@@ -234,16 +236,48 @@ class postprocessor():
             sv  = 3.0/8.0 
             nsv = 5.0/8.0
         
-        building_loss = np.zeros((structural_loss.shape[0],1)) 
-        building_loss = sv*structural_loss + nsv*nonstructural_loss
+        loss = np.zeros((structural_loss.shape[0],1)) 
+        loss = sv*structural_loss + nsv*nonstructural_loss
         
-        return building_loss
+        if uncertainty:
+            
+            # Calculate the coefficient of variation assuming the Silva et al.
+            cov=np.zeros(loss.shape)   
+            for m in range(loss.shape[0]):                        
+                mean_loss_ratio=loss[m]
+                if mean_loss_ratio<1e-4:
+                    loss[m]=1e-8
+                    cov[m] = 1e-8
+                elif np.abs(1-mean_loss_ratio)<1e-4:
+                    loss[m]= 0.99999
+                    cov[m] = 1e-8
+                else:                                  
+                    sigma_loss = np.sqrt(mean_loss_ratio*(-0.7-2*mean_loss_ratio+np.sqrt(6.8*mean_loss_ratio+0.5)))
+                    max_sigma = np.sqrt(mean_loss_ratio*(1-mean_loss_ratio))
+                    sigma_loss_ratio = np.min([max_sigma, sigma_loss])
+                    cov[m] = np.min([sigma_loss_ratio/mean_loss_ratio, 0.90*max_sigma/mean_loss_ratio])
+     
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss,
+                               'COV':  cov})
+            
+        else:
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss})
+
+        
+        
+        return df
                 
     def get_total_vulnerability(self, 
                                 structural_loss, 
                                 nonstructural_loss,
                                 contents_loss,
-                                occupancy_type):
+                                occupancy_type,
+                                intensities = np.round(np.geomspace(0.05, 10.0, 50), 3),
+                                uncertainty=True):
         """
         Function to calculate the total vulnerability function associated with a building class via a factor-based combination of
         the structural, non-structural and contents vulnerability functions and for an occupancy type (i.e., residential, commercial 
@@ -274,10 +308,38 @@ class postprocessor():
             nsv = 0.25
             cv  = 0.60 
             
-        total_loss = np.zeros((structural_loss.shape[0],1))
-        total_loss = sv*structural_loss + nsv*nonstructural_loss + cv*contents_loss
-        
-        return total_loss
+        loss = np.zeros((structural_loss.shape[0],1))
+        loss = sv*structural_loss + nsv*nonstructural_loss + cv*contents_loss
+
+        if uncertainty:
+            
+            # Calculate the coefficient of variation assuming the Silva et al.
+            cov=np.zeros(loss.shape)   
+            for m in range(loss.shape[0]):                        
+                mean_loss_ratio=loss[m]
+                if mean_loss_ratio<1e-4:
+                    loss[m]=1e-8
+                    cov[m] = 1e-8
+                elif np.abs(1-mean_loss_ratio)<1e-4:
+                    loss[m]= 0.99999
+                    cov[m] = 1e-8
+                else:                                  
+                    sigma_loss = np.sqrt(mean_loss_ratio*(-0.7-2*mean_loss_ratio+np.sqrt(6.8*mean_loss_ratio+0.5)))
+                    max_sigma = np.sqrt(mean_loss_ratio*(1-mean_loss_ratio))
+                    sigma_loss_ratio = np.min([max_sigma, sigma_loss])
+                    cov[m] = np.min([sigma_loss_ratio/mean_loss_ratio, 0.90*max_sigma/mean_loss_ratio])
+     
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss,
+                               'COV':  cov})
+            
+        else:
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss})
+
+        return df
         
     def calculate_sigma_loss(self, loss):
         """
