@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy import stats, optimize
 
 class postprocessor():
@@ -135,14 +136,22 @@ class postprocessor():
     def get_vulnerability_function(self,
                                    poes,
                                    consequence_model,
-                                   intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+                                   intensities = np.round(np.geomspace(0.05, 10.0, 50), 3),
+                                   uncertainty = True):
         """
         Function to calculate the vulnerability function given the probabilities of exceedance and a consequence model
         ----------
         Parameters
         ----------
         poes:                         array                Probabilities of exceedance associated with the damage states considered (size = Intensity measure levels x nDS)
-        consequence_model:             list                Damage-to-loss ratios        
+        consequence_model:             list                Damage-to-loss ratios       
+        intensities:                  array                Intensity measure levels
+        uncertainty:                   bool                Flag to calculate (or not) the coefficient of variation associated with Loss|IM
+        ----------
+        References
+        ----------
+        The coefficient of variation is calculated per:
+        Silva V. Uncertainty and Correlation in Seismic Vulnerability Functions of Building Classes. Earthquake Spectra. 2019;35(4):1515-1539. doi:10.1193/013018EQS031M
         -------
         Returns
         -------
@@ -155,15 +164,44 @@ class postprocessor():
         if len(intensities)!=np.size(poes,0):
               raise Exception('Mismatch between the number of IMLs and fragility models!')
         
-        loss=np.zeros([len(intensities),1])
+        loss=np.zeros([len(intensities),])
         for i in range(len(intensities)):
               for j in range(0,np.size(poes,1)):
                     if j==(np.size(poes,1)-1):
-                          loss[i,0]=loss[i,0]+poes[i,j]*consequence_model[j]
+                          loss[i,]=loss[i,]+poes[i,j]*consequence_model[j]
                     else:
-                          loss[i,0]=loss[i,0]+(poes[i,j]-poes[i,j+1])*consequence_model[j]
-                                      
-        return loss
+                          loss[i,]=loss[i,]+(poes[i,j]-poes[i,j+1])*consequence_model[j]
+         
+        if uncertainty:
+            
+            # Calculate the coefficient of variation assuming the Silva et al.
+            cov=np.zeros(loss.shape)   
+            for m in range(loss.shape[0]):                        
+                mean_loss_ratio=loss[m]
+                if mean_loss_ratio<1e-4:
+                    loss[m]=1e-8
+                    cov[m] = 1e-8
+                elif np.abs(1-mean_loss_ratio)<1e-4:
+                    loss[m]= 0.99999
+                    cov[m] = 1e-8
+                else:                                  
+                    sigma_loss = np.sqrt(mean_loss_ratio*(-0.7-2*mean_loss_ratio+np.sqrt(6.8*mean_loss_ratio+0.5)))
+                    max_sigma = np.sqrt(mean_loss_ratio*(1-mean_loss_ratio))
+                    sigma_loss_ratio = np.min([max_sigma, sigma_loss])
+                    cov[m] = np.min([sigma_loss_ratio/mean_loss_ratio, 0.90*max_sigma/mean_loss_ratio])
+     
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss,
+                               'COV':  cov})
+            
+        else:
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss})
+            
+                             
+        return df
 
 
     def get_building_vulnerability(self,
