@@ -89,6 +89,35 @@ class im_calculator():
         
         ### Return the average spectral acceleration
         return np.prod(sa)**(1/10)
+
+    def get_saavg_user_defined(self, prd, sas, periods_list):
+        """
+        Get average spectral acceleration for a range of periods
+        Parameters
+        ----------
+        prd: list
+            List of periods (obtained from get_spectrum method)
+        sas: List
+            List of spectral acceleration values (obtained from get_spectrum method)
+        periods_list: List
+            List of periods
+        
+        Returns
+        -------
+        saavg: float
+            Average spectral acceleration at the given period
+        """        
+        
+        ### Get the length of the periods list
+        N = len(periods_list)
+        
+        ### Interpolate for spectral acceleration values at each period within the range
+        sa = [np.interp(i,prd,sas) for i in periods_list]
+        
+        ### Return the average spectral acceleration
+        return np.prod(sa)**(1/N)
+
+
     
     def get_FIV3(self, period, alpha, beta):
         """
