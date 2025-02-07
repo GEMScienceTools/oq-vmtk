@@ -1,94 +1,274 @@
 import numpy as np
-import eqsig 
 from scipy import signal, integrate
 
-class im_calculator():
+class IMCalculator:
     
-    def __init__(self, acc, dt, damping = 0.05):
+    def __init__(self, acc, dt, damping=0.05):
         """
-        Get intensity measures from a ground-motion record
+        Compute intensity measures from a ground-motion record.
+
         Parameters
         ----------
-        acc: List
-            Accelerations
-        dt: float
-            Time step of the accelerogram
-        damping: float
-            Damping
+        acc : list or np.array
+            Acceleration time series (m/s² or g)
+        dt : float
+            Time step of the accelerogram (s)
+        damping : float, optional
+            Damping ratio (default is 5%)
         """
-        self.acc = acc
-        self.dt  = dt
+        self.acc = np.array(acc)
+        self.dt = dt
         self.damping = damping
-        
-    def get_spectrum(self):
+
+    def get_spectrum(self, periods=np.linspace(1e-5, 4.0, 100), damping_ratio=0.05):
         """
-        Get response spectrum of a ground-motion record
-        Parameters
-        ----------
-        acc: List
-            Accelerations
-        dt: float
-            Time step of the accelerogram
-        damping: float
-            Damping        
-        Returns
-        -------
-        record.response_times: list of periods
-        record.s_a: spectral accelerations
-        """
-        periods = np.linspace(0.0, 4.0, 100)  # compute the response for 100 periods between T=0.0s and 4.0s
-        record = eqsig.AccSignal(self.acc, self.dt)
-        record.generate_response_spectrum(response_times=periods)
-                
-        return record.response_times, record.s_a
-            
-    def get_sa(self, prd, sas, period):
-        """
-        Get spectral acceleration for a period value
-        Parameters
-        ----------
-        prd: list
-            List of periods (obtained from get_spectrum method)
-        sas: List
-            List of spectral acceleration values (obtained from get_spectrum method)
-        period: Float
-            Conditioning period (for PGA, period = 0.0)
-        
-        Returns
-        -------
-        sa: float
-            Spectral acceleration at the given period
-        """
-        
-        ### Return the interpolated spectral acceleration value
-        return np.interp(period, prd, sas)
+        Compute the response spectrum using the Newmark-beta method.
     
-    def get_saavg(self, prd, sas, period):
-        """
-        Get average spectral acceleration for a range of periods
         Parameters
         ----------
-        prd: list
-            List of periods (obtained from get_spectrum method)
-        sas: List
-            List of spectral acceleration values (obtained from get_spectrum method)
-        period: Float
-            Conditioning period
+        periods : np.array
+            List of periods to compute spectral response (s).
+        damping_ratio : float
+            Damping ratio (default is 5%).
+    
+        Returns
+        -------
+        periods : np.array
+            Periods of the response spectrum.
+        sd : np.array
+            Spectral displacement (m).
+        sv : np.array
+            Spectral velocity (m/s).
+        sa : np.array
+            Spectral acceleration (g).
+        """
+        # Constants
+        gamma = 0.5
+        beta = 0.25
+        ms = 1.0  # Unit mass (kg)
+        g = 9.81  # Gravity constant
+    
+        # Convert ground acceleration to m/s² and create force vector
+        acc = np.array(self.acc) * g
+        p = -ms * acc
+    
+        # Time vector
+        time_steps = len(acc)
+    
+        # Initialize response arrays
+        num_periods = len(periods)
+        u = np.zeros((num_periods, time_steps))  # Displacement
+        v = np.zeros((num_periods, time_steps))  # Velocity
+        a = np.zeros((num_periods, time_steps))  # Acceleration
+    
+        # Compute stiffness, frequency, and damping for all periods at once
+        omega = 2 * np.pi / periods  # Circular frequency
+        k = ms * omega**2  # Stiffness (N/m)
+        c = 2 * damping_ratio * ms * omega  # Damping coefficient
+    
+        # Initial acceleration
+        a[:, 0] = p[0] / ms
+    
+        # Precompute stiffness term for numerical stability
+        k_bar = k + (gamma / (beta * self.dt)) * c + (ms / (beta * self.dt**2))
+        A = ms / (beta * self.dt) + (gamma / beta) * c
+        B = ms / (2 * beta) + (self.dt * c * (gamma / (2 * beta) - 1))
+    
+        # Newmark time integration (vectorized loop)
+        for i in range(time_steps - 1):
+            dp = p[i + 1] - p[i]
+            dp_bar = dp + A * v[:, i] + B * a[:, i]
+            du = dp_bar / k_bar
+            dv = (gamma / (beta * self.dt)) * du - (gamma / beta) * v[:, i] + self.dt * (1 - gamma / (2 * beta)) * a[:, i]
+            da = du / (beta * self.dt**2) - v[:, i] / (beta * self.dt) - a[:, i] / (2 * beta)
+    
+            u[:, i + 1] = u[:, i] + du
+            v[:, i + 1] = v[:, i] + dv
+            a[:, i + 1] = a[:, i] + da
+    
+        # Compute spectral values (vectorized)
+        sd = np.max(np.abs(u), axis=1)  # Spectral displacement
+        sv = sd * omega  # Spectral velocity
+        sa = sd * omega**2 / g  # Spectral acceleration (normalized by gravity)
+        
+        return periods, sd, sv, sa
+
+    def get_sa(self, period):
+        """
+        Get spectral acceleration for a given period.
+
+        Parameters
+        ----------
+        period : float
+            The target period (s)
+
+        Returns
+        -------
+        sa_interp : float
+            Spectral acceleration (g) at the given period
+        """
+        periods, _, _, sa = self.get_spectrum()
+        return np.interp(period, periods, sa)  # Interpolate to find SA at the requested period
+
+    def get_saavg(self, period):
+        """
+        Compute geometric mean of spectral accelerations over a range of periods.
+
+        Parameters
+        ----------
+        period : float
+            Conditioning period (s)
+
+        Returns
+        -------
+        sa_avg : float
+            Average spectral acceleration at the given period
+        """
+        periods, _, _, sa = self.get_spectrum()
+        period_range = np.linspace(0.2 * period, 1.5 * period, 10)  # Range around the target period
+
+        # Interpolate SA values for the defined period range
+        sa_values = np.interp(period_range, periods, sa)
+
+        # Avoid multiplying zero values in geometric mean
+        sa_values = np.clip(sa_values, 1e-6, None)  # Prevent underflow
+
+        return np.exp(np.mean(np.log(sa_values)))  # Geometric mean
+    
+    
+    def get_saavg_user_defined(self, periods_list):
+        """
+        Compute geometric mean of spectral accelerations for user-defined list of periods.
+
+        Parameters
+        ----------
+        periods_list : list or np.array
+            List of user-defined periods (s) for spectral acceleration calculation.
+
+        Returns
+        -------
+        sa_avg : float
+            Geometric mean of spectral accelerations over user-defined periods.
+        """
+        periods, _, _, sa = self.get_spectrum()
+
+        # Interpolate SA values for user-defined periods
+        sa_values = np.interp(periods_list, periods, sa)
+        
+        # Avoid multiplying zero values in geometric mean
+        sa_values = np.clip(sa_values, 1e-6, None)  # Prevent underflow
+
+        return np.exp(np.mean(np.log(sa_values)))  # Geometric mean
+        
+
+    def get_velocity_displacement_history(self):
+        """
+        Compute velocity and displacement history with drift correction.
         
         Returns
         -------
-        saavg: float
-            Average spectral acceleration at the given period
-        """        
+        vel : np.array
+            Velocity time-history (m/s)
+        disp : np.array
+            Displacement time-history (m)
+        """
+        acc_m_s2 = self.acc * 9.81  # Convert g to m/s² if needed
+    
+        # High-pass filter to remove baseline drift
+        sos = signal.butter(4, 0.1, btype='highpass', fs=1/self.dt, output='sos')
+        acc_filtered = signal.sosfilt(sos, acc_m_s2)
+    
+        # Integrate acceleration to get velocity
+        vel = integrate.cumtrapz(acc_filtered, dx=self.dt, initial=0)
+        vel = signal.detrend(vel, type='linear')  # Remove linear drift
+    
+        # Integrate velocity to get displacement
+        disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)
+        disp = signal.detrend(disp, type='linear')  # Remove residual drift
+    
+        return vel, disp
+    
+    
+    def get_amplitude_ims(self):
+        """
+        Compute amplitude-based intensity measures.
+
+        Returns
+        -------
+        pga : float
+            Peak ground acceleration (g)
+        pgv : float
+            Peak ground velocity (m/s)
+        pgd : float
+            Peak ground displacement (m)
+        """
         
-        ### Define the period range
-        period_range = np.linspace(0.2*period,1.5*period, 10)
+        acc_m_s2 = self.acc * 9.81  # Convert g to m/s²
+        vel = integrate.cumtrapz(acc_m_s2, dx=self.dt, initial=0)
+        disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)
+        #vel = integrate.cumtrapz(self.acc, dx=self.dt, initial=0)  # Integrate acceleration to get velocity
+        #disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)  # Integrate velocity to get displacement
+
+        return np.max(np.abs(self.acc)), np.max(np.abs(vel)), np.max(np.abs(disp))
+
+    def get_arias_intensity(self):
+        """
+        Compute Arias Intensity.
+    
+        Returns
+        -------
+        AI : float
+            Arias intensity (m/s)
+        """
+        ai = np.cumsum(self.acc ** 2) * (np.pi / (2 * 9.81)) * self.dt
+        return ai[-1]  # Final Arias Intensity value
+
+    def get_cav(self):
+        """
+        Compute Cumulative Absolute Velocity (CAV).
+
+        Returns
+        -------
+        CAV : float
+            Cumulative absolute velocity (m/s)
+        """
+        cav = np.sum(np.abs(self.acc)) * self.dt
+        return cav
+
+    def get_significant_duration(self, start=0.05, end=0.95):
+        """
+        Compute significant duration (time between 5% and 95% of Arias intensity).
+
+        Returns
+        -------
+        sig_duration : float
+            Significant duration (s)
+        """
+        ai = np.cumsum(self.acc ** 2) * (np.pi / (2 * 9.81)) * self.dt
+        ai_norm = ai / ai[-1]  # Normalize AI
+
+        t_start = np.where(ai_norm >= start)[0][0] * self.dt
+        t_end = np.where(ai_norm >= end)[0][0] * self.dt
+
+        return t_end - t_start
         
-        ### Interpolate for spectral acceleration values at each period within the range
-        sa = [np.interp(i,prd,sas) for i in period_range]
-        
-        ### Return the average spectral acceleration
-        return np.prod(sa)**(1/10)
+    def get_duration_ims(self):
+        """
+        Compute duration-based intensity measures: Arias Intensity (AI), CAV, and t_595.
+
+        Returns
+        -------
+        ai : float
+            Arias intensity (m/s)
+        cav : float
+            Cumulative absolute velocity (m/s)
+        t_595 : float
+            5%-95% significant duration (s)
+        """
+        ai = self.get_arias_intensity()
+        cav = self.get_cav()
+        t_595 = self.get_significant_duration()
+        return ai, cav, t_595
     
     def get_FIV3(self, period, alpha, beta):
         """
@@ -97,7 +277,7 @@ class im_calculator():
         seismic collapse estimation. Earthquake Engineering & Structural Dynamics 2019; 48(12): 1384–1405.
         DOI: 10.1002/eqe.3205.
 
-        Get the filtered incremental velocity IM for a ground motion
+        Computes the filtered incremental velocity IM for a ground motion
         Parameters
         ----------
             Period:     Float
@@ -118,7 +298,7 @@ class im_calculator():
         # Import required packages
 
         # Create the time series of the signal
-        tim = self.dt*range(len(self.acc))
+        tim = [self.dt * i for i in range(len(self.acc))]
 
         # Apply a 2nd order Butterworth low pass filter to the ground motion
         Wn = beta/period/(0.5/self.dt)
@@ -157,71 +337,3 @@ class im_calculator():
         FIV3 = np.max([np.sum(pks), np.sum(trs)])
 
         return FIV3, FIV, t, ugf, pks, trs
-    
-    def get_amplitude_ims(self):
-        
-        """
-        Get amplitude-based intensity measures of a ground-motion record
-        Parameters
-        ----------
-        None        
-        Returns
-        -------
-        record.pga: peak ground acceleration
-        record.pgv: peak ground velocity
-        record.pgd: peak ground displacement
-        """
-        record = eqsig.AccSignal(self.acc, self.dt)
-        record.generate_displacement_and_velocity_series()
-        return record.pga, record.pgv, record.pgd
-    
-
-    def get_arias_intensity(self, start = 0.05, end = 0.95):
-        
-        record = eqsig.AccSignal(self.acc, self.dt)    
-        
-        # Get the 5% and 95% time stamps
-        t_start, t_end  = eqsig.im.calc_sig_dur_vals(self.acc, self.dt, start=start, end=end, se=True)
-        # Get the index of the steps
-        step_start = int(t_start/self.dt)
-        step_end   = int(t_end/self.dt)
-        
-        # Get the arias intensity time-history
-        AI = eqsig.im.calc_arias_intensity(record)
-        # Get the arias intensity between the percentiles requested       
-        
-        return AI[step_end]-AI[step_start]
-
-
-    def get_duration_ims(self):
-        """
-        Get duration-based intensity measures of a ground-motion record
-        Parameters
-        ----------
-        None        
-        Returns
-        -------
-        record.arias_intensity: arias intensity (AI)
-        record.cav: cumulative absolute velocity (CAV)
-        record.t_959: 5%-95% significant duration
-        
-        """        
-        record = eqsig.AccSignal(self.acc, self.dt)
-        record.generate_cumulative_stats()
-        record.generate_duration_stats()
-        return record.arias_intensity, record.cav, record.t_595
-
-    def get_significant_duration(self, start = 0.05, end = 0.95):
-        """
-        Get significant duration of a ground-motion record
-        Parameters
-        ----------
-        None        
-        Returns
-        -------
-        record.arias_intensity: arias intensity (AI)
-        record.cav: cumulative absolute velocity (CAV)
-        record.t_959: 5%-95% significant duration
-        
-        """        
-        return eqsig.im.calc_sig_dur_vals(self.acc, self.dt, start = start, end = end, se=False)
