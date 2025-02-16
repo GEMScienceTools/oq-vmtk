@@ -1,6 +1,12 @@
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)]
+
 # Vulnerability-Toolkit
 
-![logo](https://github.com/mouayed-nafeh/vulnerability-toolkit/blob/main/imgs/gem-vulnerability-toolkit.png)
+![logo](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/imgs/gem-vulnerability-toolkit.png)
 
 ## 🔎 Overview
 
@@ -26,6 +32,12 @@ TBD
 # 🌟 Contributors
 
 Contributors are gratefully acknowledged and listed in CONTRIBUTORS.txt.
+
+<a href="https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=GEMScienceTools/vulnerability-toolkit" alt="contrib.rocks image" />
+</a>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 # © License
 

@@ -206,8 +206,6 @@ class IMCalculator:
         acc_m_s2 = self.acc * 9.81  # Convert g to m/s²
         vel = integrate.cumtrapz(acc_m_s2, dx=self.dt, initial=0)
         disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)
-        #vel = integrate.cumtrapz(self.acc, dx=self.dt, initial=0)  # Integrate acceleration to get velocity
-        #disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)  # Integrate velocity to get displacement
 
         return np.max(np.abs(self.acc)), np.max(np.abs(vel)), np.max(np.abs(disp))
 

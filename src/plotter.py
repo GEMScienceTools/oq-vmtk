@@ -6,7 +6,6 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
-from utilities import duplicate_for_drift
 
 ## Define plot style
 HFONT = {'fontname':'Helvetica'}
@@ -34,7 +33,35 @@ class plotter():
 
     def __init__(self):
         pass
+    
+    def duplicate_for_drift(self,
+                            peak_drift_list,
+                            control_nodes):
+        """
+        Creates data to process box plots for peak storey drifts
+        -----
+        Input
+        -----
+        :param peak_drift_list:         list          Peak Storey Drifts 
+        :param control_nodes:           list          Nodes of the MDOF oscillator
+
+        ------
+        Output
+        ------
+        x:                              list          Box plot-ready drift values
+        y:                              list          Box plot-ready control nodes values
+        """    
+
+        x = []; y = []
+        for i in range(len(control_nodes)-1):
+            y.extend((float(control_nodes[i]),float(control_nodes[i+1])))
+            x.extend((peak_drift_list[i],peak_drift_list[i]))
+        y.append(float(control_nodes[i+1]))
+        x.append(0.0)
         
+        return x, y
+
+    
     def plot_cloud_analysis(self,
                             cloud_dict, 
                             output_directory, 
@@ -125,7 +152,7 @@ class plotter():
         ### plot the results
         for i in range(len(peak_drift_list)):
             
-            x,y = duplicate_for_drift(peak_drift_list[i][:,0],control_nodes)
+            x,y = self.duplicate_for_drift(peak_drift_list[i][:,0],control_nodes)
             ax1.plot([float(i)*100 for i in x], y, linewidth=LINEWIDTH_2, linestyle = 'solid', color = GEM_COLORS[1], alpha = 0.7)
             ax1.set_xlabel(r'Peak Storey Drift, $\theta_{max}$ [%]',fontsize = FONTSIZE_2, **HFONT)
             ax1.set_ylabel('Floor No.', fontsize = FONTSIZE_2, **HFONT)
@@ -249,7 +276,7 @@ class plotter():
         # Third: Demands
         nst = len(control_nodes)-1    
         for i in range(len(peak_drift_list)):
-            x,y = duplicate_for_drift(peak_drift_list[i][:,0],control_nodes)
+            x,y = self.duplicate_for_drift(peak_drift_list[i][:,0],control_nodes)
             ax3.plot([float(i)*100 for i in x], y, linewidth=LINEWIDTH_2, linestyle = 'solid', color = GEM_COLORS[1], alpha = 0.7)
             ax3.set_xlabel(r'Peak Storey Drift, $\theta_{max}$ [%]',fontsize = FONTSIZE_2, **HFONT)
             ax3.set_ylabel('Floor No.', fontsize = FONTSIZE_2, **HFONT)

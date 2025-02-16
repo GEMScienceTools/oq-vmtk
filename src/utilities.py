@@ -480,31 +480,6 @@ def get_capacity_values(df,build_class):
 
         return sdy, say, sdu, ty
 
-def duplicate_for_drift(drifts,control_nodes):
-    """
-    Creates data to process box plots for peak storey drifts
-    -----
-    Input
-    -----
-    :param drifts:                  list          Peak Storey Drift Quantities
-    :param control_nodes:           list          Nodes of the MDOF oscillator
-
-    ------
-    Output
-    ------
-    x:                              list          Box plot-ready drift values
-    y:                              list          Box plot-ready control nodes values
-    """    
-
-    x = []; y = []
-    for i in range(len(control_nodes)-1):
-        y.extend((float(control_nodes[i]),float(control_nodes[i+1])))
-        x.extend((drifts[i],drifts[i]))
-    y.append(float(control_nodes[i+1]))
-    x.append(0.0)
-    
-    return x, y
-
 
 def aa_calc(frag_vul_array, hzd_array, rtP=1, max_rtP=5000):
     """
