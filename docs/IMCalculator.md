@@ -33,7 +33,7 @@ IMCalculator(acc, dt, damping=0.05)
 
 **Parameters:**
 - `acc` : list or np.array  
-  The acceleration time series (in m/s² or g).
+  The acceleration time series (in g).
 - `dt` : float  
   The time step of the accelerogram (in seconds).
 - `damping` : float, optional  
