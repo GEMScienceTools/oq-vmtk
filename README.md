@@ -6,7 +6,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)]
+[![project_license][license-shield]][license-url]
 
 # Vulnerability-Toolkit
 
