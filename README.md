@@ -1,3 +1,7 @@
+<a id="readme-top"></a>
+
+<!-- PROJECT SHIELDS -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -60,3 +64,16 @@ Note that the `main` branch could contain the work-in-progress of the next versi
 # 📑 References
 
 TBD
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[contributors-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[forks-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/network/members
+[stars-shield]: https://img.shields.io/github/stars/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[stars-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/stargazers
+[issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[issues-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/issues
+[license-shield]: https://img.shields.io/github/license/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[license-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/blob/master/LICENSE.txt
