@@ -13,13 +13,13 @@
 <br />
 <div align="center">
   <a href="https://github.com/GEMScienceTools/vulnerability-toolkit">
-    <img src="imgs/gem-vulnerability-toolkit.png" alt="Logo" width="80" height="80">
+    <img src="imgs/gem-vulnerability-toolkit.png" alt="Logo" >
   </a>
 
   <h3 align="center">Vulnerability Toolkit</h3>
 
   <p align="center">
-    A repository for modelling and analysing representative single- and multi-degree-of-freedom systems for response characterisation of regional building classes
+    The **Vulnerability-Toolkit** is an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for regional vulnerability and risk calculations. The **Vulnerability-Toolkit** is developed by the **[GEM](http://www.globalquakemodel.org)** (Global Earthquake Model) Foundation and its collaborators.
     <br />
     <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docs"><strong>Explore the docs »</strong></a>
     <br />
@@ -35,12 +35,6 @@
 # Vulnerability-Toolkit
 
 ![logo](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/imgs/gem-vulnerability-toolkit.png)
-
-## 🔎 Overview
-
-The **Vulnerability-Toolkit** is an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for vulnerability and risk calculations. The **Vulnerability-Toolkit** is developed by the **[GEM](http://www.globalquakemodel.org)** (Global Earthquake Model) Foundation and its collaborators.
-
-DOI: TBD
 
 ## 🛠️ Current Features
 
