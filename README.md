@@ -8,6 +8,30 @@
 [![Issues][issues-shield]][issues-url]
 [![project_license][license-shield]][license-url]
 
+
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/GEMScienceTools/vulnerability-toolkit">
+    <img src="imgs/gem-vulnerability-toolkit.png" alt="Logo" width="80" height="80">
+  </a>
+
+  <h3 align="center">Vulnerability Toolkit</h3>
+
+  <p align="center">
+    A repository for modelling and analysing representative single- and multi-degree-of-freedom systems for response characterisation of regional building classes
+    <br />
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docs"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/examples">View Demos</a>
+    ·
+    <a href="https://github.com/othneildrew/Best-README-Template/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    ·
+    <a href="https://github.com/othneildrew/Best-README-Template/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+  </p>
+</div>
+
 # Vulnerability-Toolkit
 
 ![logo](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/imgs/gem-vulnerability-toolkit.png)
