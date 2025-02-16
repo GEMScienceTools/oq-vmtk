@@ -24,7 +24,7 @@
     <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docs"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/examples">View Demos</a>
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/demos">View Demos</a>
     ·
     <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
