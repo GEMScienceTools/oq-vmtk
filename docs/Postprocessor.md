@@ -133,4 +133,4 @@ Computes the average annual loss probability based on vulnerability and hazard m
 
 ## Example
 
-Please consult [example_3](demos/example_3.ipynb) notebook under the [demos](demos/) folder for a demonstration of postprocessing cloud analysis results using the `postprocessor` class.
+Please consult [example_3](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/demos/example_3.ipynb) notebook under the [demos](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/demos/) folder for a demonstration of postprocessing cloud analysis results using the `postprocessor` class.

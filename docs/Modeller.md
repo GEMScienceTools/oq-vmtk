@@ -151,4 +151,4 @@ Performs nonlinear response history analysis (NRHA) using ground motion records.
 
 ## Example
 
-Please consult [example_2](demos/example_2.ipynb) notebook under the [demos](demos/) folder for a demonstration of the structural analysis using the modeller class
+Please consult [example_2](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/demos/example_2.ipynb) notebook under the [demos](https://github.com/GEMScienceTools/vulnerability-toolkit/blob/main/demos/) folder for a demonstration of the structural analysis using the modeller class
