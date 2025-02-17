@@ -178,35 +178,4 @@ Computes the filtered incremental velocity IM for a ground motion as per the app
 
 ## Example
 
-Here's an example of how to use the `IMCalculator`:
-
-```python
-from im_calculator import IMCalculator
-import numpy as np
-
-# Example ground motion data
-acceleration = np.random.rand(1000)  # Replace with actual acceleration data
-dt = 0.01  # Time step in seconds
-
-# Initialize the calculator
-calculator = IMCalculator(acc=acceleration, dt=dt)
-
-# Get response spectrum
-periods, sd, sv, sa = calculator.get_spectrum()
-
-# Get spectral acceleration at a specific period
-sa_value = calculator.get_sa(0.5)
-
-# Compute geometric mean of spectral accelerations
-sa_avg = calculator.get_saavg(1.0)
-
-# Get velocity and displacement history
-vel, disp = calculator.get_velocity_displacement_history()
-
-# Get amplitude-based intensity measures
-pga, pgv, pgd = calculator.get_amplitude_ims()
-```
-
-## Example
-
 Please consult "example_1" notebook under "demos" for a demonstration of the intensity measures calculation and response spectrum derivation using the im_calculator class
