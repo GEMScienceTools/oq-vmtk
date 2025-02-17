@@ -48,8 +48,7 @@ class postprocessor():
             pass
         else:
             edps = np.array(edps)
-    
-          
+              
         x_array=np.log(imls)
         y_array=edps
         
@@ -130,7 +129,6 @@ class postprocessor():
         ### calculate probabilities of exceedance for a range of intensity measure levels
         poes = stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
         return poes
-
         
     def get_vulnerability_function(self,
                                    poes,

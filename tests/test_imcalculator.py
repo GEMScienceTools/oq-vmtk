@@ -3,9 +3,9 @@ import sys
 import unittest 
 import numpy as np
 
-vulnerability_toolkit = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
-sys.path.append(vulnerability_toolkit)
-os.chdir(os.path.join(vulnerability_toolkit,'src'))
+vmtk = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+sys.path.append(vmtk)
+os.chdir(os.path.join(vmtk,'src'))
 
 from im_calculator import IMCalculator
 
@@ -33,7 +33,7 @@ class TestIMCalculator(unittest.TestCase):
         Set up the IMCalculator instance for each test.
         """
         # Load acceleration data and dt from the file
-        acc_test = np.loadtxt(f'{vulnerability_toolkit}/tests/test_data/acceleration.txt')  
+        acc_test = np.loadtxt(f'{vmtk}/tests/test_data/acceleration.txt')  
         dt_test = 0.005
 
         # Create the IMCalculator object
