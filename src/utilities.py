@@ -481,33 +481,3 @@ def get_capacity_values(df,build_class):
         return sdy, say, sdu, ty
 
 
-def aa_calc(frag_vul_array, hzd_array, rtP=1, max_rtP=5000):
-    """
-    Processes average annual losses or average annual probability of collapse
-    Parameters
-    ----------
-    frag_vul_array - 2D array containing either the vul curve or the DS4 fragilty curve depending if AAL or AAPC is needed
-    hzd_array - 2D array with the hazard curve [IMLs PoE]
-    rtP - return period of the hazard curve (default 1)
-    max_rtP - max hazard return period considered in integration (default 5000 years)
-    Returns
-    -------
-    aa_value - average annual loss or average annual probability of collapse depending whether vulnerability curve or
-    fragility curve is provided as input
-    """
-    
-    max_integration=rtP/max_rtP
-          
-    hzd_array=hzd_array[np.where(hzd_array[:,1]>=max_integration)]
-        
-    mean_imls=(hzd_array[0:-1,0]+hzd_array[1:,0])/2
-    rate_occ=(hzd_array[0:-1,1]/rtP)-(hzd_array[1:,1]/rtP)
-        
-    curve_imls=np.concatenate(([0],frag_vul_array[:,0],[20]))
-    curve_ordinates=np.concatenate(([0],frag_vul_array[:,1],[1]))
-        
-    aa_value=np.sum(np.multiply(np.interp(mean_imls,curve_imls,curve_ordinates),rate_occ))
-        
-    return aa_value
-
-

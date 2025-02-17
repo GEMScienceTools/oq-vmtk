@@ -198,4 +198,74 @@ class postprocessor():
                 
         return sigma_loss_ratio,a_beta_dist,b_beta_dist
 
+    
+    def calculate_average_annual_damage_probability(self, 
+                                                    fragility_array, 
+                                                    hazard_array, 
+                                                    return_period=1, 
+                                                    max_return_period=5000):
 
+        """
+        Function to calculate the average annual damage state probability
+
+        ----------
+        Parameters
+        ----------
+        fragility_array:               array          2D array with intensity measure levels and probabilities of exceedance
+                                                      as first and second columns, respectively
+        hazard_array:                  array          2D array with intensity measure levels and annual rates of exceedance
+                                                      as first and second columns, respectively
+        -------
+        Returns
+        -------
+        average_annual_damage_probability:     float   Average annual damage state probability
+        
+        """    
+        
+        max_integration=return_period/max_return_period             
+        hazard_array=hazard_array[np.where(hazard_array[:,1]>=max_integration)]
+            
+        mean_imls=(hazard_array[0:-1,0]+hazard_array[1:,0])/2
+        rate_occ=(hazard_array[0:-1,1]/return_period)-(hazard_array[1:,1]/return_period) # Caclulate the rate of occurrence
+            
+        curve_imls=np.concatenate(([0],fragility_array[:,0],[20]))
+        curve_ordinates=np.concatenate(([0],fragility_array[:,1],[1]))
+            
+        average_annual_damage_probability=np.sum(np.multiply(np.interp(mean_imls,curve_imls,curve_ordinates),rate_occ))
+            
+        return average_annual_damage_probability
+
+    def calculate_average_annual_loss(self, 
+                                      vulnerability_array, 
+                                      hazard_array, 
+                                      return_period=1, 
+                                      max_return_period=5000):
+        """
+        Function to calculate the average annual losses
+
+        ----------
+        Parameters
+        ----------
+        vulnerability_array:           array          2D array with intensity measure levels and loss ratios
+                                                      as first and second columns, respectively
+        hazard_array:                  array          2D array with intensity measure levels and annual rates of exceedance
+                                                      as first and second columns, respectively
+        -------
+        Returns
+        -------
+        average_annual_loss:     float   Average annual damage state probability
+        
+        """    
+        
+        max_integration=return_period/max_return_period             
+        hazard_array=hazard_array[np.where(hazard_array[:,1]>=max_integration)]
+            
+        mean_imls=(hazard_array[0:-1,0]+hazard_array[1:,0])/2
+        rate_occ=(hazard_array[0:-1,1]/return_period)-(hazard_array[1:,1]/return_period) # Caclulate the rate of occurrence
+            
+        curve_imls=np.concatenate(([0],vulnerability_array[:,0],[20]))
+        curve_ordinates=np.concatenate(([0],vulnerability_array[:,1],[1]))
+            
+        average_annual_loss=np.sum(np.multiply(np.interp(mean_imls,curve_imls,curve_ordinates),rate_occ))
+            
+        return average_annual_loss
