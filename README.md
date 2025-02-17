@@ -32,18 +32,25 @@
   </p>
 </div>
 
-## 🛠️ Current Features
+# 🛠️ Features
 
-* MDOF Modelling: Model single- and multi-degree-of-freedom system using low-level information (e.g., number of storeys, first-mode transformation factor, SDoF- or storey-based force-deformation relationships);
-* Modal analysis: Estimate periods of vibration and modal shapes;
-* Static analysis: Perform gravity, static and cyclic pushover analyses;
-* Dynamic analysis: Perform cloud analysis;
-* Regression analysis: Perform regression analysis on cloud analysis data to characterise EDP|IM relationship;
-* Fragility analysis: Calculate median seismic intensities, associated dispersion (i.e., record-to-record and modelling uncertainties) and the corresponding probabilities of damage based on demand-based thresholds;
-* Vulnerability analysis: Perform fragility function convolution with with consequence models  for structural, and building contents and region-specific non-structural storey-loss functions;
-* Plotting: Plot analysis outputs such as model overview, cloud analysis results, demand profiles (i.e., peak storey drifts and peak floor acceleration along the height of the model), fragility functions. Additionally, it is possible to animate the MDoF considering a single run;
+* Modelling of Multi-Degree-of-Freedom Oscillators in OpenSees: Model single- and multi-degree-of-freedom system using low-level information (e.g., number of storeys, first-mode transformation factor, SDoF- or storey-based force-deformation relationships);
+* Linear and Nonlinear Analysis in OpenSees:
+  * Modal Analysis: Estimate Periods of Vibration and Modal Shapes;
+  * Gravity Analysis
+  * Nonlinear Static Analysis: Perform Static and Cyclic Pushover Analyses to Characterise the Lateral Load-Resisting Response of the System;
+  * Dynamic Analysis: Perform Nonlinear Time-History Analyses using Selected Ground-Motion Records;
+* Fragility Analysis: Calculate Median Seismic Intensities and Total Associated Dispersion (i.e., Record-to-Record Variability and Modelling Uncertainty):
+  * Regression Analysis following Cloud Analysis Method to Characterise EDP|IM Relationship and Calculate Exceedance Probabilities of Damage;
+* Vulnerability Analysis: Calculate Vulnerability Functions to Estimate Decision-Variables (Economic- and Human-Based) Conditioned on Ground-Shaking Intensity using Consequence Models (Damage-to-Loss Ratios)
+* Plotting: Plot Analysis Outputs
+  * Model Overview: OpenSees Model (Nodes and Elements)  
+  * Cloud Analysis Results and Fitted IM|EDP Relationship
+  * Seismic Demand Profiles: Distribution of Peak Storey Drifts and Peak Floor Accelerations
+  * Fragility Functions
+  * Vulnerability Functions
 
-## 📚 Documentation
+# 📚 Documentation
 
 TBD
 
