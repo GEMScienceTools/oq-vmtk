@@ -204,7 +204,7 @@ class plotter():
         fig, ax = plt.subplots()
     
         for i in range(len(cloud_dict['medians'])):
-            plt.plot(cloud_dict['intensities'], cloud_dict['poes'][:,i], linestyle = 'solid', color = FRAG_COLORS[i], lw=LINEWIDTH_1, label = f'DS{i}') # Plot the regressed fit
+            plt.plot(cloud_dict['intensities'], cloud_dict['poes'][:,i], linestyle = 'solid', color = FRAG_COLORS[i], lw=LINEWIDTH_1, label = f'DS{i+1}') # Plot the regressed fit
     
         plt.xlabel(xlabel, fontsize = FONTSIZE_1, **HFONT)
         plt.ylabel('Probability of Exceedance', fontsize = FONTSIZE_1, **HFONT)

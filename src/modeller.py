@@ -30,7 +30,7 @@ class modeller():
     Class of functions to model and analyse multi-degree-of-freedom oscillators
     """
     
-    def __init__(self, number_storeys, floor_heights, floor_masses, storey_disps, storey_forces):
+    def __init__(self, number_storeys, floor_heights, floor_masses, storey_disps, storey_forces, degradation):
         """
         ----------
         Parameters
@@ -40,6 +40,7 @@ class modeller():
         floor_masses:             list                Floor masses in tonnes (e.g. [1000, 1200])
         storey_disps:            array                Storey displacements (size = nst, CapPoints)
         storey_forces:           array                Storey forces (size = nst,CapPoints)
+        degradation:              bool                Set True/False to active hysteresis
         """
 
         ### Run tests on input parameters
@@ -51,9 +52,10 @@ class modeller():
         self.floor_masses   = floor_masses
         self.storey_disps   = storey_disps 
         self.storey_forces  = storey_forces
+        self.degradation    = degradation
  
 
-    def create_Pinching4_material(self, mat1Tag, mat2Tag, storey_forces, storey_disps, degradation=True):   
+    def create_Pinching4_material(self, mat1Tag, mat2Tag, storey_forces, storey_disps, degradation):   
         """
         Function to create Pinching4 Material Model used for the mdof_material object of stickModel
         -----
@@ -203,10 +205,10 @@ class modeller():
             ops.uniaxialMaterial('Elastic', rigM, 1e16)
                         
             ### Create the nonlinear material for the unrestrained dofs
-            self.create_Pinching4_material(mat1Tag, mat2Tag, current_storey_forces, current_storey_disps, degradation = True)
+            self.create_Pinching4_material(mat1Tag, mat2Tag, current_storey_forces, current_storey_disps, self.degradation)
             
             ### Aggregate materials
-            matTags = [mat2Tag, mat2Tag, rigM, rigM, rigM, rigM]            
+            matTags = [mat2Tag, rigM, rigM, rigM, rigM, rigM]            
 
             ### Define element connectivity
             eleTag = int(f'200{i}')
