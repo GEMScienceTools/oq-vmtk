@@ -210,7 +210,3 @@ pga, pgv, pgd = calculator.get_amplitude_ims()
 ## Example
 
 Please consult "example_1" notebook under "demos" for a demonstration of the intensity measures calculation and response spectrum derivation using the im_calculator class
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
