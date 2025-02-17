@@ -151,4 +151,4 @@ Performs nonlinear response history analysis (NRHA) using ground motion records.
 
 ## Example
 
-Please consult "example_2" notebook under "demos" for a demonstration of the structural analysis using the modeller class
+Please consult [example_2](demos/example_2.ipynb) notebook under the [demos](demos/) folder for a demonstration of the structural analysis using the modeller class

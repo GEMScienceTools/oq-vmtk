@@ -178,4 +178,4 @@ Computes the filtered incremental velocity IM for a ground motion as per the app
 
 ## Example
 
-Please consult "example_1" notebook under "demos" for a demonstration of the intensity measures calculation and response spectrum derivation using the im_calculator class
+Please consult [example_1](demos/example_1.ipynb) notebook under the [demos](demos/) folder for a demonstration of the intensity measures calculation and response spectrum derivation using the im_calculator class
