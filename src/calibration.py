@@ -3,6 +3,7 @@ from scipy.linalg import eigh
 
 
 def calibrate_model(number_storeys, gamma, sdof_capacity, sdof_period, isFrame, isSOS):    
+
     """
     Function to calibrate MDOF storey force-deformation relationships
     based on SDOF-based capacity functions
@@ -69,8 +70,7 @@ def calibrate_model(number_storeys, gamma, sdof_capacity, sdof_period, isFrame, 
         
         # Normalize the mode shape (optional: to make sure it's unit norm)
         mdof_phi = first_mode / first_mode[-1]
-    
-    
+        
         # Calculate the sum of the squares of phi
         sum_square_phi = np.dot(mdof_phi, mdof_phi)
     

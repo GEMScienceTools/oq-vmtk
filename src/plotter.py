@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.gridspec as gridspec
@@ -117,6 +118,7 @@ class plotter():
         plt.legend()
         plt.savefig(f'{output_directory}/{plot_label}.png', dpi=RESOLUTION, format='png')
         plt.show()
+
 
 
     def plot_demand_profiles(self,
@@ -300,6 +302,112 @@ class plotter():
         plt.tight_layout()
         plt.savefig(f'{output_directory}/{plot_label}.png', dpi=RESOLUTION, format='png')
         plt.show()
+
+    def plot_multiple_stripe_analysis(msa_dict,
+                                      output_directory, 
+                                      plot_label = 'multiple_stripe_analysis_plot',
+                                      xlabel = r'Maximum Peak Storey Drift, $\theta_{max}$ [%]', 
+                                      ylabel = 'Peak Ground Acceleration, PGA [g]'):
+        
+        """
+        Creates a combined subplot of two figures for multiple stripe analysis:
+        - First figure: Stripe analysis (IMLs vs EDPs)
+        - Second figure: Fitted fragilities (Exceedance probabilities for different thresholds)
+    
+        Parameters
+        ----------
+        msa_dict:                      dict                Direct output from do_multiple_stripe_analysis function
+        output_directory:            string                Output directory path
+        plot_label:                  string                Designated filename for plot (default set to "cloud_analysis_plot")
+        xlabel:                      string                X-axis label (default set to mpsd)
+        ylabel:                      string                Y-axis label (default set to pga)
+        
+        Returns
+        -------
+        None.
+    
+        """
+    
+        def plot_stripe_analysis(imls, 
+                                 edps, 
+                                 damage_thresholds, 
+                                 xlabel, 
+                                 ylabel, 
+                                 ax):
+            
+            """Plots the stripe analysis (IMLs vs EDPs) on a given axis"""
+            for i, threshold in enumerate(damage_thresholds):
+                for j, im in enumerate(imls):
+                    exceedances = np.sum(edps[j, :] >= threshold)
+                    ax.scatter(edps[j, :], [im] * len(edps[j, :]), color = GEM_COLORS[1], s=MARKER_SIZE_2, alpha = 0.5, label = 'MSA Data',zorder=0)
+            
+            # Add vertical lines for the damage thresholds
+            for i, threshold in enumerate(damage_thresholds):
+                ax.axvline(x=threshold, color=FRAG_COLORS[i], linestyle='--', label=f'Threshold {threshold}')
+    
+            ax.set_xlabel(xlabel,fontsize = FONTSIZE_2, **HFONT)
+            ax.set_ylabel(ylabel, fontsize = FONTSIZE_2, **HFONT)
+            ax.grid(visible=True, which='major')
+            ax.grid(visible=True, which='minor')
+            ax.set_xlim([0, np.max(edps)])
+    
+        def plot_exceedance_fit(imls, 
+                                num_exc, 
+                                num_gmr, 
+                                eta, 
+                                beta, 
+                                threshold, 
+                                xlabel,
+                                color,
+                                ax):
+            
+            """Plot the exceedance fit for the fragility curve on a given axis"""
+            fitted_exceedance = stats.norm.cdf(np.log(imls / eta) / beta)    
+            ax.plot(imls, fitted_exceedance, label=f"Fitted Lognormal (Threshold {threshold})", color=color)
+            ax.scatter(imls, num_exc / num_gmr, color = color, s=MARKER_SIZE_2, alpha = 0.5, label = 'Observed Exceedances',zorder=0)
+            ax.set_xlabel(xlabel, fontsize = FONTSIZE_1, **HFONT)
+            ax.set_ylabel('Probability of Exceedance', fontsize = FONTSIZE_1, **HFONT)
+            ax.legend()
+            ax.grid(visible=True, which='major')
+            ax.grid(visible=True, which='minor')
+    
+    
+        # Extract values from msa_dict
+        imls = msa_dict['imls']
+        edps = msa_dict['edps']
+        damage_thresholds = msa_dict['damage_thresholds']
+        
+        ### Initialise the figure
+        plt.figure(figsize=(12, 6))
+        plt.rcParams['axes.axisbelow'] = True
+        ax1 = plt.subplot(1,2,1)
+        ax2 = plt.subplot(1,2,2)
+    
+        # Plot the stripe analysis on the first axis
+        plot_stripe_analysis(imls, 
+                             edps, 
+                             damage_thresholds, 
+                             xlabel, 
+                             ylabel, 
+                             ax1)
+    
+        # Loop over all damage thresholds to plot the fragility fits
+        for i, threshold in enumerate(damage_thresholds):
+            eta = msa_dict['medians'][i]
+            beta = msa_dict['betas_total'][i]
+            color = FRAG_COLORS[i]
+            num_exc = np.array([np.sum(edp >= threshold) for edp in edps])
+            num_gmr = np.full(len(imls), len(edps[0]))  # Number of ground motions at each IM level
+    
+            # Plot the exceedance fit for the current threshold on the second axis
+            plot_exceedance_fit(imls, num_exc, num_gmr, eta, beta, threshold, xlabel, color, ax2)
+    
+        # Adjust layout for better readability
+        plt.tight_layout()
+        plt.savefig(f'{output_directory}/{plot_label}.png', dpi=RESOLUTION, format='png')        
+        plt.show()
+
+
     
     def animate_model_run(self,control_nodes, acc, dts, nrha_disps, nrha_accels, drift_thresholds, pflag=True):
         """
