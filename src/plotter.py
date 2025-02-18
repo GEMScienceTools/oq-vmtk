@@ -1,12 +1,14 @@
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from scipy import stats
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib.lines import Line2D
 import matplotlib.gridspec as gridspec
+import matplotlib.animation as animation
+from matplotlib.ticker import MultipleLocator
 from matplotlib.animation import FuncAnimation
 from matplotlib.ticker import FormatStrFormatter
-from matplotlib.lines import Line2D
-from matplotlib.ticker import MultipleLocator
 
 ## Define plot style
 HFONT = {'fontname':'Helvetica'}
@@ -556,89 +558,87 @@ class plotter():
         
         return ani
 
-    
-    def plot_slf_rlz(psd_slf, psd_cache, pfa_slf, pfa_cache, rlz_to_consider = 100):
-        """
-        Plots the storey loss functions and the individual realizations
-    
-        Parameters
-        ----------
-        psd_slf:                 dictionary                Dictionary with the slfs of drift-sensitive components (output of create_slfs function) 
-        psd_cache:               dictionary                Dictionary with the intermediate outputs of slf-generator for drift-sensitive components (output of create_slfs function) 
-        pfa_slf:                 dictionary                Dictionary with the slfs of acceleration-sensitive components (output of create_slfs function) 
-        pfa_cache:               dictionary                Dictionary with the intermediate outputs of slf-generator for acceleration-sensitive components (output of create_slfs function) 
-        rlz_to_consider:              float                Number of realizations to plot (default set to 100 but will fail if total number of realizations is below)
+
+    def plot_vulnerability_analysis(self, 
+                                    intensities,
+                                    loss,
+                                    cov,
+                                    xlabel,
+                                    ylabel,
+                                    output_directory,
+                                    plot_label):
         
-        Returns
-        -------
-        None.
-    
-        """
         
-        ### Initialise the figure
-        plt.figure(figsize=(12, 6))
-        ax1 = plt.subplot(1,2,1)
-        ax2 = plt.subplot(1,2,2)
-    
-        ### Calculate total repair cost of all components
-        cumSum_psd = []
-        cumSum_pfa = []
-        for i in range(len(list(psd_slf.keys()))):        
-            cumSum_psd.append(np.max(psd_slf[list(psd_slf.keys())[i]]['slf']))
-            cumSum_pfa.append(np.max(pfa_slf[list(pfa_slf.keys())[i]]['slf']))
-        totalRepairCost = np.sum(cumSum_psd)+np.sum(cumSum_pfa)
-            
-        ### Fetch some params
-        rlz = len(psd_cache[list(psd_cache.keys())[0]]['total_loss_storey'])
-        categories = len(psd_slf)
+        # Simulating Beta distributions for each intensity measure
+        simulated_data = []
+        intensity_labels = []
         
-        ### Initialise some colors
-        colors = ['blue','green','yellow','red']
+        for j, mean_loss in enumerate(loss):
+            variance = (cov[j] * mean_loss) ** 2  # Calculate variance using CoV
+            alpha = mean_loss * (mean_loss * (1 - mean_loss) / variance - 1)
+            beta_param = (1 - mean_loss) * (mean_loss * (1 - mean_loss) / variance - 1)
+            
+            # Generate samples from the Beta distribution
+            data = np.random.beta(alpha, beta_param, 10000)
+            simulated_data.append(data)
+            intensity_labels.extend([intensities[j]] * len(data))  # Repeat intensity measures for each sample
         
-        ### Loop over drift-sensitive components
-        for i in range(categories): 
-            # Plot individual slfs for each component category
-            edp_range = [x*100 for x in psd_slf[list(psd_slf.keys())[i]]['edp_range']]
-            slf = psd_slf[list(psd_slf.keys())[i]]['norm_slf'][0]
-            ax1.plot(edp_range, slf, color = colors[i], linewidth=8, label = psd_slf[list(psd_slf.keys())[i]]['category'][0])
-            
-            for j in range(rlz_to_consider):               
-                # Plot scatter of individual realizations
-                edp_range = [x*100 for x in psd_slf[list(psd_slf.keys())[i]]['edp_range']]
-                realization = psd_cache[list(psd_cache.keys())[i]]['total_loss_storey'][j]
-                maxval = totalRepairCost
-                normRealization = [i/maxval for i in realization]   
-                ax1.scatter(edp_range, normRealization, color = colors[i], alpha = 0.7)
-            
-            ax1.set_xlabel(r'Peak Storey Drift, $\theta$ [%]')
-            ax1.set_ylabel('Loss Ratio')
-            ax1.grid(visible=True, which='major')
-            ax1.grid(visible=True, which='minor')
-            ax1.legend(loc='upper left')
-            ax1.set_xlim([0, 5])
-            ax1.set_ylim([0, 1])
-    
-        ### Loop over acceleration-sensitive components
-        for i in range(categories):
-            # Plot individual slfs for each component category
-            edp_range = pfa_slf[list(pfa_slf.keys())[i]]['edp_range']
-            slf = pfa_slf[list(pfa_slf.keys())[i]]['norm_slf'][0]
-            ax2.plot(edp_range, slf, color = colors[i], linewidth=8, label = pfa_slf[list(pfa_slf.keys())[i]]['category'][0])
-            
-            for j in range(rlz_to_consider):
-                # Plot scatter of individual realizations
-                edp_range = pfa_slf[list(pfa_slf.keys())[i]]['edp_range']
-                realization = pfa_cache[list(pfa_cache.keys())[i]]['total_loss_storey'][j]
-                maxval = totalRepairCost
-                normRealization = [i/maxval for i in realization]   
-                ax2.scatter(edp_range, normRealization, color = colors[i], alpha = 0.7)
-            
-            ax2.set_xlabel(r'Peak Floor Acceleration, $a_{max}$ [g]')
-            ax2.set_ylabel('Loss Ratio')
-            ax2.grid(visible=True, which='major')
-            ax2.grid(visible=True, which='minor')
-            ax2.legend(loc='upper left')
-            ax2.set_xlim([0, 5])
-            ax2.set_ylim([0, 1])
-            
+        # Convert to DataFrame for seaborn visualization
+        df_sns = pd.DataFrame({
+            'Intensity Measure': intensity_labels,
+            'Simulated Data': np.concatenate(simulated_data)
+        })
+                    
+        # Create a figure and a set of axes for the violin plot
+        fig, ax1 = plt.subplots(figsize=(14, 8))
+        
+        # --- Violin plot for Beta distributions ---
+        violin=sns.violinplot(
+                x='Intensity Measure', y='Simulated Data', data=df_sns,
+                scale='width', bw=0.2, inner=None, ax=ax1, zorder=1
+                )
+        
+        # Overlay a strip plot for better visualization of individual samples
+        sns.stripplot(
+            x='Intensity Measure', y='Simulated Data', data=df_sns,
+            color='k', size=1, alpha=0.5, ax=ax1, zorder=3
+        )
+        
+        # Customize the first y-axis (for the violin plot)
+        ax1.set_ylabel("Simulated Loss Ratio", fontsize=FONTSIZE_1, color='blue')
+        ax1.set_xlabel(f"{xlabel}", fontsize=FONTSIZE_1)
+        ax1.tick_params(axis='y', labelcolor='blue')
+        ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
+        ax1.set_ylim(-0.1, 1.2)  # Adjust y-axis range for the violin plot
+        
+        # Add the legend for the violin plots (Beta distribution)
+        # Create a dummy plot handle for the legend, since the violins are not directly plotted as lines
+        beta_patch = mpatches.Patch(color=violin.collections[0].get_facecolor()[0], label="Beta Distribution")
+        ax1.legend(handles=[beta_patch], loc='upper left', fontsize=FONTSIZE_1, bbox_to_anchor=(0, 1), ncol=1)
+
+        
+        # --- Add a second set of x and y axes for the Loss Curve ---
+        ax2 = ax1.twinx()  # Create a shared y-axis for the loss curve
+        
+        # Plot the loss curve on ax2 (now in blue)
+        ax2.plot(
+            range(len(intensities)), loss, marker='o', linestyle='-', color='blue',
+            label="Loss Curve", zorder=2
+        )
+        
+        # Customize the second y-axis (for the loss curve)
+        ax2.set_ylabel(f"{ylabel}", fontsize=FONTSIZE_1, color='blue', rotation = 270, labelpad=20)
+        ax2.tick_params(axis='y', labelcolor='blue')
+        ax2.set_ylim(-0.1, 1.2)  # Adjust y-axis range for the loss curve if needed
+        
+        # Customize both x-axes to match
+        ax1.set_xticks(range(len(intensities)))
+        ax1.set_xticklabels([f"{x:.3f}" for x in intensities], rotation=45, ha='right', fontsize= FONTSIZE_3)
+                    
+        # Add a legend for the loss curve
+        ax2.legend(loc='upper left', fontsize=FONTSIZE_1, bbox_to_anchor=(0, 0.95), ncol=1)
+        
+        # Tight layout and show the combined plot
+        plt.tight_layout()
+        plt.savefig(f'{output_directory}/{plot_label}.png', dpi=RESOLUTION, format='png')
         plt.show()
