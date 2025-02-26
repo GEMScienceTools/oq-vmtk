@@ -33,10 +33,13 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-      - name: Install Dependencies of OpenQuake engine and run tests
+      - name: Install Dependencies of OpenQuake engine
         run: |
           curl -L -O https://github.com/gem/oq-engine/raw/master/install.py
           python install.py user --version=master
+          source ~/openquake/bin/activate
+      - name: Run tests
+        run: |
           source ~/openquake/bin/activate
           cd src/vmtk
           pytest --doctest-modules -x --color=yes --durations=10 tests/
