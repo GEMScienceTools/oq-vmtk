@@ -38,4 +38,5 @@ jobs:
           curl -L -O https://github.com/gem/oq-engine/raw/master/install.py
           python install.py user --version=master
           source ~/openquake/bin/activate
+          cd src/vmtk
           pytest --doctest-modules -x --color=yes --durations=10 tests/
