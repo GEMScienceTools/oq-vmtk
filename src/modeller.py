@@ -809,8 +809,6 @@ class modeller():
             alphaK = 2*xi/(self.omega[0] + self.omega[2])   
             ops.rayleigh(alphaM,0,alphaK,0)
         
-        
-        
         # Define parameters for deformation animation
         # n_steps = int(np.ceil(t_max/dt_gm))+1
         # node_disps = np.zeros([n_steps,len(control_nodes)])

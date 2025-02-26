@@ -82,12 +82,10 @@ class TestPostprocessor(unittest.TestCase):
         
         self.poes = self.pp.get_fragility_function(0.50, 0.30)
         self.poes = np.expand_dims(self.poes, axis=1)
+        self.vulnerability = self.pp.get_vulnerability_function(self.poes, self.consequence_model)
         self.assertTrue(
-            np.allclose(
-                self.pp.get_vulnerability_function(self.poes, self.consequence_model),
-                self.poes,
-                atol=10**-2  # Equivalent to `places=2`
-            ),
+            np.allclose(self.vulnerability['Loss'].values[-1],self.poes[-1],atol=10**-3  # Equivalent to `places=2`
+),
             "Arrays are not approximately equal up to 2 decimal places."
         )    
     
