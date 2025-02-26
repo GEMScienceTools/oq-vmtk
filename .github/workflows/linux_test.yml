@@ -1,5 +1,6 @@
 name: Linux tests
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       git-ref:
