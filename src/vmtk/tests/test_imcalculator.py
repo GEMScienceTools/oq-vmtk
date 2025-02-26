@@ -1,13 +1,8 @@
 import os
-import sys
-import unittest 
+import unittest
 import numpy as np
 
-vmtk = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
-sys.path.append(vmtk)
-os.chdir(os.path.join(vmtk,'src'))
-
-from im_calculator import IMCalculator
+from vmtk.im_calculator import IMCalculator
 
 class TestIMCalculator(unittest.TestCase):
 
@@ -33,7 +28,8 @@ class TestIMCalculator(unittest.TestCase):
         Set up the IMCalculator instance for each test.
         """
         # Load acceleration data and dt from the file
-        acc_test = np.loadtxt(f'{vmtk}/tests/test_data/acceleration.txt')  
+        cd = os.path.dirname(__file__)
+        acc_test = np.loadtxt(os.path.join(cd, 'test_data', 'acceleration.txt'))
         dt_test = 0.005
 
         # Create the IMCalculator object

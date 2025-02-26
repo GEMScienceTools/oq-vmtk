@@ -1,16 +1,7 @@
 import os
-import sys
 import unittest
 import numpy as np
-import pandas as pd
-from scipy import stats
-
-vmtk = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(vmtk)
-os.chdir(os.path.join(vmtk, 'src'))
-
-from postprocessor import postprocessor
-from utilities import import_from_pkl
+from vmtk.postprocessor import postprocessor
 
 class TestPostprocessor(unittest.TestCase):
 
@@ -26,8 +17,9 @@ class TestPostprocessor(unittest.TestCase):
         """Set up test case with expected regression analysis values."""
 
         self.pp = postprocessor()
-        self.imls = np.loadtxt(f'{vmtk}/tests/test_data/imls.csv', delimiter=',', usecols=0).tolist()
-        self.edps = np.loadtxt(f'{vmtk}/tests/test_data/edps.csv', delimiter=',', usecols=0).tolist()
+        cd = os.path.dirname(__file__)
+        self.imls = np.loadtxt(os.path.join(cd, 'test_data', 'imls.csv'), delimiter=',', usecols=0).tolist()
+        self.edps = np.loadtxt(os.path.join(cd, 'test_data', 'edps.csv'), delimiter=',', usecols=0).tolist()
         self.damage_thresholds = [0.003, 0.00992, 0.01708, 0.024]
         self.lower_limit = 0.1 * 0.003
         self.censored_limit = 1.5 * 0.024
