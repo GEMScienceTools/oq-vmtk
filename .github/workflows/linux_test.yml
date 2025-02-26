@@ -1,4 +1,4 @@
-name: Weekly Engine tests
+name: Linux tests
 on:
   workflow_dispatch:
     inputs:
