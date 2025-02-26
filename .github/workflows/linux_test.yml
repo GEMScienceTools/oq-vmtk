@@ -33,6 +33,7 @@ jobs:
         timeout-minutes: 60
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: Install Dependencies of OpenQuake engine and run tests
+        run: |
           curl -L -O https://github.com/gem/oq-engine/raw/master/install.py
           python install.py devel --version=master
           source ~/openquake/bin/activate
