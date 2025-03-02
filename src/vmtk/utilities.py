@@ -1,19 +1,11 @@
 ### Import libraries
-import pandas as pd
-import numpy as np
 import os
 import re
-import time
-import pickle
 import math
-from math import sqrt, pi
-from scipy import stats, optimize, signal, integrate
-from scipy.interpolate import interp1d
-from itertools import count
+import pickle
+import numpy as np
+from scipy import stats
 
-##########################################################################
-#                    GENERIC UTILITY FUNCTIONS                           #
-##########################################################################
 def fun_lognormal(x, sigma, mu):
     """
     Function to reproduce or fit a Lognormal function to data
@@ -232,140 +224,6 @@ def select_files(folder=".", start="", end="", contain="", include_path=False):
         files.sort()
         return files
 
-def processESMfile(in_filename, content, out_filename):
-    """
-    Processes acceleration history for ESM data file
-    (.asc format)
-    Parameters
-    ----------
-    in_filename : str, optional
-        Location and name of the input file.
-        The default is None
-    content : str, optional
-        Raw content of the .AT2 file.
-        The default is None
-    out_filename : str, optional
-        location and name of the output file.
-        The default is None.
-    Notes
-    -----
-    At least one of the two variables must be defined: in_filename, content.
-    Returns
-    -------
-    ndarray (n x 1)
-        time array, same length with npts.
-    ndarray (n x 1)
-        acceleration array, same length with time unit
-        usually in (g) unless stated otherwise.
-    str
-        Description of the earthquake (e.g., name, year, etc).
-    """
-    try:
-        # Read the file content from inFilename
-        if content is None:
-            with open(in_filename, 'r') as file:
-                content = file.readlines()
-        desc = content[:64]
-        dt = float(difflib.get_close_matches(
-            'SAMPLING_INTERVAL_S', content)[0].split()[1])
-        acc_data = content[64:]
-        acc = np.asarray([float(data) for data in acc_data], dtype=float)
-        dur = len(acc) * dt
-        t = np.arange(0, dur, dt)
-        acc = acc / 980.655  # cm/s**2 to g
-        if out_filename is not None:
-            np.savetxt(out_filename, acc, fmt='%1.4e')
-        return t, acc, desc
-    except BaseException as error:
-        print(f"Record file reader FAILED for {in_filename}: ", error)
-
-def processNGAfile(filepath, scalefactor=None):
-    """
-    This function process acceleration history for NGA data file (.AT2 format)
-    to a single column value and return the total number of data points and 
-    time iterval of the recording.
-    -----
-    Input
-    -----
-    filepath : string (location and name of the file)
-    scalefactor : float (Optional) - multiplier factor that is applied to each
-                  component in acceleration array.
-    
-    ------
-    Output
-    ------
-    desc: Description of the earthquake (e.g., name, year, etc)
-    npts: total number of recorded points (acceleration data)
-    dt: time interval of recorded points
-    time: array (n x 1) - time array, same length with npts
-    inp_acc: array (n x 1) - acceleration array, same length with time
-             unit usually in (g) unless stated as other.
-    
-    Example: (plot time vs acceleration)
-    filepath = os.path.join(os.getcwd(),'motion_1')
-    desc, npts, dt, time, inp_acc = processNGAfile (filepath)
-    plt.plot(time,inp_acc)
-        
-    """
-   
-    try:
-        if not scalefactor:
-            scalefactor = 1.0
-        with open(filepath,'r') as f:
-            content = f.readlines()
-        counter = 0
-        desc, row4Val, acc_data = "","",[]
-        for x in content:
-            if counter == 1:
-                desc = x
-            elif counter == 3:
-                row4Val = x
-                if row4Val[0][0] == 'N':
-                    val = row4Val.split()
-                    npts = float(val[(val.index('NPTS='))+1].rstrip(','))
-                    dt = float(val[(val.index('DT='))+1])
-                else:
-                    val = row4Val.split()
-                    npts = float(val[0])
-                    dt = float(val[1])
-            elif counter > 3:
-                data = str(x).split()
-                for value in data:
-                    a = float(value) * scalefactor
-                    acc_data.append(a)
-                inp_acc = np.asarray(acc_data)
-                time = []
-                for i in range (0,len(acc_data)):
-                    t = i * dt
-                    time.append(t)
-            counter = counter + 1
-        return desc, npts, dt, time, inp_acc
-    except IOError:
-        print("processMotion FAILED!: File is not in the directory")
-
-    
-def resample_y_values_based_on_x_values(new_x, old_x, old_y):
-    """
-    Function to resample data after changing x-axis values
-    -----
-    Input
-    -----
-    :param new_x:             list                New x-axis values
-    :param old_x:             list                Previous x-axis values
-    :param old_y:             list                Previous y-axis values
-
-    ------
-    Output
-    ------
-    new_y:                    list                New y-axis values
-
-    """    
-    
-    f = interp1d(old_x, old_y,fill_value='extrapolate')      
-    new_y = f(new_x) 
-    return new_y
-
-
 def RSE(y_true, y_predicted):
     """
     Function to calculate the relative squared error for uncertainty quantification in regression
@@ -414,11 +272,6 @@ def remove_elements_at_indices(test_list, idx_list):
     # Remove element at current index
     sub_list.pop(first_idx)
     return sub_list
-
-
-############################################################################
-
-############################################################################
 
 def get_capacity_values(df,build_class):
     """
@@ -479,5 +332,3 @@ def get_capacity_values(df,build_class):
         say=(sdy*(2*np.pi/ty)**2)/9.81
 
         return sdy, say, sdu, ty
-
-

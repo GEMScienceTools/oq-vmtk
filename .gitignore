@@ -21,3 +21,4 @@ venv
 *.whl
 .vscode/
 .ipynb_checkpoints/
+demos/notebooks/.ipynb_checkpoints/example_1-checkpoint.ipynb

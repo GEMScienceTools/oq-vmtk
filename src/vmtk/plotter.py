@@ -3,12 +3,11 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
 import matplotlib.gridspec as gridspec
-import matplotlib.animation as animation
 from matplotlib.ticker import MultipleLocator
 from matplotlib.animation import FuncAnimation
-from matplotlib.ticker import FormatStrFormatter
 
 ## Define plot style
 HFONT = {'fontname':'Helvetica'}
@@ -340,7 +339,6 @@ class plotter():
             """Plots the stripe analysis (IMLs vs EDPs) on a given axis"""
             for i, threshold in enumerate(damage_thresholds):
                 for j, im in enumerate(imls):
-                    exceedances = np.sum(edps[j, :] >= threshold)
                     ax.scatter(edps[j, :], [im] * len(edps[j, :]), color = GEM_COLORS[1], s=MARKER_SIZE_2, alpha = 0.5, label = 'MSA Data',zorder=0)
             
             # Add vertical lines for the damage thresholds
@@ -439,14 +437,7 @@ class plotter():
     
         # Create a horizontal subplot that spans the bottom row
         ax3 = fig.add_subplot(gs[1, :])
-    
-        # Data for the animation
-        x1 = nrha_disps
-        x2 = nrha_accels
-    
-        x3 = dts
-        y3 = acc
-    
+        
         # Initial plots for each subplot
         line1, = ax1.plot([], [], color="blue",  linewidth=LINEWIDTH_2, marker='o', markersize=MARKER_SIZE_3)
         line2, = ax2.plot([], [], color="red",   linewidth=LINEWIDTH_2, marker='o', markersize=MARKER_SIZE_3)

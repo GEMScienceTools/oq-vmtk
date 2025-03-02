@@ -141,7 +141,7 @@ class modeller():
                                  10,'energy']
         
         ops.uniaxialMaterial('Pinching4', mat1Tag,*matargs)
-        ops.uniaxialMaterial('MinMax', mat2Tag, mat1Tag, '-min', -1*disp[4,0], '-max', disp[4,0])
+        ops.uniaxialMaterial('MinMax', mat2Tag, mat1Tag, '-min', -1*disp[-1,0], '-max', disp[-1,0])
 
     def compile_model(self):
         """
@@ -188,7 +188,6 @@ class modeller():
          
         ### Get number of zerolength elements required
         nodeList = ops.getNodeTags()
-        numEle = len(nodeList)-1
                         
         for i in range(self.number_storeys):
             
@@ -207,16 +206,13 @@ class modeller():
             ### Create the nonlinear material for the unrestrained dofs
             self.create_Pinching4_material(mat1Tag, mat2Tag, current_storey_forces, current_storey_disps, self.degradation)
             
-            ### Aggregate materials
-            matTags = [mat2Tag, rigM, rigM, rigM, rigM, rigM]            
-
             ### Define element connectivity
             eleTag = int(f'200{i}')
             eleNodes = [i, i+1]
             
             ### Create the element
             ops.element('zeroLength', eleTag, eleNodes[0], eleNodes[1], '-mat', mat2Tag, mat2Tag, rigM, rigM, rigM, rigM, '-dir', 1, 2, 3, 4, 5, 6, '-doRayleigh', 1)
-       
+            
 
     def plot_model(self, display_info=True):
         """
@@ -231,10 +227,6 @@ class modeller():
         None.
     
         """
-
-        modelLineColor = 'blue'
-        modellinewidth = 1
-        Vert = 'Z'
                
         # get list of model nodes
         NodeCoordListX = []; NodeCoordListY = []; NodeCoordListZ = [];
@@ -343,8 +335,6 @@ class modeller():
         ### Get frequency and period        
         self.omega = np.power(ops.eigen(solver, num_modes), 0.5)
         T = 2.0*np.pi/self.omega
-        ### Get list of model nodes
-        nodeList = ops.getNodeTags() 
 
         mode_shape = []        
         # Extract mode shapes for all nodes (displacements in x)
@@ -614,7 +604,6 @@ class modeller():
         ops.algorithm(algorithm_type)
 
      	#create the list of displacements
-        dispList =                  [ref_disp*mu, -2.0*ref_disp*mu, ref_disp*mu]
         cycleDispList = (numCycles* [ref_disp*mu, -2.0*ref_disp*mu, ref_disp*mu])
         dispNoMax = len(cycleDispList)
         
