@@ -37,24 +37,17 @@ classifiers = [
 
 requires-python = ">=3.10, <3.13"
 dependencies = [
-    "geojson",
-    "geopandas > 0.10.0",
-    "pandas >= 2.0.3, <= 2.2.3",
-    "h3 <= 3.7.7",
-    "igraph",
+    "openseespy >= 3.7.1",
     "ipykernel >= 4.8.0",
     "ipython >= 6.2.0",
     "jupyter_client >= 5.0.0",
-    "nbconvert",
-    "nbformat",
-    "nbstripout >= 0.3.0",
     "notebook >= 5.0.0",
-    "pylint >= 2.1.1",
     "pyproj >= 3.6.1",
-    "reportlab",
-    "rtree",
-    "tables >= 3.7.0",
-    "scipy >= 1.11.0",
+    "scipy < 1.14.0",
+    "matplotlib >= 3.8.2",
+    "numpy >= 1.26.2",
+    "numba >= 0.58.1",
+    "pandas >= 2.0.3",
 ]
 
 
