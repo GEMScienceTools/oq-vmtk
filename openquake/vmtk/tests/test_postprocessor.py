@@ -1,7 +1,7 @@
 import os
 import unittest
 import numpy as np
-from vmtk.postprocessor import postprocessor
+from openquake.vmtk.postprocessor import postprocessor
 
 class TestPostprocessor(unittest.TestCase):
 

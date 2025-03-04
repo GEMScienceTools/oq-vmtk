@@ -2,7 +2,7 @@ import os
 import unittest
 import numpy as np
 
-from vmtk.im_calculator import IMCalculator
+from openquake.vmtk.im_calculator import IMCalculator
 
 class TestIMCalculator(unittest.TestCase):
 
