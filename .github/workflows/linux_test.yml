@@ -38,5 +38,6 @@ jobs:
           pip install -e .
       - name: Run tests
         run: |
-          cd src/vmtk
+          pip install pytest
+          cd openquake/vmtk
           pytest --doctest-modules -x --color=yes --durations=10 tests/
