@@ -6,8 +6,3 @@ https://wheelhouse.openquake.org/v3/linux/py312/pyproj-3.6.1-cp312-cp312-manylin
 https://wheelhouse.openquake.org/v3/linux/py312/fiona-1.9.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py312/GDAL-3.7.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 #
-# Version specific
-openseespy >= 3.7.1
-pandas == 2.0.3
-scipy == 1.13.1
-#
