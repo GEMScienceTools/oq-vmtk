@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Vulnerability Toolkit"
 readme = """
 A repository for modelling and analysing multi-degree-of-freedom systems for response characterisation of global building classes
-Copyright (C) 2017-2025 GEM Foundation
+Copyright (C) 2025 GEM Foundation
 """
 license = { text = "AGPL-3.0-only" }
 
