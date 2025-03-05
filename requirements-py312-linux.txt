@@ -10,6 +10,7 @@ https://wheelhouse.openquake.org/v3/linux/py312/h5py-3.11.0-cp312-cp312-manylinu
 https://wheelhouse.openquake.org/v3/linux/py312/numba-0.60.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py312/scipy-1.13.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py312/matplotlib-3.8.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+https://wheelhouse.openquake.org/v3/linux/py312/llvmlite-0.43.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 #
 #
 https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
