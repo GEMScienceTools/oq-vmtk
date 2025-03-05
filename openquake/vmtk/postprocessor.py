@@ -229,11 +229,11 @@ class postprocessor():
         ### calculate probabilities of exceedance for a range of intensity measure levels
         return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
         
-    def get_vulnerability_function(self, 
-                                   poes, 
-                                   consequence_model, 
-                                   intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), 
-                                   uncertainty=True):
+    def get_vulnerability_function(self,
+                                   poes,
+                                   consequence_model,
+                                   intensities = np.round(np.geomspace(0.05, 10.0, 50), 3),
+                                   uncertainty = True):
         """
         Function to calculate the vulnerability function given the probabilities of exceedance and a consequence model
         ----------
@@ -243,25 +243,59 @@ class postprocessor():
         consequence_model:             list                Damage-to-loss ratios       
         intensities:                  array                Intensity measure levels
         uncertainty:                   bool                Flag to calculate (or not) the coefficient of variation associated with Loss|IM
+        ----------
+        References
+        ----------
+        The coefficient of variation is calculated per:
+        Silva V. Uncertainty and Correlation in Seismic Vulnerability Functions of Building Classes. Earthquake Spectra. 2019;35(4):1515-1539. doi:10.1193/013018EQS031M
         -------
         Returns
         -------
         loss:                         array                Expected loss ratios (the uncertainty is modelled separately)
         """    
-        if len(consequence_model) != poes.shape[1]:
-            raise ValueError('Mismatch between fragility consequence models!')
-        if len(intensities) != poes.shape[0]:
-            raise ValueError('Mismatch between the number of IMLs and fragility models!')
         
-        loss = np.sum((poes[:, :-1] - np.hstack([poes[:, 1:], np.zeros((poes.shape[0], 1))])) * consequence_model[:-1], axis=1)
-        loss += poes[:, -1] * consequence_model[-1]
+        ### Do some consistency checks
+        if len(consequence_model)!=np.size(poes,1):
+              raise Exception('Mismatch between the fragility consequence models!')
+        if len(intensities)!=np.size(poes,0):
+              raise Exception('Mismatch between the number of IMLs and fragility models!')
         
-        if uncertainty:
-            sigma_loss_ratio, _, _ = self.calculate_sigma_loss(loss)
-            df = pd.DataFrame({'IMLs': intensities, 'Loss': loss, 'COV': sigma_loss_ratio})
+        loss=np.zeros([len(intensities),])
+        for i in range(len(intensities)):
+              for j in range(0,np.size(poes,1)):
+                    if j==(np.size(poes,1)-1):
+                          loss[i,]=loss[i,]+poes[i,j]*consequence_model[j]
+                    else:
+                          loss[i,]=loss[i,]+(poes[i,j]-poes[i,j+1])*consequence_model[j]
+         
+        if uncertainty:            
+            # Calculate the coefficient of variation assuming the Silva et al.
+            cov=np.zeros(loss.shape)   
+            for m in range(loss.shape[0]):                        
+                mean_loss_ratio=loss[m]
+                if mean_loss_ratio<1e-4:
+                    loss[m]=1e-8
+                    cov[m] = 1e-8
+                elif np.abs(1-mean_loss_ratio)<1e-4:
+                    loss[m]= 0.99999
+                    cov[m] = 1e-8
+                else:                                  
+                    sigma_loss = np.sqrt(mean_loss_ratio*(-0.7-2*mean_loss_ratio+np.sqrt(6.8*mean_loss_ratio+0.5)))
+                    max_sigma = np.sqrt(mean_loss_ratio*(1-mean_loss_ratio))
+                    sigma_loss_ratio = np.min([max_sigma, sigma_loss])
+                    cov[m] = np.min([sigma_loss_ratio/mean_loss_ratio, 0.90*max_sigma/mean_loss_ratio])
+     
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss,
+                               'COV':  cov})
+            
         else:
-            df = pd.DataFrame({'IMLs': intensities, 'Loss': loss})
-        
+            # Store to DataFrame
+            df = pd.DataFrame({'IMLs': intensities,
+                               'Loss': loss})
+            
+                             
         return df
             
     def calculate_average_annual_damage_probability(self, 
