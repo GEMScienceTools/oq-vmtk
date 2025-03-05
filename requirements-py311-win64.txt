@@ -1,0 +1,16 @@
+# vmtk requirements
+# From OQ wheels
+#
+https://wheelhouse.openquake.org/v3/windows/py311/pandas-2.0.3-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/numpy-1.26.2-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/matplotlib-3.8.2-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/scipy-1.11.4-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/fiona-1.9.5-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/GDAL-3.7.3-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/pyproj-3.6.1-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/numba-0.58.1-cp311-cp311-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py311/h5py-3.10.0-cp311-cp311-win_amd64.whl
+#
+#
+openseespy==3.6.0.3
+openseespywin==3.6.0.3
