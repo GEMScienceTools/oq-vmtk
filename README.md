@@ -1,31 +1,68 @@
-# Vulnerability-Toolkit
+<a id="readme-top"></a>
 
-![logo](https://github.com/mouayed-nafeh/vulnerability-toolkit/blob/main/imgs/gem-vulnerability-toolkit.png)
+<!-- PROJECT SHIELDS -->
 
-## 🔎 Overview
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![project_license][license-shield]][license-url]
 
-The **Vulnerability-Toolkit** is an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for vulnerability and risk calculations. The **Vulnerability-Toolkit** is developed by the **[GEM](http://www.globalquakemodel.org)** (Global Earthquake Model) Foundation and its collaborators.
 
-DOI: TBD
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/GEMScienceTools/vulnerability-toolkit">
+    <img src="imgs/gem-vulnerability-toolkit.png" alt="Logo" >
+  </a>
 
-## 🛠️ Current Features
+  <h3 align="center">Vulnerability Toolkit</h3>
 
-* MDOF Modelling: Model single- and multi-degree-of-freedom system using low-level information (e.g., number of storeys, first-mode transformation factor, SDoF- or storey-based force-deformation relationships);
-* Modal analysis: Estimate periods of vibration and modal shapes;
-* Static analysis: Perform gravity, static and cyclic pushover analyses;
-* Dynamic analysis: Perform cloud analysis;
-* Regression analysis: Perform regression analysis on cloud analysis data to characterise EDP|IM relationship;
-* Fragility analysis: Calculate median seismic intensities, associated dispersion (i.e., record-to-record and modelling uncertainties) and the corresponding probabilities of damage based on demand-based thresholds;
-* Vulnerability analysis: Perform fragility function convolution with with consequence models  for structural, and building contents and region-specific non-structural storey-loss functions;
-* Plotting: Plot analysis outputs such as model overview, cloud analysis results, demand profiles (i.e., peak storey drifts and peak floor acceleration along the height of the model), fragility functions. Additionally, it is possible to animate the MDoF considering a single run;
+  <p align="center">
+    This repository contains an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for regional vulnerability and risk calculations. The vulnerability toolkit is developed by the Global Earthquake Model (GEM) Foundation and its collaborators.
+    <br />
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docs"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/demos">View Demos</a>
+    ·
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    ·
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+  </p>
+</div>
 
-## 📚 Documentation
+# 🛠️ Features
+
+* Modelling of Multi-Degree-of-Freedom Oscillators in OpenSees: Model single- and multi-degree-of-freedom system using low-level information (e.g., number of storeys, first-mode transformation factor, SDoF- or storey-based force-deformation relationships);
+* Linear and Nonlinear Analysis in OpenSees:
+  * Modal Analysis: Estimate Periods of Vibration and Modal Shapes;
+  * Gravity Analysis
+  * Nonlinear Static Analysis: Perform Static and Cyclic Pushover Analyses to Characterise the Lateral Load-Resisting Response of the System;
+  * Dynamic Analysis: Perform Nonlinear Time-History Analyses using Selected Ground-Motion Records;
+* Fragility Analysis: Calculate Median Seismic Intensities and Total Associated Dispersion (i.e., Record-to-Record Variability and Modelling Uncertainty):
+  * Regression Analysis following Cloud Analysis Method to Characterise EDP|IM Relationship and Calculate Exceedance Probabilities of Damage;
+* Vulnerability Analysis: Calculate Vulnerability Functions to Estimate Decision-Variables (Economic- and Human-Based) Conditioned on Ground-Shaking Intensity using Consequence Models (Damage-to-Loss Ratios)
+* Plotting: Plot Analysis Outputs
+  * Model Overview: OpenSees Model (Nodes and Elements)  
+  * Cloud Analysis Results and Fitted IM|EDP Relationship
+  * Seismic Demand Profiles: Distribution of Peak Storey Drifts and Peak Floor Accelerations
+  * Fragility Functions
+  * Vulnerability Functions
+
+# 📚 Documentation
 
 TBD
 
 # 🌟 Contributors
 
 Contributors are gratefully acknowledged and listed in CONTRIBUTORS.txt.
+
+<a href="https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=GEMScienceTools/vulnerability-toolkit" alt="contrib.rocks image" />
+</a>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 # © License
 
@@ -48,3 +85,16 @@ Note that the `main` branch could contain the work-in-progress of the next versi
 # 📑 References
 
 TBD
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[contributors-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[forks-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/network/members
+[stars-shield]: https://img.shields.io/github/stars/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[stars-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/stargazers
+[issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[issues-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/issues
+[license-shield]: https://img.shields.io/github/license/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
+[license-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/blob/master/LICENSE.txt

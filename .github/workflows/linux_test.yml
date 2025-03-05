@@ -1,5 +1,6 @@
-name: Weekly Engine tests
+name: Linux tests
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       git-ref:
@@ -32,9 +33,16 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-      - name: Install dependencies and run tests
+      - name: Install Dependencies of OpenQuake engine
+        run: |
+          curl -L -O https://github.com/gem/oq-engine/raw/master/install.py
+          python install.py user --version=master
+      - name: Install vmtk Package
         run: |
           source ~/openquake/bin/activate
-          pip install pytest https://wheelhouse.openquake.org/v3/py/rtgmpy-1.0.0-py3-none-any.whl
-          oq engine --upgrade-db
-          pytest --doctest-modules -x --disable-warnings --color=yes --durations=10 openquake/calculators -k 'not risk and not damage and not bcr'
+          pip install -e .
+      - name: Run tests
+        run: |
+          source ~/openquake/bin/activate
+          cd openquake/vmtk
+          pytest --doctest-modules -x --color=yes --durations=10 tests/
