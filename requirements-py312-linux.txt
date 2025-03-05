@@ -5,4 +5,11 @@ https://wheelhouse.openquake.org/v3/linux/py312/numpy-1.26.4-cp312-cp312-manylin
 https://wheelhouse.openquake.org/v3/linux/py312/pyproj-3.6.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py312/fiona-1.9.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py312/GDAL-3.7.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+https://wheelhouse.openquake.org/v3/linux/py312/pandas-2.2.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+https://wheelhouse.openquake.org/v3/linux/py312/h5py-3.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+https://wheelhouse.openquake.org/v3/linux/py312/numba-0.60.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+https://wheelhouse.openquake.org/v3/linux/py312/scipy-1.13.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 #
+#
+https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
+https://wheelhouse.openquake.org/v3/py/openseespylinux-3.6.0.3-py3-none-any.whl
