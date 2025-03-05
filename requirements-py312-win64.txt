@@ -12,5 +12,5 @@ https://wheelhouse.openquake.org/v3/windows/py312/pyproj-3.6.1-cp312-cp312-win_a
 https://wheelhouse.openquake.org/v3/windows/py312/scipy-1.13.1-cp312-cp312-win_amd64.whl
 #
 #
-openseespy==3.6.0.3
-openseespywin==3.6.0.3
+https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
+https://wheelhouse.openquake.org/v3/py/openseespywin-3.6.0.3-py3-none-any.whl
