@@ -14,3 +14,4 @@ https://wheelhouse.openquake.org/v3/windows/py312/scipy-1.13.1-cp312-cp312-win_a
 #
 https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
 https://wheelhouse.openquake.org/v3/py/openseespywin-3.6.0.3-py3-none-any.whl
+https://wheelhouse.openquake.org/v3/py/click-8.1.7-py3-none-any.whl
