@@ -179,11 +179,11 @@ class IMCalculator:
         acc_filtered = signal.sosfilt(sos, acc_m_s2)
     
         # Integrate acceleration to get velocity
-        vel = integrate.cumtrapz(acc_filtered, dx=self.dt, initial=0)
+        vel = integrate.cumulative_trapezoid(acc_filtered, dx=self.dt, initial=0)
         vel = signal.detrend(vel, type='linear')  # Remove linear drift
     
         # Integrate velocity to get displacement
-        disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)
+        disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
         disp = signal.detrend(disp, type='linear')  # Remove residual drift
     
         return vel, disp
@@ -204,8 +204,8 @@ class IMCalculator:
         """
         
         acc_m_s2 = self.acc * 9.81  # Convert g to m/s²
-        vel = integrate.cumtrapz(acc_m_s2, dx=self.dt, initial=0)
-        disp = integrate.cumtrapz(vel, dx=self.dt, initial=0)
+        vel = integrate.cumulative_trapezoid(acc_m_s2, dx=self.dt, initial=0)
+        disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
 
         return np.max(np.abs(self.acc)), np.max(np.abs(vel)), np.max(np.abs(disp))
 
@@ -313,7 +313,7 @@ class IMCalculator:
                 ugf_pc = ugf[i:i+int(np.floor(alpha*period/self.dt))]
 
                 # Integrate the snippet
-                FIV = np.append(FIV, self.dt*integrate.trapz(ugf_pc))
+                FIV = np.append(FIV, self.dt*integrate.trapezoid(ugf_pc))
 
                 # Log the time
                 t = np.append(t, tim[i])

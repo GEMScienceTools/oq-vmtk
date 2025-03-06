@@ -12,16 +12,16 @@ class postprocessor():
     
     def __init__(self):
         pass                
+            
     
-    def do_cloud_analysis(self,
-                          imls,
-                          edps,
-                          damage_thresholds,
-                          lower_limit,
-                          censored_limit,
-                          sigma_build2build=0.3,
-                          intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
-        
+    def do_cloud_analysis(self, 
+                          imls, 
+                          edps, 
+                          damage_thresholds, 
+                          lower_limit, 
+                          censored_limit, 
+                          sigma_build2build=0.3, 
+                          intensities=np.round(np.geomspace(0.05, 10.0, 50), 3)):
         """
         Function to perform censored cloud analysis to a set of engineering demand parameters and intensity measure levels
         Processes cloud analysis and fits linear regression after due consideration of collapse
@@ -39,75 +39,83 @@ class postprocessor():
         -------
         cloud_dict:              dict         Cloud analysis outputs (regression coefficients and data, fragility parameters and functions)        
         """    
-    
-        # Convert to numpy array type
-        if isinstance(imls, np.ndarray):
-            pass
-        else:
-            imls = np.array(imls)
-        if isinstance(edps, np.ndarray):
-            pass
-        else:
-            edps = np.array(edps)
-              
-        x_array=np.log(imls)
-        y_array=edps
+
+        # Convert inputs to numpy arrays
+        imls = np.asarray(imls)
+        edps = np.asarray(edps)
         
-        # remove displacements below lower limit
-        bool_y_lowdisp=edps>=lower_limit
-        x_array = x_array[bool_y_lowdisp]
-        y_array = y_array[bool_y_lowdisp]
+        x_array = np.log(imls)
+        y_array = edps
         
-        # checks if the y value is above the censored limit
-        bool_is_censored=y_array>=censored_limit
-        bool_is_not_censored=y_array<censored_limit
+        # Apply filtering
+        valid_mask = y_array >= lower_limit
+        x_array = x_array[valid_mask]
+        y_array = y_array[valid_mask]
         
-        # creates an array where all the censored values are set to the limit
-        observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
-        
-        y_array=np.log(edps)
+        # Censoring operations
+        bool_is_censored = y_array >= censored_limit
+        observed = np.log(np.where(bool_is_censored, censored_limit, y_array))
         
         def func(x):
-              p = np.array([stats.norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
-              return -np.sum(np.log(p))
-        sol1=optimize.fmin(func,[1,1,1],disp=False)
+            locs = x[1] + x[0] * x_array
+            p = stats.norm.pdf(observed, loc=locs, scale=x[2])
+            return -np.sum(np.log(p[p > 0]))
+        
+        sol1 = optimize.fmin(func, [1, 1, 1], disp=False)
         
         def func2(x):
-              p1 = np.array([stats.norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
-              p2 = np.array([1-stats.norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
-              return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
+            locs = x[1] + x[0] * x_array
+            p1 = stats.norm.pdf(observed[~bool_is_censored], loc=locs[~bool_is_censored], scale=x[2])
+            p2 = 1 - stats.norm.cdf(observed[bool_is_censored], loc=locs[bool_is_censored], scale=x[2])
+            return -np.sum(np.log(p1[p1 > 0])) - np.sum(np.log(p2[p2 > 0]))
         
-        p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
+        p_cens = optimize.fmin(func2, sol1, disp=False)
         
-        # reproduce the fit
-        xvec = np.linspace(np.log(min(imls)),np.log(max(imls)),endpoint=True)
-        yvec = p_cens[0]*xvec+p_cens[1]
+        # Regression fit
+        xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
+        yvec = p_cens[0] * xvec + p_cens[1]
         
-        # calculate probabilities of exceedance
-        thetas = [np.exp((np.log(x)-p_cens[1])/p_cens[0]) for x in damage_thresholds] # calculate the median seismic intensities via the regression coefficients
-        betas = [np.sqrt((p_cens[2]/p_cens[0])**2+sigma_build2build**2)]*4            # calculate the total uncertainty accounting for the modelling uncertainty
-        poes = np.zeros((len(intensities),len(damage_thresholds)))               # initialise and calculate the probabilities of exceedances associated with each damage state
-        for i in range((len(damage_thresholds))):
-            poes[:,i] = self.get_fragility_function(thetas[i], betas[i])
-    
-        ## Package the outputs
-        cloud_dict =     {'imls': imls,                                              # Input intensity measure levels
-                          'edps': edps,                                              # Input engineering demand parameters
-                          'lower_limit': lower_limit,                                # Input lower censoring limit
-                          'upper_limit': censored_limit,                             # Input upper censoring limit
-                          'damage_thresholds': damage_thresholds,                    # Input damage thresholds
-                          'fitted_x': np.exp(xvec),                                  # Fitted intensity measure range
-                          'fitted_y': np.exp(yvec),                                  # Fitted edps 
-                          'intensities': intensities,                                # Sampled intensities for fragility analysis
-                          'poes': poes,                                              # Probabilities of exceedance of each damage state (DS1 to DSi)
-                          'medians': thetas,                                         # Median seismic intensities (in g)
-                          'betas_total': betas,                                      # Associated total dispersion (accounting for building-to-building and modelling uncertainties)
-                          'b1': p_cens[0],                                           # Cloud analysis regression parameter (a in EDP = aIM^b)
-                          'b0': p_cens[1],                                           # Cloud analysis regression parameter (b in EDP = aIM^b)
-                          'sigma': p_cens[2]}                                        # Standard error in the fitted regression
-                                                    
+        # Compute fragility parameters
+        thetas = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])
+        betas = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))
+        
+        # Compute probabilities of exceedance
+        poes = np.array([self.get_fragility_function(theta, beta) for theta, beta in zip(thetas, betas)]).T
+        
+        cloud_dict = {
+            'imls': imls, 'edps': edps, 'lower_limit': lower_limit, 'upper_limit': censored_limit,
+            'damage_thresholds': damage_thresholds, 'fitted_x': np.exp(xvec), 'fitted_y': np.exp(yvec),
+            'intensities': intensities, 'poes': poes, 'medians': thetas, 'betas_total': betas,
+            'b1': p_cens[0], 'b0': p_cens[1], 'sigma': p_cens[2]
+        }
+        
         return cloud_dict
 
+    def calculate_sigma_loss(self, 
+                             loss):
+        """
+        Function to calculate the sigma in loss estimates based on the recommendations in:
+        'Silva, V. (2019) Uncertainty and correlation in seismic vulnerability 
+        functions of building classes. Earthquake Spectra. 
+        DOI: 10.1193/013018eqs031m.'
+        ----------
+        Parameters
+        ----------
+        loss:                           list          Expected loss ratio
+        -------
+        Returns
+        -------
+        sigma_loss_ratio:               list          The uncertainty associated with mean loss ratio
+        a_beta_dist:                   float          coefficient of the beta-distribution
+        b_beta_dist:                   float          coefficient of the beta_distribution
+        
+        """    
+        sigma_loss_ratio = np.where(loss == 0, 0,
+                                    np.where(loss == 1, 1,
+                                             np.sqrt(loss * (-0.7 - 2 * loss + np.sqrt(6.8 * loss + 0.5)))))
+        a_beta_dist = np.zeros(loss.shape)
+        b_beta_dist = np.zeros(loss.shape)
+        return sigma_loss_ratio, a_beta_dist, b_beta_dist
 
 
     def do_multiple_stripe_analysis(self,
@@ -219,8 +227,7 @@ class postprocessor():
         """
         
         ### calculate probabilities of exceedance for a range of intensity measure levels
-        poes = stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
-        return poes
+        return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
         
     def get_vulnerability_function(self,
                                    poes,
@@ -290,50 +297,14 @@ class postprocessor():
             
                              
         return df
-        
-    def calculate_sigma_loss(self, loss):
-        """
-        Function to calculate the sigma in loss estimates based on the recommendations in:
-        'Silva, V. (2019) Uncertainty and correlation in seismic vulnerability 
-        functions of building classes. Earthquake Spectra. 
-        DOI: 10.1193/013018eqs031m.'
-        ----------
-        Parameters
-        ----------
-        loss:                           list          Expected loss ratio
-        -------
-        Returns
-        -------
-        sigma_loss_ratio:               list          The uncertainty associated with mean loss ratio
-        a_beta_dist:                   float          coefficient of the beta-distribution
-        b_beta_dist:                   float          coefficient of the beta_distribution
-        
-        """    
-        
-        sigma_loss_ratio = np.zeros(loss.shape)
-        a_beta_dist = np.zeros(loss.shape)
-        b_beta_dist = np.zeros(loss.shape)
-        
-        for i in range(loss.shape[0]):
-            if loss[i]==0:
-                  sigma_loss_ratio[i]=np.array([0])
-            elif loss[i]==1:
-                  sigma_loss_ratio[i]=np.array([1])
-            else:
-                  sigma_loss_ratio[i]=np.sqrt(loss[i]*(-0.7-2*loss[i]+np.sqrt(6.8*loss[i]+0.5)))
-                
-        return sigma_loss_ratio,a_beta_dist,b_beta_dist
-
-    
+            
     def calculate_average_annual_damage_probability(self, 
                                                     fragility_array, 
                                                     hazard_array, 
                                                     return_period=1, 
                                                     max_return_period=5000):
-
         """
         Function to calculate the average annual damage state probability
-
         ----------
         Parameters
         ----------
@@ -345,22 +316,19 @@ class postprocessor():
         Returns
         -------
         average_annual_damage_probability:     float   Average annual damage state probability
-        
         """    
+        max_integration = return_period / max_return_period
+        hazard_array = hazard_array[hazard_array[:, 1] >= max_integration]
         
-        max_integration=return_period/max_return_period             
-        hazard_array=hazard_array[np.where(hazard_array[:,1]>=max_integration)]
-            
-        mean_imls=(hazard_array[0:-1,0]+hazard_array[1:,0])/2
-        rate_occ=(hazard_array[0:-1,1]/return_period)-(hazard_array[1:,1]/return_period) # Caclulate the rate of occurrence
-            
-        curve_imls=np.concatenate(([0],fragility_array[:,0],[20]))
-        curve_ordinates=np.concatenate(([0],fragility_array[:,1],[1]))
-            
-        average_annual_damage_probability=np.sum(np.multiply(np.interp(mean_imls,curve_imls,curve_ordinates),rate_occ))
-            
-        return average_annual_damage_probability
-
+        mean_imls = (hazard_array[:-1, 0] + hazard_array[1:, 0]) / 2
+        rate_occ = np.diff(hazard_array[:, 1]) / -return_period
+        
+        curve_imls = np.hstack(([0], fragility_array[:, 0], [20]))
+        curve_ordinates = np.hstack(([0], fragility_array[:, 1], [1]))
+        
+        interpolated_values = np.interp(mean_imls, curve_imls, curve_ordinates)
+        return np.dot(interpolated_values, rate_occ)
+    
     def calculate_average_annual_loss(self, 
                                       vulnerability_array, 
                                       hazard_array, 
@@ -368,7 +336,6 @@ class postprocessor():
                                       max_return_period=5000):
         """
         Function to calculate the average annual losses
-
         ----------
         Parameters
         ----------
@@ -380,18 +347,15 @@ class postprocessor():
         Returns
         -------
         average_annual_loss:     float   Average annual damage state probability
-        
         """    
+        max_integration = return_period / max_return_period
+        hazard_array = hazard_array[hazard_array[:, 1] >= max_integration]
         
-        max_integration=return_period/max_return_period             
-        hazard_array=hazard_array[np.where(hazard_array[:,1]>=max_integration)]
-            
-        mean_imls=(hazard_array[0:-1,0]+hazard_array[1:,0])/2
-        rate_occ=(hazard_array[0:-1,1]/return_period)-(hazard_array[1:,1]/return_period) # Caclulate the rate of occurrence
-            
-        curve_imls=np.concatenate(([0],vulnerability_array[:,0],[20]))
-        curve_ordinates=np.concatenate(([0],vulnerability_array[:,1],[1]))
-            
-        average_annual_loss=np.sum(np.multiply(np.interp(mean_imls,curve_imls,curve_ordinates),rate_occ))
-            
-        return average_annual_loss
+        mean_imls = (hazard_array[:-1, 0] + hazard_array[1:, 0]) / 2
+        rate_occ = np.diff(hazard_array[:, 1]) / -return_period
+        
+        curve_imls = np.hstack(([0], vulnerability_array[:, 0], [20]))
+        curve_ordinates = np.hstack(([0], vulnerability_array[:, 1], [1]))
+        
+        interpolated_values = np.interp(mean_imls, curve_imls, curve_ordinates)
+        return np.dot(interpolated_values, rate_occ)

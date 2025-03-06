@@ -37,7 +37,7 @@ classifiers = [
 
 requires-python = ">=3.10, <3.13"
 dependencies = [
-    "openseespy >= 3.7.1",
+	"seaborn >= 0.13.0",
     "ipykernel >= 4.8.0",
     "ipython >= 6.2.0",
     "jupyter_client >= 5.0.0",
