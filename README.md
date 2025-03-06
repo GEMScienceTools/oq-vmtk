@@ -127,8 +127,16 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
 * On Windows:
 
   ```bash
-   {virtual_environment_directory}\Scripts\activate
+   {virtual_environment_directory}\Scripts
+   activate
   ```
+
+* To deactivate virtual environment:
+
+  ```bash
+   deactivate
+  ```
+
 2. Open Jupyter Lab from the terminal:
 
   ```bash
