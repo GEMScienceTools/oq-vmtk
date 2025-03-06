@@ -109,7 +109,7 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 
 # 📚 Documentation
 
-TBD
+[WIP]
 
 # 📼 Demos
 
@@ -158,17 +158,11 @@ This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agp
 
 ### How to contribute?
 
-You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md). (Work-In-Progress)
-
-### Which version am I seeing? How to change the version?
-
-By default, you will see the files in the repository in the `main` branch. Each version of the model that is released can be accessed is marked with a `tag`. By changing the tag version at the top of the repository, you can change see the files for a given version.
-
-Note that the `main` branch could contain the work-in-progress of the next version of the model.
+You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md)
 
 # 📑 References
 
-TBD
+[WIP]
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
