@@ -71,13 +71,13 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 * On Linux:
 
   ```bash
-   source {virtual_environment_name}/bin/activate
+   source {virtual_environment_directory}/bin/activate
   ```
 
 * On Windows:
 
   ```bash
-   .\{virtual_environment_name}\Scripts\activate
+   {virtual_environment_directory}\Scripts\activate
   ```
 
 4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
