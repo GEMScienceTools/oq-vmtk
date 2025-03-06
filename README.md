@@ -53,7 +53,7 @@
 # 👩‍💻🧑‍💻 Installation
 
 Follow these steps to install the required tools and set up the development environment. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Mac and Linux OS.
-It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts. 
+It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
 
 1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
 
@@ -110,6 +110,33 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 # 📚 Documentation
 
 TBD
+
+# 📼 Demos
+
+The repository includes demo scripts that showcase the functionality of the vulnerability-modellers-toolkit (oq-vmtk). You can find them in the demos folder of the repository.
+
+To run a demo, simply navigate to the demos directory and execute the relevant demo script in Jupyter Lab. Jupyter Lab is automatically installed with oq-vmtk.
+
+1. Open a terminal and activate the virtual environment:
+* On Linux:
+
+  ```bash
+   source {virtual_environment_name}/bin/activate
+  ```
+
+* On Windows:
+
+  ```bash
+   .\{virtual_environment_name}\Scripts\activate
+  ```
+2. Open Jupyter Lab from the terminal:
+
+  ```bash
+   jupyter-lab
+  ```
+
+3. Navigate to the "demos" folder
+4. Run the examples
 
 # 🌟 Contributors
 
