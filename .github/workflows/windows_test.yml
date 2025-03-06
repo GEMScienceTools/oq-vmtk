@@ -1,0 +1,45 @@
+name: Windows tests
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      git-ref:
+        description: Git Ref
+        default: master
+        required: true
+      debug_enabled:
+        type: boolean
+        description: 'tmate debug enabled'
+        required: false
+        default: false
+  schedule:
+    - cron: "0 2 * * 0"
+
+jobs:
+  vulnerability_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022]
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python  ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies of OpenQuake engine
+        run: |
+          curl.exe -LO https://github.com/gem/oq-engine/raw/master/install.py
+          python install.py user --version=master
+      - name: Install vmtk Package
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          C:\Users\runneradmin\openquake\Scripts\activate.ps1
+          pip install -e .
+      - name: Run tests
+        run: |
+          C:\Users\runneradmin\openquake\Scripts\activate.ps1
+          cd openquake\vmtk
+          pytest --doctest-modules -x --color=yes --durations=10 tests/
