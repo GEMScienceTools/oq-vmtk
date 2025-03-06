@@ -42,4 +42,4 @@ jobs:
         run: |
           C:\Users\runneradmin\openquake\Scripts\activate.ps1
           cd openquake\vmtk
-          pytest --doctest-modules -x --color=yes --durations=10 tests/
+          pytest -v --doctest-modules -x --color=yes --durations=10 tests/

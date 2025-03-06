@@ -45,4 +45,4 @@ jobs:
         run: |
           source ~/openquake/bin/activate
           cd openquake/vmtk
-          pytest --doctest-modules -x --color=yes --durations=10 tests/
+          pytest -v --doctest-modules -x --color=yes --durations=10 tests/
