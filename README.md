@@ -52,12 +52,13 @@
 
 # 👩‍💻🧑‍💻 Installation
 
-Follow these steps to install the required tools and set up the development environment. It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
+Follow these steps to install the required tools and set up the development environment. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Mac and Linux OS.
+It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts. 
 
 1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
 
   ```bash
-   cd {virtual_environment_diretory}
+   cd {virtual_environment_directory}
   ```
 
 2. Create a virtual environment using the following command:
@@ -83,13 +84,13 @@ Follow these steps to install the required tools and set up the development envi
 
   ```bash
    cd {preferred_directory}
-   ```
+  ```
 
 5. Clone the "oq-vmtk" repository
 
-   ```bash
-   git clone https://github.com/GEMScienceTools/oq-vmtk.git
-   ```
+ ```bash
+ git clone https://github.com/GEMScienceTools/oq-vmtk.git
+ ```
 
 6. Complete the development installation by running the following commands depending on your python version {py-version} (e.g., 310, 311 or 312):
 * On Linux
