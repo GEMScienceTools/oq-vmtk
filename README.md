@@ -50,6 +50,62 @@
   * Fragility Functions
   * Vulnerability Functions
 
+# 👩‍💻🧑‍💻 Installation
+
+Follow these steps to install the required tools and set up the development environment. It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
+
+1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
+
+  ```bash
+   cd {virtual_environment_diretory}
+  ```
+
+2. Create a virtual environment using the following command:
+
+  ```bash
+   python3 -m venv {virtual_environment_name}
+  ```
+
+3. Activate the virtual environment:
+* On Linux:
+
+  ```bash
+   source {virtual_environment_name}/bin/activate
+  ```
+
+* On Windows:
+
+  ```bash
+   .\{virtual_environment_name}\Scripts\activate
+  ```
+
+4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
+
+  ```bash
+   cd {preferred_directory}
+   ```
+
+5. Clone the "oq-vmtk" repository
+
+   ```bash
+   git clone https://github.com/GEMScienceTools/oq-vmtk.git
+   ```
+
+6. Complete the development installation by running the following commands depending on your python version {py-version} (e.g., 310, 311 or 312):
+* On Linux
+
+  ```bash
+  pip install -r {preferred_directory}/requirements-py{py-version}-linux.txt
+  pip install -e .
+  ```
+
+* On Windows
+
+  ```bash
+  pip install -r {preferred_directory}/requirements-py{py-version}-win64.txt
+  pip install -e .
+  ```
+
 # 📚 Documentation
 
 TBD
