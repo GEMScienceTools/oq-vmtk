@@ -121,13 +121,13 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
 * On Linux:
 
   ```bash
-   source {virtual_environment_name}/bin/activate
+   source {virtual_environment_directory}/bin/activate
   ```
 
 * On Windows:
 
   ```bash
-   .\{virtual_environment_name}\Scripts\activate
+   {virtual_environment_directory}\Scripts\activate
   ```
 2. Open Jupyter Lab from the terminal:
 
