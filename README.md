@@ -58,32 +58,33 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
 
   ```bash
-   cd {virtual_environment_directory}
+   cd <virtual_environment_directory>
   ```
 
 2. Create a virtual environment using the following command:
 
   ```bash
-   python3 -m venv {virtual_environment_name}
+   python3 -m venv <virtual_environment_name>
   ```
 
 3. Activate the virtual environment:
 * On Linux:
 
   ```bash
-   source {virtual_environment_directory}/bin/activate
+   source <virtual_environment_directory>/bin/activate
   ```
 
 * On Windows:
 
   ```bash
-   {virtual_environment_directory}\Scripts\activate
+   <virtual_environment_directory>\Scripts
+   activate
   ```
 
 4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
 
   ```bash
-   cd {preferred_directory}
+   cd <preferred_directory>
   ```
 
 5. Clone the "oq-vmtk" repository
@@ -96,14 +97,14 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 * On Linux
 
   ```bash
-  pip install -r {preferred_directory}/requirements-py{py-version}-linux.txt
+  pip install -r <preferred_directory>/requirements-py<py-version>-linux.txt
   pip install -e .
   ```
 
 * On Windows
 
   ```bash
-  pip install -r {preferred_directory}/requirements-py{py-version}-win64.txt
+  pip install -r <preferred_directory>/requirements-py<py-version>-win64.txt
   pip install -e .
   ```
 
@@ -121,13 +122,13 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
 * On Linux:
 
   ```bash
-   source {virtual_environment_directory}/bin/activate
+   source <virtual_environment_directory>/bin/activate
   ```
 
 * On Windows:
 
   ```bash
-   {virtual_environment_directory}\Scripts
+   <virtual_environment_directory>\Scripts
    activate
   ```
 
