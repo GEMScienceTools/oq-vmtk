@@ -52,7 +52,7 @@
 
 # 👩‍💻🧑‍💻 Installation
 
-Follow these steps to install the required tools and set up the development environment. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Mac and Linux OS.
+Follow these steps to install the required tools and set up the development environment. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Windows and Linux OS.
 It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
 
 1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
@@ -77,8 +77,7 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 * On Windows:
 
   ```bash
-   <virtual_environment_directory>\Scripts
-   activate
+   <virtual_environment_directory>\Scripts\Activate.ps1
   ```
 
 4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
@@ -97,14 +96,14 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 * On Linux
 
   ```bash
-  pip install -r <preferred_directory>/requirements-py<py-version>-linux.txt
+  pip install -r requirements-py-linux.txt
   pip install -e .
   ```
 
 * On Windows
 
   ```bash
-  pip install -r <preferred_directory>/requirements-py<py-version>-win64.txt
+  pip install -r requirements-py-win64.txt
   pip install -e .
   ```
 
@@ -128,8 +127,7 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
 * On Windows:
 
   ```bash
-   <virtual_environment_directory>\Scripts
-   activate
+   <virtual_environment_directory>\Scripts\Activate.ps1
   ```
 
 * To deactivate virtual environment:
