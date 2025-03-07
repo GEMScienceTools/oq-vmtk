@@ -234,12 +234,13 @@ class modeller():
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
     
-        GEM_COLORS  = ["#0A4F4E","#0A4F5E","#54D7EB","#54D6EB","#399283","#399264","#399296"]
-
         for i in range(len(nodeList)):
-            ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i],s=60,color=GEM_COLORS[0])
+            if i==0:
+                ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i], marker='s', s=200,color='black')
+            else:
+                ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i], marker='o', s=150,color='black')
             if display_info == True:
-                ax.text(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i],  'Node %s (%s,%s,%s)' % (str(i),str(NodeCoordListX[i]),str(NodeCoordListY[i]),str(NodeCoordListZ[i])), size=20, zorder=1, color=GEM_COLORS[1]) 
+                ax.text(NodeCoordListX[i]+0.01,NodeCoordListY[i],NodeCoordListZ[i],  'Node %s (%s,%s,%s)' % (str(i),str(NodeCoordListX[i]),str(NodeCoordListY[i]),str(NodeCoordListZ[i])), size=20, zorder=1, color="#0A4F5E") 
         
         i = 0
         while i < len(elementList):
