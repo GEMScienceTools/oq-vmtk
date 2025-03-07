@@ -32,7 +32,7 @@ class plotter:
             'gem': ["#0A4F4E", "#0A4F5E", "#54D7EB", "#54D6EB", "#399283", "#399264", "#399296"]
         }
         self.resolution = 500
-        self.font_name = 'Helvetica'
+        self.font_name = 'Arial'
 
     def _set_plot_style(self, ax, title=None, xlabel=None, ylabel=None, grid=True):
         """Set consistent plot style for all plots."""
