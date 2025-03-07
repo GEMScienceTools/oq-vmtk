@@ -1,26 +1,7 @@
-import numpy as np
-from scipy.linalg import eigh
-import openseespy.opensees as ops
-import matplotlib.pyplot as plt
 import os 
-
-## Define plot style
-HFONT = {'fontname':'Helvetica'}
-
-FONTSIZE_1 = 16
-FONTSIZE_2 = 14
-FONTSIZE_3 = 12
-
-LINEWIDTH_1= 3
-LINEWIDTH_2= 2
-LINEWIDTH_3 = 1
-
-RESOLUTION = 500
-MARKER_SIZE_1 = 100
-MARKER_SIZE_2 = 60
-MARKER_SIZE_3 = 10
-
-GEM_COLORS  = ["#0A4F4E","#0A4F5E","#54D7EB","#54D6EB","#399283","#399264","#399296"]
+import numpy as np
+import matplotlib.pyplot as plt
+import openseespy.opensees as ops
 
 class modeller():
 
@@ -252,9 +233,11 @@ class modeller():
         
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
-        
+    
+        GEM_COLORS  = ["#0A4F4E","#0A4F5E","#54D7EB","#54D6EB","#399283","#399264","#399296"]
+
         for i in range(len(nodeList)):
-            ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i],s=MARKER_SIZE_2,color=GEM_COLORS[0])
+            ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i],s=60,color=GEM_COLORS[0])
             if display_info == True:
                 ax.text(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i],  'Node %s (%s,%s,%s)' % (str(i),str(NodeCoordListX[i]),str(NodeCoordListY[i]),str(NodeCoordListZ[i])), size=20, zorder=1, color=GEM_COLORS[1]) 
         
@@ -268,9 +251,9 @@ class modeller():
             plt.plot(x,y,z,color='blue')
             i = i+1
         
-        ax.set_xlabel('X-Direction [m]', fontsize=FONTSIZE_2)
-        ax.set_ylabel('Y-Direction [m]', fontsize=FONTSIZE_2)
-        ax.set_zlabel('Z-Direction [m]', fontsize=FONTSIZE_2)
+        ax.set_xlabel('X-Direction [m]', fontsize=14)
+        ax.set_ylabel('Y-Direction [m]', fontsize=14)
+        ax.set_zlabel('Z-Direction [m]', fontsize=14)
         
         plt.show()
 
