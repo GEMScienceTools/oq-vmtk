@@ -35,10 +35,6 @@ class TestIMCalculator(unittest.TestCase):
         # Create the IMCalculator object
         self.calculator = IMCalculator(acc_test, dt_test)
 
-    # def test_get_spectrum(self):
-    #     periods, sd, sv, sa = self.calculator.get_spectrum(periods=np.linspace(0.1, 1, 10))
-    #     self.assertAlmostEqual(np.max(sa), self.pga_test, places=5)
-
     def test_get_sa(self):
         sa03 = self.calculator.get_sa(0.3)
         sa06 = self.calculator.get_sa(0.6)
