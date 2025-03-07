@@ -50,9 +50,100 @@
   * Fragility Functions
   * Vulnerability Functions
 
+# 👩‍💻🧑‍💻 Installation
+
+Follow these steps to install the required tools and set up the development environment. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Windows and Linux OS.
+It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
+
+1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
+
+  ```bash
+   cd <virtual_environment_directory>
+  ```
+
+2. Create a virtual environment using the following command:
+
+  ```bash
+   python3 -m venv <virtual_environment_name>
+  ```
+
+3. Activate the virtual environment:
+* On Linux:
+
+  ```bash
+   source <virtual_environment_directory>/bin/activate
+  ```
+
+* On Windows:
+
+  ```bash
+   <virtual_environment_directory>\Scripts\Activate.ps1
+  ```
+
+4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
+
+  ```bash
+   cd <preferred_directory>
+  ```
+
+5. Clone the "oq-vmtk" repository
+
+ ```bash
+ git clone https://github.com/GEMScienceTools/oq-vmtk.git
+ ```
+
+6. Complete the development installation by running the following commands depending on your python version {py-version} (e.g., 310, 311 or 312):
+* On Linux
+
+  ```bash
+  pip install -r requirements-py-linux.txt
+  pip install -e .
+  ```
+
+* On Windows
+
+  ```bash
+  pip install -r requirements-py-win64.txt
+  pip install -e .
+  ```
+
 # 📚 Documentation
 
-TBD
+[WIP]
+
+# 📼 Demos
+
+The repository includes demo scripts that showcase the functionality of the vulnerability-modellers-toolkit (oq-vmtk). You can find them in the demos folder of the repository.
+
+To run a demo, simply navigate to the demos directory and execute the relevant demo script in Jupyter Lab. Jupyter Lab is automatically installed with oq-vmtk.
+
+1. Open a terminal and activate the virtual environment:
+* On Linux:
+
+  ```bash
+   source <virtual_environment_directory>/bin/activate
+  ```
+
+* On Windows:
+
+  ```bash
+   <virtual_environment_directory>\Scripts\Activate.ps1
+  ```
+
+* To deactivate virtual environment:
+
+  ```bash
+   deactivate
+  ```
+
+2. Open Jupyter Lab from the terminal:
+
+  ```bash
+   jupyter-lab
+  ```
+
+3. Navigate to the "demos" folder
+4. Run the examples
 
 # 🌟 Contributors
 
@@ -74,17 +165,11 @@ This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agp
 
 ### How to contribute?
 
-You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md). (Work-In-Progress)
-
-### Which version am I seeing? How to change the version?
-
-By default, you will see the files in the repository in the `main` branch. Each version of the model that is released can be accessed is marked with a `tag`. By changing the tag version at the top of the repository, you can change see the files for a given version.
-
-Note that the `main` branch could contain the work-in-progress of the next version of the model.
+You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md)
 
 # 📑 References
 
-TBD
+[WIP]
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
