@@ -35,6 +35,8 @@
 
 # ✨ Key Features
 
+The OQ-VMTK is a powerful toolkit developed by scientists at the Global Earthquake Model (GEM) Foundation. Designed for earthquake engineers and catastrophe modellers, it provides a comprehensive OpenSees-based platform for running representative (idealised) models, developing fragility and vulnerability assessments, and offering extensive flexibility in defining seismic demand, structural capacity, damage criteria, and damage-to-loss conversion.
+
 ## 🏗️ Single/Multi-Degree-of-Freedom System Modeling
 - Effortlessly create single- and multi-degree-of-freedom models using intuitive low-level parameters.
 - Define structures with key attributes like storey count, first-mode transformation factors, and force-deformation relationships.
@@ -42,14 +44,14 @@
 ## 🔍 Comprehensive Analysis Suite
 ### 📊 Linear & Nonlinear Analysis
 - **Modal Analysis:** Extract vibration periods and mode shapes with precision.
-- **Gravity Analysis:** Ensure stability before running advanced simulations.
-- **Nonlinear Static Analysis:** Perform static and cyclic pushover tests to assess lateral load resistance.
-- **Dynamic Time-History Analysis:** Simulate real-world earthquake scenarios using selected ground-motion records.
+- **Gravity Analysis:** Perform gravity analysis and ensure system stability before running advanced simulations.
+- **Nonlinear Static Analysis:** Perform static and cyclic pushover tests to assess the system's lateral load resisting capacity, dissipated energy and other metrics.
+- **Dynamic Time-History Analysis:** Simulate dynamic response of structures using selected ground-motion records.
 
 ### 🌍 Seismic Fragility & Vulnerability Assessment
-- **Fragility Analysis:** Quantify seismic performance by computing median seismic intensities and total dispersion (record-to-record variability & modeling uncertainty).
-- **Regression Analysis:** Characterize EDP|IM relationships using Cloud Analysis and determine damage exceedance probabilities.
-- **Vulnerability Analysis:** Derive vulnerability functions to estimate economic and human-based decision variables, incorporating damage-to-loss ratios.
+- **Fragility Analysis:** Characterize EDP|IM relationships using Cloud Analysis and determine damage exceedance probabilities (accounting for record-to-record variability & modeling uncertainty).
+- **Storey Loss Function Generation:** Generate storey loss functions based on user-specific inventory of structural and nonstructural components and building contents.
+- **Vulnerability Analysis:** Derive vulnerability functions to estimate economic and human-based decision variables, incorporating damage-to-loss ratios and/or storey loss functions.
 
 ### 📈 Powerful Visualization & Plotting Tools
 - Generate insightful plots for:
@@ -57,6 +59,7 @@
   - **Cloud Analysis Results:** Fitted IM|EDP relationships.
   - **Seismic Demand Profiles:** Peak storey drifts and floor accelerations.
   - **Fragility Functions:** Visualize probability-based structural performance.
+  - **Storey Loss Functions:** Visualize storey loss function simulations and models.
   - **Vulnerability Functions:** Understand risk and loss estimates.
 
 # 🚀 Get Started
@@ -152,6 +155,24 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
 3. Navigate to the "demos" folder
 4. Run the examples
 
+# © License
+
+This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agpl-3.0.en.html)
+
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+# 📚 Documentation
+
+[WIP]
+
+# 📑 References
+
+[WIP]
+
+# 🤝 Contributions
+
+You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md)
+
 # 🌟 Contributors
 
 Contributors are gratefully acknowledged and listed in CONTRIBUTORS.txt.
@@ -161,26 +182,6 @@ Contributors are gratefully acknowledged and listed in CONTRIBUTORS.txt.
 </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-# © License
-
-This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agpl-3.0.en.html)
-
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-
-# 🤔 Frequently asked questions
-
-### How to contribute?
-
-You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md)
-
-# 📚 Documentation
-
-[WIP]
-
-# 📑 References
-
-[WIP]
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
