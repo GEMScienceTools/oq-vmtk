@@ -78,7 +78,7 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 2. Create a virtual environment using the following command:
 
   ```bash
-   python3 -m venv <virtual_environment_name>
+   py -m venv <virtual_environment_name>
   ```
 
 3. Activate the virtual environment:
@@ -91,7 +91,9 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 * On Windows:
 
   ```bash
-   <virtual_environment_directory>\Scripts\Activate.ps1
+   <virtual_environment_directory>\Scripts\
+   activate
+
   ```
 
 4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
@@ -110,15 +112,21 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 * On Linux
 
   ```bash
-  pip install -r requirements-py-linux.txt
+  pip install -r requirements-py{py-version}-linux.txt
   pip install -e .
   ```
 
 * On Windows
 
   ```bash
-  pip install -r requirements-py-win64.txt
+  pip install -r requirements-py{py-version}-win64.txt
   pip install -e .
+  ```
+
+* Note: to check your current python version, run the following command
+
+  ```bash
+  python --version
   ```
 
 ## 📼 Demos
@@ -137,7 +145,8 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
 * On Windows:
 
   ```bash
-   <virtual_environment_directory>\Scripts\Activate.ps1
+   <virtual_environment_directory>\Scripts\
+   activate
   ```
 
 * To deactivate virtual environment:
