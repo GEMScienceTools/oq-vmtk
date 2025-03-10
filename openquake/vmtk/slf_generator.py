@@ -1,10 +1,8 @@
 import math
-import json
 import warnings
 import numpy as np
 import pandas as pd
 from scipy import stats
-from pathlib import Path
 from scipy.optimize import curve_fit
 from typing import Optional, Dict, Union, List
 from pydantic import BaseModel, Field, validator
@@ -12,8 +10,8 @@ from scipy.stats import genpareto, lognorm
 
 warnings.filterwarnings('ignore')
 
-
-class ComponentDataModel(BaseModel):
+## Model and sub-components definition and validation classes
+class component_data_model(BaseModel):
     ITEM: Optional[int] = None
     ID: Optional[str] = None
     EDP: str
@@ -23,153 +21,80 @@ class ComponentDataModel(BaseModel):
     Damage_States: int = Field(alias="Damage States")
 
     @validator('ITEM')
-    def validate_id(cls, v):
-        if v is not None and v < 0:
+    def validate_id(cls, vid):
+        if vid is not None and vid < 0:
             raise ValueError('ITEM ID must not be below zero')
-        return v
-
+        return vid
     @validator('Group', 'ITEM', pre=True)
-    def allow_none(cls, v):
-        if v is None or np.isnan(v):
+    def allow_none(cls, vid):
+        if vid is None or np.isnan(vid):
             return None
         else:
-            return v
+            return vid
 
-class CorrelationTreeModel(BaseModel):
+class correlation_tree_model(BaseModel):
     ITEM: int
-    dependent_on_item: str = Field(alias="DEPENDANT ON ITEM")
-
+    dependent_on_item: str = Field(alias="DEPENDENT ON ITEM")
     @validator('ITEM')
-    def validate_id(cls, v):
-        if v < 0:
+    def validate_id(cls, vid):
+        if vid < 0:
             raise ValueError('ITEM ID must not be below zero')
-        return v
+        return vid
 
-class ItemBase(BaseModel):
+class item_base(BaseModel):
     RootModel: Dict[str, np.ndarray]
-
     class Config:
         arbitrary_types_allowed = True
 
+class items_model(BaseModel):
+    RootModel: Dict[int, item_base]
 
-class ItemsModel(BaseModel):
-    RootModel: Dict[int, ItemBase]
-
-
-class FragilityModel(BaseModel):
+class fragility_model(BaseModel):
     EDP: np.ndarray
-    ITEMs: ItemsModel
-
+    ITEMs: items_model
     class Config:
         arbitrary_types_allowed = True
 
-
-class DamageStateModel(BaseModel):
+class ds_model(BaseModel):
     RootModel: Dict[int, Dict[int, np.ndarray]]
-
     class Config:
         arbitrary_types_allowed = True
 
-
-class DamageStateValidateModel(BaseModel):
-    ds: DamageStateModel
-
-
-class CostModel(BaseModel):
+class cost_model(BaseModel):
     RootModel: Dict[int, np.ndarray]
-
     class Config:
         arbitrary_types_allowed = True
 
-
-class SimulationModel(BaseModel):
-    RootModel: Dict[int, CostModel]
-
+class simulation_model(BaseModel):
+    RootModel: Dict[int, cost_model]
     class Config:
         arbitrary_types_allowed = True
 
-
-class CostValidateModel(BaseModel):
-    cost: CostModel
-
-
-class SimulationValidateModel(BaseModel):
-    sim: SimulationModel
-
-
-class FittingModelBase(BaseModel):
+class fitting_model(BaseModel):
     popt: np.ndarray
     pcov: np.ndarray
-
     class Config:
         arbitrary_types_allowed = True
 
-class FittingParametersModel(BaseModel):
-    RootModel: Dict[str, FittingModelBase]
+class fitting_parameters_model(BaseModel):
+    RootModel: Dict[str,fitting_model]
 
-
-class FittedLossModel(BaseModel):
+class fitted_loss_model(BaseModel):
     RootModel: Dict[str, np.ndarray]
-
     class Config:
         arbitrary_types_allowed = True
 
-
-class LossModel(BaseModel):
+class loss_model(BaseModel):
     loss: Dict[int, Dict[Union[int, str], float]]
     loss_ratio: Dict[int, Dict[Union[int, str], float]]
 
-
-class EALCacheModel(BaseModel):
-    eal_bins: List[float] = Field(alias="eal-bins")
-    iml: List[float]
-    mafe: List[float]
-    loss_ratio: List[float] = Field(alias="loss-ratio")
-
-
-class DisEALBaseModel(BaseModel):
-    eal: float
-    cache: EALCacheModel
-
-
-class EALBaseModel(BaseModel):
-    e_nc_nd_ns: DisEALBaseModel = Field(alias="E_NC_ND_ns")
-    e_nc_nd_s: DisEALBaseModel = Field(alias="E_NC_ND_s")
-    e_c: DisEALBaseModel = Field(alias="E_C")
-    e_nc_d: DisEALBaseModel = Field(alias="E_NC_D")
-    e_lt: DisEALBaseModel = Field(alias="E_LT")
-
-    class Config:
-        arbitrary_types_allowed = True
-
-class EALModel(BaseModel):
-    RootModel: Dict[str, EALBaseModel]
-
-    class Config:
-        arbitrary_types_allowed = True
-        allow_population_by_field_name = True
-        validate_assignment = True
-
-
-class DemolitionModel(BaseModel):
-    median: float
-    beta: float
-
-
-class SLFModel(BaseModel):
+class slf_model(BaseModel):
     directionality: Optional[int] = Field(alias="Directionality")
     component_type: str = Field(alias="Component-type")
     storey: Optional[Union[int, List[int]]] = Field(aliast="Storey")
     edp: str
     edp_range: List[float]
     slf: List[float]
-
-
-class SLFPGModel(BaseModel):
-    RootModel: Dict[str, SLFModel]
-
-    class Config:
-        arbitrary_types_allowed = True
 
 class slf_generator:
     """
@@ -198,9 +123,9 @@ class slf_generator:
     NEGLIGIBLE = 1e-20
 
     def __init__(self,
-                 component_data: ComponentDataModel,
+                 component_data: component_data_model,
                  edp: str,
-                 correlation_tree: CorrelationTreeModel = None,
+                 correlation_tree: correlation_tree_model = None,
                  component: List[str] = None,
                  edp_range: Union[List[float], np.ndarray] = None,
                  edp_bin: float = None,
@@ -217,13 +142,13 @@ class slf_generator:
         
         Parameters
         ----------
-        component_data : ComponentDataModel  
+        component_data : component_data_model 
             Inventory of component data.  
 
         edp : str  
             Engineering demand parameter (EDP) options are : 'PSD' (Peak Storey Drift) or 'PFA' (Peak Floor Acceleration).  
 
-        correlation_tree : CorrelationTreeModel, optional  
+        correlation_tree : correlation_tree_model, optional  
             Correlation tree for the component data. Default is None.  
 
         component : List[str], optional  
@@ -455,7 +380,7 @@ class slf_generator:
         # Validate base fields
         id_set = set()
         for row in component_data:
-            model = ComponentDataModel.parse_obj(row)
+            model = component_data_model.parse_obj(row)
             if model.ITEM is not None and model.ITEM in id_set:
                 raise ValueError(f'Duplicate ITEM: {model.ITEM}')
             id_set.add(model.ITEM)
@@ -489,7 +414,7 @@ class slf_generator:
         # Validate base fields
         id_set = set()
         for row in corr_dict:
-            model = CorrelationTreeModel.parse_obj(row)
+            model = correlation_tree_model.parse_obj(row)
             if model.ITEM in id_set:
                 raise ValueError(f'Duplicate ITEM: {model.ITEM}')
             id_set.add(model.ITEM)
@@ -518,12 +443,12 @@ class slf_generator:
                 "[EXCEPTION] Number of items in the correlation tree "
                 "and component data should match")
 
-    def fragility_function(self) -> tuple[FragilityModel, np.ndarray, np.ndarray]:
+    def fragility_function(self) -> tuple[fragility_model, np.ndarray, np.ndarray]:
         """Derives fragility functions
 
         Returns
         -------
-        dict, FragilityModel
+        dict, fragility_model
             Fragility functions associated with each damage state and component
         np.ndarray (number of components, number of damage states)
             Mean values of cost functions
@@ -580,17 +505,17 @@ class slf_generator:
         return fragilities, means_cost, covs_cost
 
     def perform_monte_carlo(self, 
-                            fragilities: FragilityModel) -> DamageStateModel:
+                            fragilities: fragility_model) -> ds_model:
         """Performs Monte Carlo simulations and simulates damage state (DS) for
         each engineering demand parameter (EDP) value
     
         Parameters
         ----------
-        fragilities : FragilityModel         Fragility functions of all components at all DSs
+        fragilities : fragility_model         Fragility functions of all components at all DSs
     
         Returns
         ----------
-        DamageStateModel                     Sampled damage states of each component for each simulation
+        ds_model                     Sampled damage states of each component for each simulation
         """
         # Number of damage states
         n_ds = len(fragilities['ITEMs'][1])
@@ -626,16 +551,16 @@ class slf_generator:
         return damage_state
 
     def enforce_ds_dependent(self, 
-                             damage_state: DamageStateModel) -> DamageStateModel:
+                             damage_state: ds_model) -> ds_model:
         """Enforces new DS for each dependent component
 
         Parameters
         ----------
-        damage_state : DamageStateModel          Sampled damage states of each component for each simulation
+        damage_state : ds_model          Sampled damage states of each component for each simulation
 
         Returns
         ----------
-        DamageStateModel                         Sampled DS of each component for each simulation after enforcing
+        ds_model                         Sampled DS of each component for each simulation after enforcing
                                                  DS for dependent components if a correlation matrix is provided
         """
         if self.correlation_tree is None:
@@ -668,16 +593,16 @@ class slf_generator:
         return damage_state
 
     def calculate_costs(self,
-                        damage_state: DamageStateModel,
+                        damage_state: ds_model,
                         means_cost: np.ndarray,
                         covs_cost: np.ndarray,
-                        ) -> tuple[CostModel, CostModel, SimulationModel]:
+                        ) -> tuple[cost_model, cost_model, simulation_model]:
         """Evaluates the damage cost on the individual i-th component at each
         EDP level for each n-th simulation
 
         Parameters
         ----------
-        damage_state : DamageStateModel
+        damage_state : ds_model
             Sampled damage states
         means_cost : np.ndarray (number of components, number of damage states)
             Mean values of cost functions
@@ -686,11 +611,11 @@ class slf_generator:
 
         Returns
         ----------
-        CostModel
+        cost_model
             Total replacement costs in absolute values
-        CostModel
+        cost_model
             Total replacement costs as a ratio of replacement cost
-        SimulationModel
+        simulation_model
             Repair costs associated with each component and simulation
         """
         # Number of damage states
@@ -778,10 +703,10 @@ class slf_generator:
         return total_loss_storey, total_loss_storey_ratio, repair_cost
 
     def perform_regression(self, 
-                           loss: CostModel, 
-                           loss_ratio: CostModel, 
+                           loss: cost_model, 
+                           loss_ratio: cost_model, 
                            regression_type: str = None, 
-                           percentiles: List[float] = None) -> tuple[LossModel, FittedLossModel, FittingParametersModel, float, float]:
+                           percentiles: List[float] = None) -> tuple[loss_model,fitted_loss_model, fitting_parameters_model, float, float]:
         
         # Set default percentiles if not provided
         percentiles = percentiles or [0.16, 0.50, 0.84]
@@ -918,19 +843,19 @@ class slf_generator:
 
 
     def transform_output(self, 
-                         losses_fitted: FittedLossModel, 
-                         component: str = None) -> SLFModel:
+                         losses_fitted: fitted_loss_model, 
+                         component: str = None) -> slf_model:
         """Transforms SLF output to primary attributes supported by
         Loss assessment module
 
         Parameters
         ----------
-        losses_fitted : FittedLossModel
+        losses_fitted : fitted_loss_model
             Fitted loss functions
 
         Returns
         -------
-        SLFModel
+        slf_model
             SLF output
         """
         out = {
@@ -949,7 +874,7 @@ class slf_generator:
     
         Returns
         -------
-        Dict[SLFModel]
+        Dict[slf_model]
             SLFs per each performance group
         """
         out, cache = {}, {}
