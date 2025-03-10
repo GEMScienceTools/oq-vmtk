@@ -34,7 +34,7 @@ class component_data_model(BaseModel):
 
 class correlation_tree_model(BaseModel):
     ITEM: int
-    dependent_on_item: str = Field(alias="DEPENDANT ON ITEM")
+    dependent_on_item: str = Field(alias="DEPENDENT ON ITEM")
     @validator('ITEM')
     def validate_id(cls, vid):
         if vid < 0:
@@ -57,7 +57,6 @@ class fragility_model(BaseModel):
 
 class ds_model(BaseModel):
     RootModel: Dict[int, Dict[int, np.ndarray]]
-
     class Config:
         arbitrary_types_allowed = True
 
