@@ -1,9 +1,8 @@
 import os
 import unittest
-import numpy as np
 import pandas as pd
 
-from openquake.vmtk.slf_generator import slf_generator, ComponentDataModel, CorrelationTreeModel
+from openquake.vmtk.slf_generator import slf_generator
 
 class TestSLFGenerator(unittest.TestCase):
 
@@ -34,6 +33,8 @@ class TestSLFGenerator(unittest.TestCase):
         
     def test_generate(self):        
         out, cache = self.model.generate()
+        self.assertIsNotNone(out)  
+        self.assertIsNotNone(cache)
 
 if __name__ == '__main__':
     unittest.main()

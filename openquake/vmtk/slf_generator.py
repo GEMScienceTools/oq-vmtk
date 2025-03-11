@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.optimize import curve_fit
+from scipy.stats import genpareto, lognorm
 from typing import Optional, Dict, Union, List
 from pydantic import BaseModel, Field, validator
-from scipy.stats import genpareto, lognorm
 
 warnings.filterwarnings('ignore')
 
@@ -240,7 +240,6 @@ class slf_generator:
 
     def _get_component_data(self):
         """Fetches and processes component data from the provided .csv file.
-    
         Components with missing IDs will be assigned automatically.
         Newly created entries will not persist if the .csv file is modified.
         """
@@ -265,7 +264,6 @@ class slf_generator:
 
     def _group_components(self):
         """Component performance grouping."""
-    
         # Ensure placeholders for missing values
         self.component_data["Group"].fillna(-1, inplace=True)
         self.component_data["Component"].fillna("-1", inplace=True)
@@ -443,66 +441,54 @@ class slf_generator:
                 "[EXCEPTION] Number of items in the correlation tree "
                 "and component data should match")
 
-    def fragility_function(self) -> tuple[fragility_model, np.ndarray, np.ndarray]:
-        """Derives fragility functions
 
+    def fragility_function(self) -> tuple[dict, np.ndarray, np.ndarray]:
+        """Derives fragility functions.
+    
         Returns
         -------
-        dict, fragility_model
-            Fragility functions associated with each damage state and component
-        np.ndarray (number of components, number of damage states)
-            Mean values of cost functions
-        np.ndarray (number of components, number of damage states)
-            Covariances of cost functions
+        dict
+            Fragility functions associated with each damage state and component.
+        np.ndarray
+            Mean values of cost functions (shape: number of components, number of damage states).
+        np.ndarray
+            Covariances of cost functions (shape: number of components, number of damage states).
         """
-        # Get all DS columns
-        n_ds = 0
-        for column in self.component_data.columns:
-            if column.endswith("Median Demand"):
-                n_ds += 1
-
-        # Fragility parameters
-        means_fr = np.zeros((len(self.component_data), n_ds))
-        covs_fr = np.zeros((len(self.component_data), n_ds))
-
-        # Consequence parameters
-        means_cost = np.zeros((len(self.component_data), n_ds))
-        covs_cost = np.zeros((len(self.component_data), n_ds))
-
-        # Deriving fragility functions
+    
+        # Count the number of Damage States (DS) using string matching
+        n_ds = self.component_data.columns.str.endswith("Median Demand").sum()
+    
+        # Extract numerical data excluding categorical columns
         data = self.component_data.select_dtypes(exclude=['object']).drop(
-            labels=['ITEM', 'Group', 'Quantity', 'Damage States'], axis=1,
+            labels=['ITEM', 'Group', 'Quantity', 'Damage States'], axis=1
         ).values
-
-        # Get parameters of the fragility and consequence functions
-        for item in range(len(data)):
-            for ds in range(n_ds):
-                means_fr[item][ds] = data[item][ds]
-                covs_fr[item][ds] = data[item][ds + n_ds]
-                means_cost[item][ds] = data[item][
-                    ds + 2 * n_ds] * self.conversion
-                covs_cost[item][ds] = data[item][ds + 3 * n_ds]
-
-        # Deriving the ordinates of the fragility functions
+    
+        num_components = len(data)
+    
+        # Initialize fragility and consequence parameter arrays
+        means_fr, covs_fr = data[:, :n_ds], data[:, n_ds:2*n_ds]
+        means_cost, covs_cost = data[:, 2*n_ds:3*n_ds] * self.conversion, data[:, 3*n_ds:4*n_ds]
+    
+        # Construct fragility functions
         fragilities = {"EDP": self.edp_range, "ITEMs": {}}
-        for item in range(len(data)):
+    
+        for item in range(num_components):
             fragilities["ITEMs"][item + 1] = {}
+    
             for ds in range(n_ds):
-                if means_fr[item][ds] == 0:
-                    fragilities["ITEMs"][
-                        item + 1][f"DS{ds + 1}"] \
-                        = np.zeros(len(self.edp_range))
+                mean_val, cov_val = means_fr[item, ds], covs_fr[item, ds]
+    
+                if mean_val == 0:
+                    fragilities["ITEMs"][item + 1][f"DS{ds + 1}"] = np.zeros(len(self.edp_range))
                 else:
-                    mean = np.exp(
-                        np.log(means_fr[item][ds])
-                        - 0.5 * np.log(covs_fr[item][ds] ** 2 + 1))
-                    std = np.log(covs_fr[item][ds] ** 2 + 1) ** 0.5
-                    frag = stats.norm.cdf(
-                        np.log(self.edp_range / mean) / std, loc=0, scale=1)
-                    frag[np.isnan(frag)] = 0
-                    fragilities["ITEMs"][item + 1][f"DS{ds + 1}"] = frag
-
+                    log_std = np.log(cov_val ** 2 + 1) ** 0.5
+                    log_mean = np.exp(np.log(mean_val) - 0.5 * log_std**2)
+                    fragility_curve = stats.norm.cdf(np.log(self.edp_range / log_mean) / log_std)
+    
+                    fragilities["ITEMs"][item + 1][f"DS{ds + 1}"] = np.nan_to_num(fragility_curve)
+    
         return fragilities, means_cost, covs_cost
+
 
     def perform_monte_carlo(self, 
                             fragilities: fragility_model) -> ds_model:
