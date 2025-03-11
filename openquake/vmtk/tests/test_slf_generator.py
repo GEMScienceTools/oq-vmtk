@@ -18,13 +18,13 @@ class TestSLFGenerator(unittest.TestCase):
         self.regF = 'gpd'
         self.edp = 'PSD'
         self.rlz = 100
-        self.do_grouping=True
+        self.grouping_flag=True
         self.conversion = 1.00
         self.repCost = 1.00 
         
         self.model = slf_generator(self.slf_file,
                                    edp= self.edp,
-                                   do_grouping= self.do_grouping,
+                                   grouping_flag= self.grouping_flag,
                                    conversion = self.conversion,
                                    realizations = self.rlz,
                                    replacement_cost = self.repCost,

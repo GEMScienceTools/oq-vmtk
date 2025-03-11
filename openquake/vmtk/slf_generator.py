@@ -12,33 +12,34 @@ warnings.filterwarnings('ignore')
 
 ## Model and sub-components definition and validation classes
 class component_data_model(BaseModel):
-    ITEM: Optional[int] = None
-    ID: Optional[str] = None
-    EDP: str
-    Component: str
-    Group: Optional[int] = None
-    Quantity: float
-    Damage_States: int = Field(alias="Damage States")
+    Component_ID:      Optional[int] = Field(alias="Component ID")
+    Description:       Optional[str] = None
+    EDP:                        str
+    Typology:                   str
+    Performance_Group: Optional[int] = Field(alias="Performance Group")
+    Quantity:                  float
+    Damage_States:               int = Field(alias="Damage States")
 
-    @validator('ITEM')
-    def validate_id(cls, vid):
-        if vid is not None and vid < 0:
-            raise ValueError('ITEM ID must not be below zero')
-        return vid
-    @validator('Group', 'ITEM', pre=True)
-    def allow_none(cls, vid):
-        if vid is None or np.isnan(vid):
+    @validator('Component_ID')
+    def validate_id(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('Component ID must be a positive integer')
+        return v
+
+    @validator('Performance_Group', 'Component_ID', pre=True)
+    def allow_none(cls, v):
+        if v is None or np.isnan(v):
             return None
         else:
-            return vid
+            return v
 
 class correlation_tree_model(BaseModel):
-    ITEM: int
+    ID: int
     dependent_on_item: str = Field(alias="DEPENDENT ON ITEM")
-    @validator('ITEM')
+    @validator('ID')
     def validate_id(cls, vid):
         if vid < 0:
-            raise ValueError('ITEM ID must not be below zero')
+            raise ValueError('Component ID must be a positive integer')
         return vid
 
 class item_base(BaseModel):
@@ -120,16 +121,14 @@ class slf_generator:
     We acknowledge and appreciate Dr. Shahnazaryan’s original contribution.
     """
     
-    NEGLIGIBLE = 1e-20
-
     def __init__(self,
                  component_data: component_data_model,
                  edp: str,
                  correlation_tree: correlation_tree_model = None,
-                 component: List[str] = None,
+                 typology: List[str] = None,
                  edp_range: Union[List[float], np.ndarray] = None,
                  edp_bin: float = None,
-                 do_grouping: bool = True,
+                 grouping_flag: bool = True,
                  conversion: float = 1.0,
                  realizations: int = 20,
                  replacement_cost: float = 1.0,
@@ -151,7 +150,7 @@ class slf_generator:
         correlation_tree : correlation_tree_model, optional  
             Correlation tree for the component data. Default is None.  
 
-        component : List[str], optional  
+        typology : List[str], optional  
             Type of components considered; options are: "ns" (Non-structural) or "s" (Structural). Default is None.  
 
         edp_range : Union[List[float], np.ndarray], optional  
@@ -160,11 +159,11 @@ class slf_generator:
         edp_bin : float, optional  
             Size of the EDP bin. Default is None.  
 
-        do_grouping : bool, optional  
+        grouping_flag : bool, optional  
             Whether to perform performance grouping of components. Default is True.  
 
         conversion : float, optional  
-            Conversion factor for cost-related values. Default is 1.0. Example: Use 1.0 for euros, 0.88 if 1 USD = 0.88 EUR, or 1.0 for direct cost ratios.  
+            Conversion factor for cost-related values.
 
         realizations : int, optional  
             Number of realizations for the Monte Carlo method. Default is 20.  
@@ -183,10 +182,10 @@ class slf_generator:
         """
 
         self.edp = edp.lower()
-        self.component = component
+        self.typology = typology
         self.edp_bin = edp_bin
         self.edp_range = edp_range
-        self.do_grouping = do_grouping
+        self.grouping_flag = grouping_flag
         self.conversion = conversion
         self.realizations = realizations
         self.replacement_cost = replacement_cost
@@ -208,7 +207,7 @@ class slf_generator:
             self._get_correlation_tree()
 
         # Group components if required
-        if self.do_grouping:
+        if self.grouping_flag:
             self._group_components()
 
 
@@ -221,13 +220,13 @@ class slf_generator:
             If incorrect EDP type is provided, must be 'psd' or 'pfa'.
         """
         edp_defaults = {
-            "idr": (0.1 / 100, 0, 0.2),
-            "psd": (0.1 / 100, 0, 0.2),
-            "pfa": (0.05, 0, 10),
+            "idr": (0.1 / 100, 0, 0.5),
+            "psd": (0.1 / 100, 0, 0.5),
+            "pfa": (0.05, 0, 5),
         }
     
         if self.edp not in edp_defaults:
-            raise ValueError("Wrong EDP type, must be 'psd' or 'pfa'")
+            raise ValueError("Incorrect EDP is provided, must be either 'psd' or 'pfa'")
     
         default_bin, range_start, range_end = edp_defaults[self.edp]
         self.edp_bin = self.edp_bin if self.edp_bin is not None else default_bin
@@ -235,7 +234,7 @@ class slf_generator:
         if self.edp_range is None:
             self.edp_range = np.arange(range_start, range_end + self.edp_bin, self.edp_bin)
     
-        self.edp_range[0] = self.NEGLIGIBLE
+        self.edp_range[0] = 1e-20
         self.edp_range = np.asarray(self.edp_range)
 
     def _get_component_data(self):
@@ -248,34 +247,34 @@ class slf_generator:
         self._validate_component_data_schema()
     
         # Handle 'best fit' columns (fill missing values with 'normal')
-        best_fit_cols = [col for col in self.component_data if col.endswith("best fit")]
+        best_fit_cols = [col for col in self.component_data if col.endswith("Best Fit")]
         self.component_data[best_fit_cols] = self.component_data[best_fit_cols].fillna("normal")
     
         # Assign default values for 'ITEM' and 'ID' columns
-        self.component_data["ITEM"] = self.component_data["ITEM"].fillna(
+        self.component_data["Component ID"] = self.component_data["Component ID"].fillna(
             pd.Series(np.arange(1, len(self.component_data) + 1), dtype="int")
         )
-        self.component_data["ID"] = self.component_data["ID"].fillna("B")
+        self.component_data["Description"] = self.component_data["Description"].fillna("B")
     
         # Fill missing values in all other columns except 'Group' and 'Component'
-        exclude_cols = ["Group", "Component"]
+        exclude_cols = ["Performance Group", "Typology"]
         cols_to_fill = self.component_data.columns.difference(exclude_cols)
         self.component_data[cols_to_fill] = self.component_data[cols_to_fill].fillna(0)
 
     def _group_components(self):
         """Component performance grouping."""
         # Ensure placeholders for missing values
-        self.component_data["Group"].fillna(-1, inplace=True)
-        self.component_data["Component"].fillna("-1", inplace=True)
+        self.component_data["Performance Group"].fillna(-1, inplace=True)
+        self.component_data["Typology"].fillna("-1", inplace=True)
     
         # If no grouping is needed, assign all data under the first EDP value
-        if not self.do_grouping:
+        if not self.grouping_flag:
             key = self.component_data["EDP"].iloc[0]
             self.component_groups = {key: self.component_data}
             return
     
         # Perform grouping based on EDP and Component
-        edp_groups = self.component_data.groupby(["EDP", "Component"])
+        edp_groups = self.component_data.groupby(["EDP", "Typology"])
     
         # Define specific groups if applicable
         if "psd" in self.component_data["EDP"].values:
@@ -297,8 +296,8 @@ class slf_generator:
         self.component_groups = {k: v for k, v in self.component_groups.items() if v is not None}
     
         # If Group exists, override default EDP-based grouping
-        if self.component_data["Group"].nunique() > 1:
-            self.component_groups = {group: df for group, df in self.component_data.groupby("Group")}
+        if self.component_data["Performance Group"].nunique() > 1:
+            self.component_groups = {group: df for group, df in self.component_data.groupby("Performance Group")}
 
 
     def _get_correlation_tree(self) -> np.ndarray[int]:
@@ -316,15 +315,15 @@ class slf_generator:
         
         Examples
         ----------
-            +------------+-------------+-------------+-------------+
-            | Item ID    | Dependent on | MIN DS | DS0  | MIN DS | DS1 |
-            +============+=============+=============+=============+
-            | Item 1     | Independent | Independent | Independent |
-            +------------+-------------+-------------+-------------+
-            | Item 2     | 1           | Undamaged   | Undamaged   |
-            +------------+-------------+-------------+-------------+
-            | Item 3     | 1           | Undamaged   | Undamaged   |
-            +------------+-------------+-------------+-------------+
+            +---------------+-------------+-------------+-------------+
+            | Component ID  | Dependent on | MIN DS | DS0  | MIN DS | DS1 |
+            +===============+=============+=============+=============+
+            | Item 1        | Independent | Independent | Independent |
+            +---------------+-------------+-------------+-------------+
+            | Item 2        | 1           | Undamaged   | Undamaged   |
+            +---------------+-------------+-------------+-------------+
+            | Item 3        | 1           | Undamaged   | Undamaged   |
+            +---------------+-------------+-------------+-------------+
         
             Continued...
         
@@ -379,16 +378,16 @@ class slf_generator:
         id_set = set()
         for row in component_data:
             model = component_data_model.parse_obj(row)
-            if model.ITEM is not None and model.ITEM in id_set:
-                raise ValueError(f'Duplicate ITEM: {model.ITEM}')
-            id_set.add(model.ITEM)
+            if model.Component_ID is not None and model.Component_ID in id_set:
+                raise ValueError(f'Duplicate ITEM: {model.Component_ID}')
+            id_set.add(model.Component_ID)
 
         counts = {
-            "Median Demand": 0,
-            "Total Dispersion (Beta)": 0,
-            "Repair COST": 0,
-            "COST Dispersion (Beta)": 0,
-            "best fit": 0,
+            "Median": 0,
+            "Total Dispersion": 0,
+            "Cost": 0,
+            "Cost Dispersion": 0,
+            "Best Fit": 0,
         }
 
         for col in columns:
@@ -396,13 +395,13 @@ class slf_generator:
                 if col.endswith(key):
                     counts[key] += 1
 
-        total_count = counts["Median Demand"]
+        total_count = counts["Median"]
         for key in counts.keys():
             if total_count != counts[key]:
                 raise ValueError(
-                    "There must be equal amount of columns: 'Median Demand', "
-                    "'Total Dispersion (Beta), 'Repair COST', "
-                    "'COST Dispersion (Beta)', 'best fit")
+                    "There must be equal amount of columns: 'Median', "
+                    "'Total Dispersion, 'Cost', "
+                    "'Cost Dispersion', 'Best Fit")
 
     def _validate_correlation_tree_schema(self, 
                                           damage_states):
@@ -456,11 +455,11 @@ class slf_generator:
         """
     
         # Count the number of Damage States (DS) using string matching
-        n_ds = self.component_data.columns.str.endswith("Median Demand").sum()
+        n_ds = self.component_data.columns.str.endswith("Median").sum()
     
         # Extract numerical data excluding categorical columns
         data = self.component_data.select_dtypes(exclude=['object']).drop(
-            labels=['ITEM', 'Group', 'Quantity', 'Damage States'], axis=1
+            labels=['Component ID', 'Performance Group', 'Quantity', 'Damage States'], axis=1
         ).values
     
         num_components = len(data)
@@ -470,22 +469,22 @@ class slf_generator:
         means_cost, covs_cost = data[:, 2*n_ds:3*n_ds] * self.conversion, data[:, 3*n_ds:4*n_ds]
     
         # Construct fragility functions
-        fragilities = {"EDP": self.edp_range, "ITEMs": {}}
+        fragilities = {"EDP": self.edp_range, "IDs": {}}
     
         for item in range(num_components):
-            fragilities["ITEMs"][item + 1] = {}
+            fragilities["IDs"][item + 1] = {}
     
             for ds in range(n_ds):
                 mean_val, cov_val = means_fr[item, ds], covs_fr[item, ds]
     
                 if mean_val == 0:
-                    fragilities["ITEMs"][item + 1][f"DS{ds + 1}"] = np.zeros(len(self.edp_range))
+                    fragilities["IDs"][item + 1][f"DS{ds + 1}"] = np.zeros(len(self.edp_range))
                 else:
                     log_std = np.log(cov_val ** 2 + 1) ** 0.5
                     log_mean = np.exp(np.log(mean_val) - 0.5 * log_std**2)
                     fragility_curve = stats.norm.cdf(np.log(self.edp_range / log_mean) / log_std)
     
-                    fragilities["ITEMs"][item + 1][f"DS{ds + 1}"] = np.nan_to_num(fragility_curve)
+                    fragilities["IDs"][item + 1][f"DS{ds + 1}"] = np.nan_to_num(fragility_curve)
     
         return fragilities, means_cost, covs_cost
 
@@ -504,7 +503,7 @@ class slf_generator:
         ds_model                     Sampled damage states of each component for each simulation
         """
         # Number of damage states
-        n_ds = len(fragilities['ITEMs'][1])
+        n_ds = len(fragilities['IDs'][1])
         ds_range = np.arange(0, n_ds + 1)
     
         # Prepare the random numbers once per simulation
@@ -514,7 +513,7 @@ class slf_generator:
         damage_state = {}
     
         # Iterate over items in fragility model
-        for item, frag in fragilities['ITEMs'].items():
+        for item, frag in fragilities['IDs'].items():
             damage_state[item] = {}
     
             # For each simulation
@@ -621,7 +620,7 @@ class slf_generator:
                         # Best fit function
                         best_fit = \
                             self.component_data.iloc[
-                                item - 1][f"DS{ds}, best fit"].lower()
+                                item - 1][f"DS{ds}, Best Fit"].lower()
 
                         # EDP ID where ds is observed
                         idx_list = np.where(damage_state[item][n] == ds)[0]
@@ -830,7 +829,7 @@ class slf_generator:
 
     def transform_output(self, 
                          losses_fitted: fitted_loss_model, 
-                         component: str = None) -> slf_model:
+                         typology: str = None) -> slf_model:
         """Transforms SLF output to primary attributes supported by
         Loss assessment module
 
@@ -846,7 +845,7 @@ class slf_generator:
         """
         out = {
             'Directionality': self.directionality,
-            'Component-type': component,
+            'Component-type': typology,
             'Storey': self.storey,
             'edp': self.edp,
             'edp_range': list(self.edp_range),
@@ -880,21 +879,21 @@ class slf_generator:
                 continue
     
             # Determine component type
-            component = (
-                self.component[group].lower()
-                if isinstance(self.component, dict)
+            typology = (
+                self.typology[group].lower()
+                if isinstance(self.typology, dict)
                 else (
-                    self.component[0].lower()
-                    if isinstance(self.component, list) and len(self.component) > 0
+                    self.typology[0].lower()
+                    if isinstance(self.typology, list) and len(self.typology) > 0
                     else None
                 )
             )
     
             # Prepare group data
-            item_ids = list(component_data_group['ITEM'])
+            item_ids = list(component_data_group['Component ID'])
             ds_group = {key: damage_state[key] for key in item_ids}
             fragilities_group = {
-                'ITEMs': {key: fragilities['ITEMs'][key] for key in item_ids},
+                'IDs': {key: fragilities['IDs'][key] for key in item_ids},
                 'EDP': fragilities['EDP']
             }
     
@@ -906,7 +905,7 @@ class slf_generator:
     
             # Transform output and store results
             group_str = str(group)
-            out[group_str] = self.transform_output(losses_fitted, component)
+            out[group_str] = self.transform_output(losses_fitted, typology)
             out[group_str]['error_max'], out[group_str]['error_cum'] = error_max, error_cum
 
             # Cache relevant data for future use
