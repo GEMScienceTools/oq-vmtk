@@ -66,68 +66,52 @@ The OQ-VMTK is a powerful toolkit developed by scientists at the Global Earthqua
 
 ## 👩‍💻🧑‍💻 Installation
 
-Follow these steps to install the required tools and set up the development environment. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Windows and Linux OS.
+Follow these steps to install the `oq-vmtk` package and its dependencies. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Windows and Linux OS.
 It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
 
-1. Open a terminal and navigate to the folder where you intend to install the virtual environment using the "cd" command.
-
-  ```bash
+### 1. Clone the Repository
+   Open your terminal,  and run:
+   ```bash
    cd <virtual_environment_directory>
-  ```
+   git clone https://github.com/GEMScienceTools/oq-vmtk.git
+   cd oq-vmtk
+   ```
 
-2. Create a virtual environment using the following command:
+### 2. Set Up a Virtual Environment (Recommended)
+   Create a virtual environment to manage dependencies:
+   ```bash
+   python -m venv .venv  # On Windows
+   python3 -m venv .venv  # On Linux
+   ```
 
-  ```bash
-   py -m venv <virtual_environment_name>
-  ```
+   Activate the virtual environment:
+   ```bash
+   .venv\Scripts\activate  # On Windows
+   source .venv/Scripts/activate  # On Linux
+   ```
 
-3. Activate the virtual environment:
-* On Linux:
+### 3. Install Dependencies
+   Install the required packages listed in `requirements.txt`.
 
-  ```bash
-   source <virtual_environment_directory>/bin/activate
-  ```
+   **For Windows Users:** Install the appropriate requirements file based on your Python version:
+   ```bash
+   pip install -r requirements-py310-win64.txt  # Python 3.10
+   pip install -r requirements-py311-win64.txt  # Python 3.11
+   pip install -r requirements-py312-win64.txt  # Python 3.12
+   ```
+   **For Linux Users:** Install the appropriate requirements file based on your Python version:
+   ```bash
+   pip install -r requirements-py310-linux64.txt  # Python 3.11
+   pip install -r requirements-py311-linux64.txt  # Python 3.11
+   pip install -r requirements-py312-linux64.txt  # Python 3.12
+   ```
+   **For macOS Users:** OpenSeesPy does not currently support macOS versions running on arm64 processors, such as M1 and M2 chips. As a result, newer OpenSeesPy versions are not available for macOS. To use OpenSeesPy on a Mac, it is advised to run a virtual machine with Linux or Windows.
 
-* On Windows:
+   * Note: to check your current python version, run the following command
 
-  ```bash
-   <virtual_environment_directory>\Scripts\
-   activate
-
-  ```
-
-4. Enter (while on virtual environment) the preferred directory for "oq-vmtk" using the "cd" command
-
-  ```bash
-   cd <preferred_directory>
-  ```
-
-5. Clone the "oq-vmtk" repository
-
- ```bash
- git clone https://github.com/GEMScienceTools/oq-vmtk.git
- ```
-
-6. Complete the development installation by running the following commands depending on your python version {py-version} (e.g., 310, 311 or 312):
-* On Linux
-
-  ```bash
-  pip install -r requirements-py{py-version}-linux.txt
-  pip install -e .
-  ```
-
-* On Windows
-
-  ```bash
-  pip install -r requirements-py{py-version}-win64.txt
-  pip install -e .
-  ```
-
-* Note: to check your current python version, run the following command
-
-  ```bash
-  python --version
-  ```
+     ```bash
+     python --version
+     ```
 
 ## 📼 Demos
 
@@ -135,34 +119,27 @@ The repository includes demo scripts that showcase the functionality of the vuln
 
 To run a demo, simply navigate to the demos directory and execute the relevant demo script in Jupyter Lab. Jupyter Lab is automatically installed with oq-vmtk.
 
-1. Open a terminal and activate the virtual environment:
-* On Linux:
+### 1. Activate the virtual environment:
 
   ```bash
-   source <virtual_environment_directory>/bin/activate
+  .venv\Scripts\activate  # On Windows
+  source .venv/Scripts/activate  # On Linux
   ```
 
-* On Windows:
+  * Note: to deactivate virtual environment:
 
-  ```bash
-   <virtual_environment_directory>\Scripts\
-   activate
-  ```
+    ```bash
+     deactivate
+    ```
 
-* To deactivate virtual environment:
-
-  ```bash
-   deactivate
-  ```
-
-2. Open Jupyter Lab from the terminal:
+### 2. Open Jupyter Lab from the terminal:
 
   ```bash
    jupyter-lab
   ```
 
-3. Navigate to the "demos" folder
-4. Run the examples
+### 3. Navigate to the "demos" folder
+### 4. Run the examples
 
 # © License
 
