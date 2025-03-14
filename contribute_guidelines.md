@@ -1,4 +1,4 @@
-# 🤓 CONTRIBUTE TO THE VULNERABILITY TOOLKIT
+# 🤓 CONTRIBUTE TO THE VULNERABILITY MODELLERS TOOLKIT
 
 We welcome contributions to improve the vulnerability-modellers-toolkit (oq-vmtk) and this repository! If you'd like to contribute, follow the steps below. Otherwise, you can email your information to _mouayed.nafeh@globalquakemodel.org_.
 
