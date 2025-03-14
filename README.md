@@ -107,11 +107,10 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    ```
    **For macOS Users:** OpenSeesPy does not currently support macOS versions running on arm64 processors, such as M1 and M2 chips. As a result, newer OpenSeesPy versions are not available for macOS. To use OpenSeesPy on a Mac, it is advised to run a virtual machine with Linux or Windows.
 
-   * Note: to check your current python version, run the following command
-
-     ```bash
-     python --version
-     ```
+   **Note:** to check your current python version, run the following command
+   ```bash
+   python --version
+   ```
 
 ## 📼 Demos
 
@@ -126,11 +125,10 @@ To run a demo, simply navigate to the demos directory and execute the relevant d
   source .venv/Scripts/activate  # On Linux
   ```
 
-  * Note: to deactivate virtual environment:
-
-    ```bash
-     deactivate
-    ```
+  **Note:** to deactivate virtual environment:
+  ```bash
+   deactivate
+  ```
 
 ### 2. Open Jupyter Lab from the terminal:
 
