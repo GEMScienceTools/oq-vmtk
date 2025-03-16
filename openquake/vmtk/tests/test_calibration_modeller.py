@@ -18,7 +18,6 @@ class TestModeller(unittest.TestCase):
         self.gamma = 1.33
         self.damping = 0.05
         self.degradation = True
-        self.sdof_period = 0.154
         self.sdof_capacity = np.array([[0.00060789, 0.00486316, 0.02420000, 0.04353684], 
                                        [0.10315200, 0.20630401, 0.12378241, 0.12502023]]).T
         self.isSOS = False  
@@ -36,8 +35,8 @@ class TestModeller(unittest.TestCase):
         self.forces_test = np.array([[0.11496146, 0.22992293, 0.13795376, 0.1393333 ],
                                      [0.06152551, 0.12305102, 0.07383061, 0.07456892]])
         self.phi_test = np.array([0.65138782, 1.])
-        self.T_test = 0.154
-
+        self.T_test= 0.154
+        
         # Initialize the model here so that it is ready for all tests
         self.model = modeller(self.number_storeys,
                               self.storey_heights,
@@ -52,7 +51,6 @@ class TestModeller(unittest.TestCase):
         masses, disps, forces, phi = calibrate_model(self.number_storeys,
                                                      self.gamma,
                                                      self.sdof_capacity,
-                                                     self.sdof_period,
                                                      self.isFrame,
                                                      self.isSOS)
 
