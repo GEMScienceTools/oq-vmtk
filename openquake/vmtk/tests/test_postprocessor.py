@@ -68,7 +68,7 @@ class TestPostprocessor(unittest.TestCase):
 
     def test_get_fragility_function(self):
         """Check if the probability of exceeding 0.5g is equal to 50% if theta=0.5g"""
-        self.assertAlmostEqual(self.pp.get_fragility_function(0.50, 0.30, self.iml_test), self.poe_test, places=4)
+        self.assertAlmostEqual(self.pp.get_fragility_function(0.50, 0.30, 0.30, self.iml_test), self.poe_test, places=4)
 
     def test_get_vulnerability_function(self):
 

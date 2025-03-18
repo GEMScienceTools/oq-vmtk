@@ -76,47 +76,21 @@ class postprocessor():
         yvec = p_cens[0] * xvec + p_cens[1]
         
         # Compute fragility parameters
-        thetas = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])
-        betas = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))
+        thetas      = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0]) # Median intensities
+        betas_r     = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])      # Record-to-record variability
+        betas_total = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2)) # Total dispersion
         
         # Compute probabilities of exceedance
-        poes = np.array([self.get_fragility_function(theta, beta) for theta, beta in zip(thetas, betas)]).T
+        poes = np.array([self.get_fragility_function(theta, beta_r, sigma_build2build = sigma_build2build) for theta, beta_r in zip(thetas, betas_r)]).T
         
         cloud_dict = {
             'imls': imls, 'edps': edps, 'lower_limit': lower_limit, 'upper_limit': censored_limit,
             'damage_thresholds': damage_thresholds, 'fitted_x': np.exp(xvec), 'fitted_y': np.exp(yvec),
-            'intensities': intensities, 'poes': poes, 'medians': thetas, 'betas_total': betas,
+            'intensities': intensities, 'poes': poes, 'medians': thetas, 'betas_total': betas_total,
             'b1': p_cens[0], 'b0': p_cens[1], 'sigma': p_cens[2]
         }
         
         return cloud_dict
-
-    def calculate_sigma_loss(self, 
-                             loss):
-        """
-        Function to calculate the sigma in loss estimates based on the recommendations in:
-        'Silva, V. (2019) Uncertainty and correlation in seismic vulnerability 
-        functions of building classes. Earthquake Spectra. 
-        DOI: 10.1193/013018eqs031m.'
-        ----------
-        Parameters
-        ----------
-        loss:                           list          Expected loss ratio
-        -------
-        Returns
-        -------
-        sigma_loss_ratio:               list          The uncertainty associated with mean loss ratio
-        a_beta_dist:                   float          coefficient of the beta-distribution
-        b_beta_dist:                   float          coefficient of the beta_distribution
-        
-        """    
-        sigma_loss_ratio = np.where(loss == 0, 0,
-                                    np.where(loss == 1, 1,
-                                             np.sqrt(loss * (-0.7 - 2 * loss + np.sqrt(6.8 * loss + 0.5)))))
-        a_beta_dist = np.zeros(loss.shape)
-        b_beta_dist = np.zeros(loss.shape)
-        return sigma_loss_ratio, a_beta_dist, b_beta_dist
-
 
     def do_multiple_stripe_analysis(self,
                                     imls, 
@@ -180,20 +154,18 @@ class postprocessor():
             # Minimize negative log-likelihood function
             sol = optimize.minimize(likelihood, initial_guess, args=(imls, num_gmr, num_exc, sigma_build2build), bounds=bounds)
             
-            eta = sol.x[0]  # Median (θ)
-            beta = sol.x[1] # Dispersion (β)
+            theta = sol.x[0]  # Median (θ)
+            beta_r = sol.x[1] # Dispersion (β) due to record-to-record variability
             
             # Store results for each damage threshold
-            results[threshold] = (eta, beta)
+            results[threshold] = (theta, beta_r)
         
         # Calculate probabilities of exceedance for given intensity levels
         poes = np.zeros((len(intensities), len(damage_thresholds)))
         for i, threshold in enumerate(damage_thresholds):
-            eta = results[threshold][0]
-            beta = results[threshold][1]
-            beta_total = np.sqrt(beta**2 + sigma_build2build**2)  # Total dispersion
-            fitted_exceedance = stats.norm.cdf(np.log(intensities / eta) / beta_total)
-            poes[:, i] = fitted_exceedance
+            theta = results[threshold][0]
+            beta_r = results[threshold][1]
+            poes[:, i] = self.get_fragility_function(theta, beta_r, beta_u = sigma_build2build)
         
         # Create the msa_dict with all relevant information
         msa_dict = {'imls': imls,                                                                                                  # Input intensity measure levels
@@ -207,27 +179,99 @@ class postprocessor():
     
         return msa_dict
 
-
-    def get_fragility_function(self,
-                               theta, 
-                               beta_total,
-                               intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+    def calculate_sigma_loss(self, 
+                             loss):
         """
-        Function to calculate the damage state lognormal CDF given median seismic intensity and associated dispersion
+        Function to calculate the sigma in loss estimates based on the recommendations in:
+        'Silva, V. (2019) Uncertainty and correlation in seismic vulnerability 
+        functions of building classes. Earthquake Spectra. 
+        DOI: 10.1193/013018eqs031m.'
         ----------
         Parameters
         ----------
-        intensities:                   list                Intensity measure levels 
+        loss:                           list          Expected loss ratio
+        -------
+        Returns
+        -------
+        sigma_loss_ratio:               list          The uncertainty associated with mean loss ratio
+        a_beta_dist:                   float          coefficient of the beta-distribution
+        b_beta_dist:                   float          coefficient of the beta_distribution
+        
+        """    
+        sigma_loss_ratio = np.where(loss == 0, 0,
+                                    np.where(loss == 1, 1,
+                                             np.sqrt(loss * (-0.7 - 2 * loss + np.sqrt(6.8 * loss + 0.5)))))
+        a_beta_dist = np.zeros(loss.shape)
+        b_beta_dist = np.zeros(loss.shape)
+        return sigma_loss_ratio, a_beta_dist, b_beta_dist
+
+
+
+    def get_fragility_function(self,
+                               theta,
+                               beta_r,
+                               sigma_build2build = 0.30,
+                               intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+        """
+        Function to calculate the damage state lognormal CDF given median seismic intensity and total associated dispersion
+        ----------
+        Parameters
+        ----------
         theta:                        float                Median seismic intensity given edp-based damage threshold.
-        beta_total:                   float                Total uncertainty (i.e. accounting for record-to-record and modelling variabilities).
+        beta_r:                       float                Uncertainty associated with record-to-record variability
+        sigma_build2build:            float                Uncertainty associated with modelling variability (Default set to 0.3)
+        intensities:                   list                Intensity measure levels (Default set to np.geomspace(0.05, 10.0, 50), 3))
+    
         -------
         Returns
         -------
         poes:                          list                Probabilities of damage exceedance.
         """
         
-        ### calculate probabilities of exceedance for a range of intensity measure levels
+        # Calculate the total uncertainty
+        beta_total = np.sqrt(beta_r**2+sigma_build2build**2)
+        
+        # Calculate probabilities of exceedance for a range of intensity measure levels
         return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
+    
+    def rotated_fragility_function(self,
+                                   theta, 
+                                   percentile,
+                                   beta_r, 
+                                   sigma_build2build = 0.30,
+                                   intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+        """
+        Function to calculate the damage state lognormal CDF given median seismic intensity and total associated dispersion
+        ----------
+        Reference
+        ----------
+        Porter (2017), When Addressing Epistemic Uncertainty in a Lognormal Fragility Function,
+        How Should One Adjust the Median, Proceedings of the 16th World Conference on Earthquake
+        Engineering (16WCEE), Santiago, Chile
+
+        ----------
+        Parameters
+        ----------
+        theta:                        float                Median seismic intensity given edp-based damage threshold.
+        beta_r:                       float                Uncertainty associated with record-to-record variability
+        beta_u:                       float                Uncertainty associated with modelling variability (Default set to 0.3)
+        intensities:                   list                Intensity measure levels (Default set to np.geomspace(0.05, 10.0, 50), 3))
+    
+        -------
+        Returns
+        -------
+        poes:                          list                Probabilities of damage exceedance.
+        """
+    
+        # Calculate the combined logarithmic standard deviation
+        beta_c = np.sqrt(beta_r**2 + sigma_build2build**2)
+        
+        # Calculate the new median after rotation
+        theta_prime = theta * np.exp(-stats.norm.ppf(percentile) * (beta_c - beta_r))
+        
+        # Calculate the rotated lognormal CDF
+        return stats.lognorm(s=beta_c, scale=theta_prime).cdf(intensities)
+ 
         
     def get_vulnerability_function(self,
                                    poes,
@@ -286,13 +330,13 @@ class postprocessor():
                     cov[m] = np.min([sigma_loss_ratio/mean_loss_ratio, 0.90*max_sigma/mean_loss_ratio])
      
             # Store to DataFrame
-            df = pd.DataFrame({'IMLs': intensities,
+            df = pd.DataFrame({'IML': intensities,
                                'Loss': loss,
                                'COV':  cov})
             
         else:
             # Store to DataFrame
-            df = pd.DataFrame({'IMLs': intensities,
+            df = pd.DataFrame({'IML': intensities,
                                'Loss': loss})
             
                              
