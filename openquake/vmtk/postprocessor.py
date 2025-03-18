@@ -21,7 +21,10 @@ class postprocessor():
                           lower_limit, 
                           censored_limit, 
                           sigma_build2build=0.3, 
-                          intensities=np.round(np.geomspace(0.05, 10.0, 50), 3)):
+                          intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
+                          fragility_rotation=False,
+                          rotation_percentile = 0.1):
+        
         """
         Function to perform censored cloud analysis to a set of engineering demand parameters and intensity measure levels
         Processes cloud analysis and fits linear regression after due consideration of collapse
@@ -34,6 +37,9 @@ class postprocessor():
         lower_limit             float          Minimum EDP below which cloud records are filtered out (Typically equal to 0.1 times the yield capacity which is a proxy for no-damage)
         censored_limit          float          Maximum EDP above which cloud records are filtered out (Typically equal to 1.5 times the ultimate capacity which is a proxy for collapse)
         sigma_build2build       float          Building-to-building variability or modelling uncertainty (Default is set to 0.3)
+        intensities             array          Array of intensity measure levels to sample the fragility functions
+        fragility_rotation       bool          Bool to indicate whether or not to rotate the fragility function about a target percentile (Default set to False)
+        rotation_percentile     float          Target percentile for fragility function rotation (Default set to 0.1 i.e., 10-th percentile)
         -------
         Returns
         -------
@@ -81,7 +87,15 @@ class postprocessor():
         betas_total = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2)) # Total dispersion
         
         # Compute probabilities of exceedance
-        poes = np.array([self.get_fragility_function(theta, beta_r, sigma_build2build = sigma_build2build) for theta, beta_r in zip(thetas, betas_r)]).T
+        if fragility_rotation:
+            poes = np.array([self.get_rotated_fragility_function(theta,
+                                                                 rotation_percentile, 
+                                                                 beta_r, 
+                                                                 sigma_build2build = sigma_build2build) for theta, beta_r in zip(thetas, betas_r)]).T        
+        else:            
+            poes = np.array([self.get_fragility_function(theta, 
+                                                         beta_r, 
+                                                         sigma_build2build = sigma_build2build) for theta, beta_r in zip(thetas, betas_r)]).T
         
         cloud_dict = {
             'imls': imls, 'edps': edps, 'lower_limit': lower_limit, 'upper_limit': censored_limit,
@@ -97,7 +111,9 @@ class postprocessor():
                                     edps, 
                                     damage_thresholds, 
                                     sigma_build2build=0.3, 
-                                    intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+                                    intensities = np.round(np.geomspace(0.05, 10.0, 50), 3),
+                                    fragility_rotation = False,
+                                    rotation_percentile = 0.10):
     
         """
         Function to perform maximum likelihood estimation (MLE) for fragility cuve fitting 
@@ -165,7 +181,16 @@ class postprocessor():
         for i, threshold in enumerate(damage_thresholds):
             theta = results[threshold][0]
             beta_r = results[threshold][1]
-            poes[:, i] = self.get_fragility_function(theta, beta_r, beta_u = sigma_build2build)
+            if fragility_rotation:
+                poes[:, i] = self.get_rotated_fragility_function(theta, 
+                                                                 rotation_percentile, 
+                                                                 beta_r, 
+                                                                 beta_u = sigma_build2build)
+            else:
+                poes[:, i] = self.get_fragility_function(theta, 
+                                                         beta_r, 
+                                                         beta_u = sigma_build2build)
+                
         
         # Create the msa_dict with all relevant information
         msa_dict = {'imls': imls,                                                                                                  # Input intensity measure levels
@@ -206,7 +231,6 @@ class postprocessor():
         return sigma_loss_ratio, a_beta_dist, b_beta_dist
 
 
-
     def get_fragility_function(self,
                                theta,
                                beta_r,
@@ -234,12 +258,12 @@ class postprocessor():
         # Calculate probabilities of exceedance for a range of intensity measure levels
         return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
     
-    def rotated_fragility_function(self,
-                                   theta, 
-                                   percentile,
-                                   beta_r, 
-                                   sigma_build2build = 0.30,
-                                   intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+    def get_rotated_fragility_function(self,
+                                       theta, 
+                                       percentile,
+                                       beta_r, 
+                                       sigma_build2build = 0.30,
+                                       intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
         """
         Function to calculate the damage state lognormal CDF given median seismic intensity and total associated dispersion
         ----------
