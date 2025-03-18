@@ -277,7 +277,7 @@ class postprocessor():
         Parameters
         ----------
         theta:                        float                Median seismic intensity given edp-based damage threshold.
-        percentile:                   float                Target percentile for fragility function rotation (e.g., 20 corresponds to 20th percentile)
+        percentile:                   float                Target percentile for fragility function rotation (e.g., 0.2 corresponds to 20th percentile)
         beta_r:                       float                Uncertainty associated with record-to-record variability
         beta_u:                       float                Uncertainty associated with modelling variability (Default set to 0.3)
         intensities:                   list                Intensity measure levels (Default set to np.geomspace(0.05, 10.0, 50), 3))
@@ -292,7 +292,7 @@ class postprocessor():
         beta_c = np.sqrt(beta_r**2 + sigma_build2build**2)
         
         # Calculate the new median after rotation
-        theta_prime = theta * np.exp(-stats.norm.ppf(percentile/100) * (beta_c - beta_r))
+        theta_prime = theta * np.exp(-stats.norm.ppf(percentile) * (beta_c - beta_r))
         
         # Calculate the rotated lognormal CDF
         return stats.lognorm(s=beta_c, scale=theta_prime).cdf(intensities)

@@ -78,7 +78,7 @@ class TestPostprocessor(unittest.TestCase):
         theta= 0.50
         beta_r = 0.30
         sigma_build2build = 0.30 
-        percentile= 20 # We rotate about the 20th percentile
+        percentile= 0.50 # We rotate about the 20th percentile
         
         x_values        =  np.round(np.geomspace(0.05, 10.0, 50), 3)   
         
@@ -91,10 +91,9 @@ class TestPostprocessor(unittest.TestCase):
                                                                  beta_r, 
                                                                  sigma_build2build=sigma_build2build) # Rotated around the 10-th percentile
         
-        a = np.interp(percentile, non_rotated_cdf, x_values)   # Get the 10-th percentile from the non-rotated fragility function
-        b = np.interp(percentile, rotated_cdf, x_values)       # Get the 10-th percentile from the rotated fragility function
+        a = np.interp(percentile/100, non_rotated_cdf, x_values)   # Get the 10-th percentile from the non-rotated fragility function
+        b = np.interp(percentile/100, rotated_cdf, x_values)       # Get the 10-th percentile from the rotated fragility function
         self.assertAlmostEqual(a, b, places = 5)
-
         
     def test_get_vulnerability_function(self):
 
