@@ -78,7 +78,7 @@ class TestPostprocessor(unittest.TestCase):
         theta= 0.50
         beta_r = 0.30
         sigma_build2build = 0.30 
-        percentile= 0.50 # We rotate about the median to avoid tests failing due to interpolation issues
+        percentile= 20 # We rotate about the 20th percentile
         
         x_values        =  np.round(np.geomspace(0.05, 10.0, 50), 3)   
         
