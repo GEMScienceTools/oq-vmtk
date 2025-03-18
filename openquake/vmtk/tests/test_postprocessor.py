@@ -65,34 +65,35 @@ class TestPostprocessor(unittest.TestCase):
 
         self.assertTrue(self.within_tolerance(self.sigma, cloud_dict['sigma']),
                         f"sigma value {cloud_dict['sigma']} is out of tolerance range for expected {self.sigma}")
-
     
     def test_get_fragility_function(self):
         """Check if the probability of exceeding 0.5g is equal to 50% if theta=0.5g"""
-        self.assertAlmostEqual(self.pp.get_fragility_function(0.50, 0.30, 0.30, self.iml_test), self.poe_test, places=4)
+        self.assertAlmostEqual(self.pp.get_fragility_function(0.50, 0.40, 0.20, self.iml_test), self.poe_test, places=4)
     
     
     def test_get_rotated_fragility_function(self):
         """Check if a given percentile is equal between the non-rotated and rotated fragility functions"""
         
         theta= 0.50
-        beta_r = 0.30
-        sigma_build2build = 0.30 
-        percentile= 0.50 # We rotate about the 20th percentile
+        beta_r = 0.40
+        sigma_build2build = 0.20 
+        percentile= 0.10 # We rotate about the median to avoid mismatches due to the interp method
         
-        x_values        =  np.round(np.geomspace(0.05, 10.0, 50), 3)   
-        
+        x_values = np.linspace(0.01, 2, 500)
+   
         non_rotated_cdf = self.pp.get_fragility_function(theta, 
                                                          beta_r, 
-                                                         sigma_build2build=sigma_build2build)
+                                                         sigma_build2build=0.00,
+                                                         intensities= x_values)
         
         rotated_cdf     = self.pp.get_rotated_fragility_function(theta, 
                                                                  percentile, 
                                                                  beta_r, 
-                                                                 sigma_build2build=sigma_build2build) # Rotated around the 10-th percentile
+                                                                 sigma_build2build=0.30,
+                                                                 intensities = x_values) # Rotated around the 10-th percentile and without the added uncertainty
         
-        a = np.interp(percentile/100, non_rotated_cdf, x_values)   # Get the 10-th percentile from the non-rotated fragility function
-        b = np.interp(percentile/100, rotated_cdf, x_values)       # Get the 10-th percentile from the rotated fragility function
+        a = np.interp(percentile, non_rotated_cdf, x_values)   # Get the 10-th percentile from the non-rotated fragility function
+        b = np.interp(percentile, rotated_cdf, x_values)       # Get the 10-th percentile from the rotated fragility function
         self.assertAlmostEqual(a, b, places = 5)
         
     def test_get_vulnerability_function(self):

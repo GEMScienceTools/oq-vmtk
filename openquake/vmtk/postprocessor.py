@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import stats, optimize
+from scipy.stats import lognorm 
 
 class postprocessor():
 
@@ -254,9 +255,9 @@ class postprocessor():
         
         # Calculate the total uncertainty
         beta_total = np.sqrt(beta_r**2+sigma_build2build**2)
-        
+
         # Calculate probabilities of exceedance for a range of intensity measure levels
-        return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)            
+        return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)  
     
     def get_rotated_fragility_function(self,
                                        theta, 
@@ -289,13 +290,13 @@ class postprocessor():
         """
     
         # Calculate the combined logarithmic standard deviation
-        beta_c = np.sqrt(beta_r**2 + sigma_build2build**2)
+        beta_total = np.sqrt(beta_r**2 + sigma_build2build**2)
         
         # Calculate the new median after rotation
-        theta_prime = theta * np.exp(-stats.norm.ppf(percentile) * (beta_c - beta_r))
+        theta_prime = theta * np.exp(-stats.norm.ppf(percentile) * (beta_total - beta_r))
         
         # Calculate the rotated lognormal CDF
-        return stats.lognorm(s=beta_c, scale=theta_prime).cdf(intensities)
+        return stats.lognorm(s=beta_total, scale=theta_prime).cdf(intensities)
  
         
     def get_vulnerability_function(self,
