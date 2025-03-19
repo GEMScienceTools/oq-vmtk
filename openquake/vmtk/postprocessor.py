@@ -14,7 +14,7 @@ class postprocessor():
     def __init__(self):
         pass                
             
-    
+
     def do_cloud_analysis(self, 
                           imls, 
                           edps, 
@@ -51,33 +51,35 @@ class postprocessor():
         imls = np.asarray(imls)
         edps = np.asarray(edps)
         
-        x_array = np.log(imls)
-        y_array = edps
+        x_array=np.log(imls)
+        y_array=edps
         
-        # Apply filtering
-        valid_mask = y_array >= lower_limit
-        x_array = x_array[valid_mask]
-        y_array = y_array[valid_mask]
+        # remove displacements below lower limit
+        bool_y_lowdisp=edps>=lower_limit
+        x_array = x_array[bool_y_lowdisp]
+        y_array = y_array[bool_y_lowdisp]
+          
+        # checks if the y value is above the censored limit
+        bool_is_censored=y_array>=censored_limit
+        bool_is_not_censored=y_array<censored_limit
         
-        # Censoring operations
-        bool_is_censored = y_array >= censored_limit
-        observed = np.log(np.where(bool_is_censored, censored_limit, y_array))
+        # creates an array where all the censored values are set to the limit
+        observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
+        
+        y_array=np.log(edps)
         
         def func(x):
-            locs = x[1] + x[0] * x_array
-            p = stats.norm.pdf(observed, loc=locs, scale=x[2])
-            return -np.sum(np.log(p[p > 0]))
-        
-        sol1 = optimize.fmin(func, [1, 1, 1], disp=False)
+              p = np.array([stats.norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
+              return -np.sum(np.log(p))
+        sol1=optimize.fmin(func,[1,1,1],disp=False)
         
         def func2(x):
-            locs = x[1] + x[0] * x_array
-            p1 = stats.norm.pdf(observed[~bool_is_censored], loc=locs[~bool_is_censored], scale=x[2])
-            p2 = 1 - stats.norm.cdf(observed[bool_is_censored], loc=locs[bool_is_censored], scale=x[2])
-            return -np.sum(np.log(p1[p1 > 0])) - np.sum(np.log(p2[p2 > 0]))
+              p1 = np.array([stats.norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
+              p2 = np.array([1-stats.norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
+              return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
         
-        p_cens = optimize.fmin(func2, sol1, disp=False)
-        
+        p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
+
         # Regression fit
         xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
         yvec = p_cens[0] * xvec + p_cens[1]

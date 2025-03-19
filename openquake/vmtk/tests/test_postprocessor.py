@@ -7,23 +7,39 @@ from openquake.vmtk.postprocessor import postprocessor
 class TestPostprocessor(unittest.TestCase):
 
     # Expected values
+    # These values correspond to the regression coefficients of the "CR_LDUAL-DUH_H1"
+    # building class from ESRM20 accessible here: 
+    # https://gitlab.seismo.ethz.ch/efehr/esrm20_vulnerability/-/blob/master/scripts/vmtk/outputs/regression/CR_LDUAL-DUH_H1/regression_coeff_PGA.csv?ref_type=heads
+    
     b0_value = -6.650269
     b1_value = 2.564951
     sigma    = 0.507748
-    tolerance = 0.15  # 10% tolerance
+    tolerance = 0.15  # 15% tolerance
     iml_test = 0.50
     poe_test = 0.50
-
+    
     def setUp(self):
         """Set up test case with expected regression analysis values."""
 
         self.pp = postprocessor()
         cd = os.path.dirname(__file__)
+        self.cap_array = np.array(([0.0, 0.0],[0.0005313, 1.025], [0.004, 2.05], [0.024, 2.071]))
         self.imls = np.loadtxt(os.path.join(cd, 'test_data', 'imls.csv'), delimiter=',', usecols=0).tolist()
         self.edps = np.loadtxt(os.path.join(cd, 'test_data', 'edps.csv'), delimiter=',', usecols=0).tolist()
-        self.damage_thresholds = [0.003, 0.00992, 0.01708, 0.024]
-        self.lower_limit = 0.1 * 0.003
-        self.censored_limit = 1.5 * 0.024
+        
+        if self.cap_array.shape[0]>=4:
+            self.dam_model_drift=[0.75*self.cap_array[2,0],\
+                             0.5*self.cap_array[2,0]+0.33*self.cap_array[-1,0],\
+                             0.25*self.cap_array[2,0]+0.67*self.cap_array[-1,0],\
+                             self.cap_array[-1,0]]
+            self.low_disp_limit = 0.1*self.cap_array[2,0]
+        else:
+            self.dam_model_drift=[0.75*self.cap_array[1,0],\
+                             0.5*self.cap_array[1,0]+0.33*self.cap_array[-1,0],\
+                             0.25*self.cap_array[1,0]+0.67*self.cap_array[-1,0],\
+                             self.cap_array[-1,0]]
+            self.low_disp_limit = 0.1*self.cap_array[1,0]
+        self.censored_limit = 1.5 * self.cap_array[-1,0]
         self.sigma_build2build = 0.30
         self.consequence_model = [1.0]
 
@@ -47,8 +63,8 @@ class TestPostprocessor(unittest.TestCase):
         https://gitlab.seismo.ethz.ch/efehr/esrm20_vulnerability/"""
         cloud_dict = self.pp.do_cloud_analysis(self.imls,
                                                self.edps,
-                                               self.damage_thresholds,
-                                               self.lower_limit,
+                                               self.dam_model_drift,
+                                               self.low_disp_limit,
                                                self.censored_limit,
                                                sigma_build2build=self.sigma_build2build)
 
