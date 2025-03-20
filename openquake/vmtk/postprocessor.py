@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from scipy import stats, optimize
+import statsmodels.api as sm
 from scipy.stats import lognorm 
+from scipy import stats, optimize
 
 class postprocessor():
 
@@ -15,31 +16,155 @@ class postprocessor():
         pass                
             
 
-    def calculate_lognormal_fragility(theta,
+    def calculate_lognormal_fragility(self,
+                                      theta,
                                       sigma_record2record,
                                       sigma_build2build = 0.30,
                                       intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
         """
-        Function to calculate the damage state exceedances using a lognormal cumulative distribution function
-        ----------
+        Computes the probability of exceeding a damage state using a lognormal cumulative distribution function (CDF).
+        
         Parameters
         ----------
-        theta:                        float                Median seismic intensity given edp-based damage threshold.
-        sigma_record2record:          float                Uncertainty associated with record-to-record variability.
-        sigma_build2build:            float                Uncertainty associated with modelling variability (Default set to 0.3).
-        intensities:                   list                Intensity measure levels (Default set to np.geomspace(0.05, 10.0, 50), 3)).
+        theta : float
+            The median seismic intensity corresponding to an EDP-based damage threshold.
+        sigma_record2record : float
+            The logarithmic standard deviation representing record-to-record variability.
+        sigma_build2build : float, optional
+            The logarithmic standard deviation representing building-to-building (or model) variability.
+            Default value is 0.30.
+        intensities : array-like, optional
+            The set of intensity measure (IM) levels for which exceedance probabilities will be computed.
+            Default is a geometric sequence from 0.05 to 10.0 with 50 points.
     
-        -------
         Returns
         -------
-        poes:                          list                Probabilities of damage exceedance.
-        """
+        poes : numpy.ndarray
+            An array of exceedance probabilities corresponding to each intensity measure in `intensities`.
+        
+        References
+        -----
+        1) Baker JW. Efficient Analytical Fragility Function Fitting Using Dynamic Structural Analysis. 
+        Earthquake Spectra. 2015;31(1):579-599. doi:10.1193/021113EQS025M
+        
+        2) Singhal A, Kiremidjian AS. Method for probabilistic evaluation of seismic structural damage. 
+        Journal of Structural Engineering 1996; 122: 1459–1467. DOI:10.1061/(ASCE)0733-9445(1996)122:12(1459)
+        
+        3) Lallemant, D., Kiremidjian, A., and Burton, H. (2015), Statistical procedures for developing 
+        earthquake damage fragility curves. Earthquake Engng Struct. Dyn., 44, 1373–1389. doi: 10.1002/eqe.2522.
+        
+        4) Bird JF, Bommer JJ, Bray JD, Sancio R, Spence RJS. Comparing loss estimation with observed damage in a zone
+        of ground failure: a study of the 1999 Kocaeli Earthquake in Turkey. Bulletin of Earthquake Engineering 2004; 2:
+        329–360. DOI: 10.1007/s10518-004-3804-0
+        
+        """        
         
         # Calculate the total uncertainty
         beta_total = np.sqrt(sigma_record2record**2+sigma_build2build**2)
         
         # Calculate probabilities of exceedance for a range of intensity measure levels
         return lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta) 
+
+    def calculate_glm_fragility(self,
+                                imls,
+                                edps,
+                                damage_thresholds,
+                                intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
+                                fragility_method = 'logit'):
+
+        """
+        Computes non-parametric fragility functions using Generalized Linear Models (GLM) with 
+        either a Logit or Probit link function.
+    
+        Parameters:
+        -----------
+        imls : array-like
+            Intensity Measure Levels (IMLs) corresponding to each observation.
+        edps : array-like
+            Engineering Demand Parameters (EDPs) representing structural response values.
+        damage_thresholds : array-like
+            List of thresholds defining different damage states.
+        intensities : array-like, optional
+            Intensity measure values at which probabilities of exceedance (PoEs) are evaluated.
+            Defaults to np.round(np.geomspace(0.05, 10.0, 50), 3).
+        fragility_method : str, optional
+            Specifies the GLM model to be used for fragility function fitting.
+            Options:
+            - 'logit' (default): Uses a logistic regression model.
+            - 'probit': Uses a probit regression model.
+    
+        Returns:
+        --------
+        poes : ndarray
+            A 2D array where each column represents the probability of exceeding a 
+            specific damage state at each intensity level.
+    
+        References:
+        ------
+        1) Charvet, I., Ioannou, I., Rossetto, T., Suppasri, A., and Imamura, F.: Empirical fragility 
+        assessment of buildings affected by the 2011 Great East Japan tsunami using improved statistical models, 
+        Nat. Hazards, 73, 951–973, 2014. 
+        
+        2) Lahcene, E., Ioannou, I., Suppasri, A., Pakoksung, K., Paulik, R., Syamsidik, S., Bouchette, F., 
+        and Imamura, F.: Characteristics of building fragility curves for seismic and non-seismic tsunamis: 
+        case studies of the 2018 Sunda Strait, 2018 Sulawesi–Palu, and 2004 Indian Ocean tsunamis, 
+        Nat. Hazards Earth Syst. Sci., 21, 2313–2344, https://doi.org/10.5194/nhess-21-2313-2021, 2021.
+        
+        3) Lallemant, D., Kiremidjian, A., and Burton, H. (2015), Statistical procedures for developing 
+        earthquake damage fragility curves. Earthquake Engng Struct. Dyn., 44, 1373–1389. doi: 10.1002/eqe.2522.
+        
+        4) Jalayer, F., Ebrahamian, H., Trevlopoulos, K., and Bradley, B. (2023). Empirical tsunami fragility modelling 
+        for hierarchical damage levels. Natural Hazards and Earth System Sciences, 23(2), 909–931. 
+        https://doi.org/10.5194/nhess-23-909-2023
+        
+        """
+        
+        # Create probabilities of exceedance array
+        poes = np.zeros((len(intensities),len(damage_thresholds)))
+        
+        for ds, current_threshold in enumerate(damage_thresholds):
+            
+            # Count exceedances
+            exceedances = [1 if edp>damage_thresholds[ds] else 0 for edp in edps]
+            
+            # Assemble dictionary containing log of IMs and binary damage state assignments 
+            data = {'IM': np.log(imls),
+                    'Damage': exceedances} 
+            
+            # Create DataFrame
+            df = pd.DataFrame(data)
+            
+            # Add a constant for the intercept term
+            X = sm.add_constant(df['IM'])
+            y = df['Damage']
+            
+            if fragility_method.lower() == 'probit':
+    
+                # Fit the Probit GLM model 
+                probit_model = sm.GLM(y, X, family=sm.families.Binomial(link=sm.families.links.Probit()))
+                probit_results = probit_model.fit()
+                
+                # Generate a range of IM values for plotting
+                log_IM_range = np.log(intensities)
+                X_range = sm.add_constant(log_IM_range)
+                
+                # Predict probabilities using the Probit GLM model
+                poes[:,ds] = probit_results.predict(X_range)
+            
+            elif fragility_method.lower() == 'logit':
+            
+                # Fit the Logit GLM model 
+                logit_model = sm.GLM(y, X, family=sm.families.Binomial(link=sm.families.links.Logit()))
+                logit_results = logit_model.fit()
+                
+                # Generate a range of IM values for plotting
+                log_IM_range = np.log(intensities)
+                X_range = sm.add_constant(log_IM_range)
+                
+                # Predict probabilities using the Probit GLM model
+                poes[:,ds] = logit_results.predict(X_range)
+            
+        return poes
 
 
     def do_cloud_analysis(self, 
