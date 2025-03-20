@@ -233,33 +233,6 @@ class postprocessor():
         b_beta_dist = np.zeros(loss.shape)
         return sigma_loss_ratio, a_beta_dist, b_beta_dist
 
-
-    def get_fragility_function(self,
-                               theta,
-                               beta_r,
-                               sigma_build2build = 0.30,
-                               intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
-        """
-        Function to calculate the damage state lognormal CDF given median seismic intensity and total associated dispersion
-        ----------
-        Parameters
-        ----------
-        theta:                        float                Median seismic intensity given edp-based damage threshold.
-        beta_r:                       float                Uncertainty associated with record-to-record variability
-        sigma_build2build:            float                Uncertainty associated with modelling variability (Default set to 0.3)
-        intensities:                   list                Intensity measure levels (Default set to np.geomspace(0.05, 10.0, 50), 3))
-    
-        -------
-        Returns
-        -------
-        poes:                          list                Probabilities of damage exceedance.
-        """
-        
-        # Calculate the total uncertainty
-        beta_total = np.sqrt(beta_r**2+sigma_build2build**2)
-
-        # Calculate probabilities of exceedance for a range of intensity measure levels
-        return stats.lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)  
     
     def get_rotated_fragility_function(self,
                                        theta, 
