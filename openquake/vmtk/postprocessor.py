@@ -329,7 +329,7 @@ class postprocessor():
                           intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
                           fragility_rotation=False,
                           rotation_percentile=0.1,
-                          fragility_method='probit'):
+                          fragility_method='lognormal'):
         """
         Perform a censored cloud analysis to assess fragility functions for a set of engineering demand parameters (EDPs) 
         and intensity measure levels (IMLs). This function processes the cloud analysis and fits regression models, 
@@ -402,7 +402,7 @@ class postprocessor():
         if fragility_method in ['probit', 'logit']:
             
             # Get the probabilities of exceedance
-            poes = self.fit_glm_fragility(imls, edps, damage_thresholds, fragility_method=fragility_method)
+            poes = self.calculate_glm_fragility(imls, edps, damage_thresholds, fragility_method=fragility_method)
             
             # Create the dictionary
             cloud_dict = {
