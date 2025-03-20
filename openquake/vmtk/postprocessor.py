@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
+#import statsmodels.api as sm
 from scipy import stats, optimize
 from scipy.stats import norm, lognorm 
-from statsmodels.miscmodels.ordinal_model import OrderedModel
+#from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 class postprocessor():
 
@@ -557,10 +557,10 @@ class postprocessor():
             if fragility_rotation:
                 
                 fragility_method == f'lognormal - rotated around the {rotation_percentile}th percentile'
-                poes = np.array([self.get_rotated_fragility_function(theta,
-                                                                     rotation_percentile, 
-                                                                     sigma_record2record, 
-                                                                     sigma_build2build = sigma_build2build) for theta, sigma_record2record in zip(thetas, sigmas_record2record)]).T        
+                poes = np.array([self.calculate_rotated_fragility(theta,
+                                                                  rotation_percentile, 
+                                                                  sigma_record2record, 
+                                                                  sigma_build2build = sigma_build2build) for theta, sigma_record2record in zip(thetas, sigmas_record2record)]).T        
             else:            
                 poes = np.array([self.calculate_lognormal_fragility(theta, 
                                                                     sigma_record2record, 
@@ -718,12 +718,12 @@ class postprocessor():
             sigma_record2record = results[threshold][1]
             
             if fragility_rotation:
-                poes[:, i] = self.get_rotated_fragility_function(theta, 
-                                                                 rotation_percentile, 
-                                                                 sigma_record2record, 
-                                                                 sigma_build2build = sigma_build2build)
+                poes[:, i] = self.calculate_rotated_fragility(theta, 
+                                                             rotation_percentile, 
+                                                             sigma_record2record, 
+                                                             sigma_build2build = sigma_build2build)
             else:
-                poes[:, i] = self.get_lognormal_fragility_function(theta, 
+                poes[:, i] = self.calculate_lognormal_fragility(theta, 
                                                                    sigma_record2record, 
                                                                    sigma_build2build = sigma_build2build)
                 
