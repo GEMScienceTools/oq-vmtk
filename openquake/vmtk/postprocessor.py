@@ -29,11 +29,14 @@ class postprocessor():
         ----------
         theta : float
             The median seismic intensity corresponding to an EDP-based damage threshold.
+            
         sigma_record2record : float
             The logarithmic standard deviation representing record-to-record variability.
+            
         sigma_build2build : float, optional
             The logarithmic standard deviation representing building-to-building (or model) variability.
             Default value is 0.30.
+            
         intensities : array-like, optional
             The set of intensity measure (IM) levels for which exceedance probabilities will be computed.
             Default is a geometric sequence from 0.05 to 10.0 with 50 points.
@@ -66,6 +69,75 @@ class postprocessor():
         # Calculate probabilities of exceedance for a range of intensity measure levels
         return lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta) 
 
+    def calculate_rotated_fragility(self,
+                                    theta, 
+                                    percentile,
+                                    sigma_record2record, 
+                                    sigma_build2build = 0.30,
+                                    intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+        """
+        Calculates a rotated fragility function based on a lognormal cumulative distribution function (CDF),
+        adjusting the median intensity to align with a specified target percentile.
+    
+        This function modifies the median intensity based on the desired target percentile and total uncertainty 
+        (considering both record-to-record variability and modeling variability). The resulting rotated fragility 
+        curve represents the damage exceedance probabilities for a range of intensity measure levels, as defined 
+        by the lognormal distribution.
+        
+        ----------
+        Parameters
+        ----------
+        theta : float
+            The median seismic intensity corresponding to the edp-based damage threshold.
+    
+        percentile : float
+            The target percentile for fragility function rotation. This value corresponds to the desired 
+            percentile (e.g., 0.2 corresponds to the 20th percentile of the fragility curve). The curve is adjusted 
+            such that this percentile aligns with the calculated fragility function.
+    
+        sigma_record2record : float
+            The uncertainty associated with record-to-record variability in the seismic records used to derive the fragility.
+    
+        sigma_build2build : float, optional, default=0.30
+            The uncertainty associated with modeling variability between different buildings or building types.
+    
+        intensities : array-like, optional, default=np.round(np.geomspace(0.05, 10.0, 50), 3)
+            A list or array of intensity measure levels at which to evaluate the fragility function, typically representing
+            seismic intensity levels (e.g., spectral acceleration). The default is a geometric space ranging from 0.05 to 10.0.
+    
+        -------
+        Returns
+        -------
+        theta_prime : float
+            The new median intensity after the rotation based on the specified percentile.
+    
+        beta_total : float
+            The total standard deviation of the lognormal distribution, calculated from both record-to-record and 
+            building-to-building (modelling) uncertainties.
+    
+        poes : array-like
+            The probabilities of exceedance (fragility values) corresponding to the input intensity measure levels.
+            This is the lognormal CDF evaluated at the given intensities with the rotated median and combined uncertainty.
+
+        ----------
+        References
+        ----------
+        1) Porter, K. (2017), "When Addressing Epistemic Uncertainty in a Lognormal Fragility Function, 
+        How Should One Adjust the Median?", Proceedings of the 16th World Conference on Earthquake Engineering 
+        (16WCEE), Santiago, Chile.
+
+        """
+                
+        # Calculate the combined logarithmic standard deviation (total uncertainty)
+        beta_total = np.sqrt(sigma_record2record**2 + sigma_build2build**2)
+        
+        # Adjust the median intensity based on the target percentile
+        theta_prime = theta * np.exp(-stats.norm.ppf(percentile) * (beta_total - sigma_record2record))
+        
+        # Calculate and return the rotated lognormal CDF (probabilities of exceedance) for the given intensities
+        return theta_prime, beta_total, stats.lognorm(s=beta_total, scale=theta_prime).cdf(intensities)
+
+
     def calculate_glm_fragility(self,
                                 imls,
                                 edps,
@@ -81,13 +153,17 @@ class postprocessor():
         -----------
         imls : array-like
             Intensity Measure Levels (IMLs) corresponding to each observation.
+            
         edps : array-like
             Engineering Demand Parameters (EDPs) representing structural response values.
+            
         damage_thresholds : array-like
             List of thresholds defining different damage states.
+            
         intensities : array-like, optional
             Intensity measure values at which probabilities of exceedance (PoEs) are evaluated.
             Defaults to np.round(np.geomspace(0.05, 10.0, 50), 3).
+            
         fragility_method : str, optional
             Specifies the GLM model to be used for fragility function fitting.
             Options:
@@ -183,10 +259,13 @@ class postprocessor():
         ----------
         imls : array-like
             Intensity measure levels corresponding to the observed EDPs.
+            
         edps : array-like
             Engineering Demand Parameters (EDPs) representing structural responses.
+            
         damage_thresholds : array-like
             Damage state thresholds for classifying exceedance levels.
+            
         intensities : array-like, optional
             Intensity measure levels for which fragility curves are evaluated (default: np.geomspace(0.05, 10.0, 50)).
     
