@@ -6,8 +6,65 @@ from matplotlib.lines import Line2D
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 from matplotlib.animation import FuncAnimation
-
+    
 class plotter:
+    """
+    A class for creating and customizing various types of plots for structural analysis results.
+
+    This class provides methods to visualize data from structural analyses, including cloud analysis,
+    fragility analysis, demand profiles, vulnerability analysis, and animations of seismic responses.
+    It also includes utility methods for setting consistent plot styles and saving plots.
+
+    Attributes
+    ----------
+    font_sizes : dict
+        Dictionary containing font sizes for titles, labels, ticks, and legends.
+    line_widths : dict
+        Dictionary containing line widths for thick, medium, and thin lines.
+    marker_sizes : dict
+        Dictionary containing marker sizes for large, medium, and small markers.
+    colors : dict
+        Dictionary containing color schemes for fragility, damage states, and GEM colors.
+    resolution : int
+        Resolution for saving plots (default: 500 DPI).
+    font_name : str
+        Font name for plot text (default: 'Arial').
+
+    Methods
+    -------
+    _set_plot_style(ax, title=None, xlabel=None, ylabel=None, grid=True)
+        Sets consistent plot style for all plots.
+    _save_plot(output_directory, plot_label)
+        Saves the plot to the specified directory.
+    duplicate_for_drift(peak_drift_list, control_nodes)
+        Creates data for box plots of peak storey drifts.
+    plot_cloud_analysis(cloud_dict, output_directory=None, plot_label='cloud_analysis_plot', xlabel='Peak Ground Acceleration, PGA [g]', ylabel=r'Maximum Peak Storey Drift, $\theta_{max}$ [%]')
+        Plots cloud analysis results.
+    plot_fragility_analysis(cloud_dict, output_directory=None, plot_label='fragility_plot', xlabel='Peak Ground Acceleration, PGA [g]')
+        Plots fragility analysis results.
+    plot_demand_profiles(peak_drift_list, peak_accel_list, control_nodes, output_directory=None, plot_label='demand_profiles')
+        Plots demand profiles for peak drifts and accelerations.
+    plot_ansys_results(cloud_dict, peak_drift_list, peak_accel_list, control_nodes, output_directory=None, plot_label='ansys_results', cloud_xlabel='PGA', cloud_ylabel='MPSD')
+        Plots a 2x2 grid of analysis results, including cloud, fragility, and demand profiles.
+    plot_vulnerability_analysis(intensities, loss, cov, xlabel, ylabel, output_directory=None, plot_label='vulnerability_plot')
+        Plots vulnerability analysis results, including Beta distributions and loss curves.
+    plot_slf_model(out, cache, xlabel, output_directory=None, plot_label='slf')
+        Plots Storey Loss Function (SLF) model results.
+    animate_model_run(control_nodes, acc, dts, nrha_disps, nrha_accels, drift_thresholds, output_directory=None, plot_label='animation')
+        Animates the seismic demands for a single nonlinear time-history analysis (NRHA) run.
+
+    Notes
+    -----
+    - The class uses Matplotlib and Seaborn for plotting.
+    - The `_set_plot_style` method ensures consistent styling across all plots.
+    - The `_save_plot` method handles saving plots with high resolution.
+    - The `plot_cloud_analysis`, `plot_fragility_analysis`, and `plot_demand_profiles` methods are used for visualizing structural analysis results.
+    - The `plot_vulnerability_analysis` method visualizes loss distributions and loss curves.
+    - The `plot_slf_model` method visualizes Storey Loss Function (SLF) results.
+    - The `animate_model_run` method creates animations of seismic responses.
+
+    """    
+
     def __init__(self):
         # Define default styles
         self.font_sizes = {
