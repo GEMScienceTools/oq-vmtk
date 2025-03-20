@@ -15,6 +15,33 @@ class postprocessor():
         pass                
             
 
+    def calculate_lognormal_fragility(theta,
+                                      sigma_record2record,
+                                      sigma_build2build = 0.30,
+                                      intensities = np.round(np.geomspace(0.05, 10.0, 50), 3)):
+        """
+        Function to calculate the damage state exceedances using a lognormal cumulative distribution function
+        ----------
+        Parameters
+        ----------
+        theta:                        float                Median seismic intensity given edp-based damage threshold.
+        sigma_record2record:          float                Uncertainty associated with record-to-record variability.
+        sigma_build2build:            float                Uncertainty associated with modelling variability (Default set to 0.3).
+        intensities:                   list                Intensity measure levels (Default set to np.geomspace(0.05, 10.0, 50), 3)).
+    
+        -------
+        Returns
+        -------
+        poes:                          list                Probabilities of damage exceedance.
+        """
+        
+        # Calculate the total uncertainty
+        beta_total = np.sqrt(sigma_record2record**2+sigma_build2build**2)
+        
+        # Calculate probabilities of exceedance for a range of intensity measure levels
+        return lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta) 
+
+
     def do_cloud_analysis(self, 
                           imls, 
                           edps, 
