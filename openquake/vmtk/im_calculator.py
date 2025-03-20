@@ -2,11 +2,55 @@ import numpy as np
 from scipy import signal, integrate
 
 class IMCalculator:
+    """
+    A class to compute various intensity measures (IMs) from a ground-motion record, such as response spectrum, 
+    spectral acceleration, amplitude-based IMs, Arias Intensity, Cumulative Absolute Velocity (CAV), 
+    and significant duration. The class also supports calculating velocity and displacement histories, as well as 
+    advanced IMs like the filtered incremental velocity (FIV3).
+
+    Attributes
+    ----------
+    acc : np.array
+        The acceleration time series (m/s² or g).
+    dt : float
+        The time step of the accelerogram (s).
+    damping : float, optional
+        The damping ratio (default is 5%).
+
+    Methods
+    -------
+    __init__(acc, dt, damping=0.05)
+        Initializes the IMCalculator with acceleration time series and time step, and optional damping ratio.
+    get_spectrum(periods=np.linspace(1e-5, 4.0, 100), damping_ratio=0.05)
+        Computes the response spectrum using the Newmark-beta method.
+    get_sa(period)
+        Computes the spectral acceleration at a given period.
+    get_saavg(period)
+        Computes the geometric mean of spectral accelerations over a range of periods.
+    get_saavg_user_defined(periods_list)
+        Computes the geometric mean of spectral accelerations for a user-defined list of periods.
+    get_velocity_displacement_history()
+        Computes velocity and displacement history with baseline drift correction.
+    get_amplitude_ims()
+        Computes amplitude-based intensity measures, including PGA, PGV, and PGD.
+    get_arias_intensity()
+        Computes the Arias Intensity.
+    get_cav()
+        Computes the Cumulative Absolute Velocity (CAV).
+    get_significant_duration(start=0.05, end=0.95)
+        Computes the significant duration (time between 5% and 95% of Arias intensity).
+    get_duration_ims()
+        Computes duration-based intensity measures: Arias Intensity, CAV, and 5%-95% significant duration.
+    get_FIV3(period, alpha, beta)
+        Computes the filtered incremental velocity (FIV3) based on a ground motion record and specified parameters.
+    
+    """   
+    
     
     def __init__(self, acc, dt, damping=0.05):
         """
-        Compute intensity measures from a ground-motion record.
-
+        Initialize the intensity measure calculator with the acceleration data and time step.
+        
         Parameters
         ----------
         acc : list or np.array
@@ -270,29 +314,48 @@ class IMCalculator:
     
     def get_FIV3(self, period, alpha, beta):
         """
-        References:
-        Dávalos H, Miranda E. Filtered incremental velocity: A novel approach in intensity measures for
-        seismic collapse estimation. Earthquake Engineering & Structural Dynamics 2019; 48(12): 1384–1405.
-        DOI: 10.1002/eqe.3205.
-
-        Computes the filtered incremental velocity IM for a ground motion
+        Computes the filtered incremental velocity (FIV3) intensity measure for a given ground motion record.
+    
+        This method calculates the FIV3 based on the approach described by Dávalos and Miranda (2019) using a 
+        filtered incremental velocity (FIV) method. The FIV3 is an intensity measure that is used in seismic 
+        collapse estimation. The method applies a low-pass Butterworth filter to the acceleration time series 
+        and then calculates the incremental velocity using a specified period, alpha (period factor), and beta 
+        (cut-off frequency factor). 
+    
+        The FIV3 is computed by considering the three largest peaks and the three smallest troughs of the 
+        filtered incremental velocity time series.
+    
         Parameters
         ----------
-            Period:     Float
-            Period [s]
-            alpha:      Float
-            Period factor (see Figure 6)
-            beta:       Float
-            Cut-off frequency factor (see Figure 6)
-
-        Returns:
-            FIV3:       Intensity measure FIV3 (as per Eq. (3) of Davalos and Miranda (2019))
-            FIV:        Filtered incremental velocity (as per Eq. (2) of Davalos and Miranda (2019))
-            t:          Time series of FIV
-            ugf:        Filtered acceleration time history
-            pks:        Three peak values used to compute FIV3
-            trs:        Three trough values used to compute FIV3
+        period : float
+            The period (in seconds) used to filter the ground motion record.
+        alpha : float
+            A period factor that defines the length of the time window used for filtering.
+        beta : float
+            A cut-off frequency factor that influences the low-pass filter applied to the ground motion record.
+    
+        Returns
+        -------
+        FIV3 : float
+            The FIV3 intensity measure (as per Equation (3) of Dávalos and Miranda (2019)).
+        FIV : np.array
+            The filtered incremental velocity time series (as per Equation (2) of Dávalos and Miranda (2019)).
+        t : np.array
+            The time series corresponding to the FIV values.
+        ugf : np.array
+            The filtered acceleration time history after applying the low-pass Butterworth filter.
+        pks : np.array
+            The three largest peak values from the filtered incremental velocity time series, used to compute FIV3.
+        trs : np.array
+            The three smallest trough values from the filtered incremental velocity time series, used to compute FIV3.
+    
+        References
+        ----------
+        Dávalos H, Miranda E. "Filtered incremental velocity: A novel approach in intensity measures for 
+        seismic collapse estimation." *Earthquake Engineering & Structural Dynamics*, 2019, 48(12), 1384–1405. 
+        DOI: 10.1002/eqe.3205.
         """
+
         # Import required packages
 
         # Create the time series of the signal
