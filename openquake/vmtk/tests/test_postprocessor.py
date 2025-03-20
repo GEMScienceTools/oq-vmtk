@@ -70,24 +70,24 @@ class TestPostprocessor(unittest.TestCase):
                                                fragility_method = 'lognormal')
 
         # Check if keys exist
-        for key in ['cloud inputs', 'fragility functions', 'regression coefficients']:
+        for key in ['cloud inputs', 'fragility functions', 'regression']:
             self.assertIn(key, cloud_dict, f"Key '{key}' not found in cloud_dict")
         
         # Assert values within tolerance
-        self.assertTrue(self.within_tolerance(self.b0_value, cloud_dict['regression coefficients']['b0']),
-                        f"b0 value {cloud_dict['regression coefficients']['b0']} is out of tolerance range for expected {self.b0_value}")
+        self.assertTrue(self.within_tolerance(self.b0_value, cloud_dict['regression']['b0']),
+                        f"b0 value {cloud_dict['regression']['b0']} is out of tolerance range for expected {self.b0_value}")
 
-        self.assertTrue(self.within_tolerance(self.b1_value, cloud_dict['regression coefficients']['b1']),
-                        f"b1 value {cloud_dict['regression coefficients']['b1']} is out of tolerance range for expected {self.b1_value}")
+        self.assertTrue(self.within_tolerance(self.b1_value, cloud_dict['regression']['b1']),
+                        f"b1 value {cloud_dict['regression']['b1']} is out of tolerance range for expected {self.b1_value}")
 
-        self.assertTrue(self.within_tolerance(self.sigma, cloud_dict['regression coefficients']['sigma']),
-                        f"sigma value {cloud_dict['regression coefficients']['sigma']} is out of tolerance range for expected {self.sigma}")
+        self.assertTrue(self.within_tolerance(self.sigma, cloud_dict['regression']['sigma']),
+                        f"sigma value {cloud_dict['regression']['sigma']} is out of tolerance range for expected {self.sigma}")
     
     def test_calculate_lognormal_fragility(self):
         """Check if the probability of exceeding 0.5g is equal to 50% if theta=0.5g"""
         self.assertAlmostEqual(self.pp.calculate_lognormal_fragility(0.50, 0.40, 0.20, self.iml_test), self.poe_test, places=4)
     
-    
+
     def test_calculate_rotated_fragility(self):
         """Check if a given percentile is equal between the non-rotated and rotated fragility functions"""
         

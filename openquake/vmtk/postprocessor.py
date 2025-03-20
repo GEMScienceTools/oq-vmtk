@@ -417,7 +417,7 @@ class postprocessor():
                     },
                 
                 # Add a nested dictionary for fragility functions parameters
-                'fragility functions': {
+                'fragility': {
                     'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
                     'intensities': intensities,                   # Store the intensities used for sampling fragility functions
                     'poes': poes,                                 # Store the probabilities of damage state exceedance
@@ -428,7 +428,7 @@ class postprocessor():
                     },
                 
                 # Add a nested dictionary for regression coefficients
-                'regression coefficients': {
+                'regression': {
                     'b1': None,         # Store 'b1' coefficient
                     'b0': None,         # Store 'b0' coefficient
                     'sigma': None,      # Store 'sigma' value
@@ -456,7 +456,7 @@ class postprocessor():
                     },
                 
                 # Add a nested dictionary for fragility functions parameters
-                'fragility functions': {
+                'fragility': {
                     'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
                     'intensities': intensities,                   # Store the intensities used for sampling fragility functions
                     'poes': poes,                                 # Store the probabilities of damage state exceedance
@@ -467,7 +467,7 @@ class postprocessor():
                     },
                 
                 # Add a nested dictionary for regression coefficients
-                'regression coefficients': {
+                'regression': {
                     'b1': None,         # Store 'b1' coefficient
                     'b0': None,         # Store 'b0' coefficient
                     'sigma': None,      # Store 'sigma' value
@@ -544,7 +544,7 @@ class postprocessor():
                     },
                 
                 # Add a nested dictionary for fragility functions parameters
-                'fragility functions': {
+                'fragility': {
                     'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
                     'intensities': intensities,                   # Store the intensities used for sampling fragility functions
                     'poes': poes,                                 # Store the probabilities of damage state exceedance
@@ -555,7 +555,7 @@ class postprocessor():
                     },
                 
                 # Add a nested dictionary for regression coefficients
-                'regression coefficients': {
+                'regression': {
                     'b1': p_cens[0],            # Store 'b1' coefficient
                     'b0': p_cens[1],            # Store 'b0' coefficient
                     'sigma': p_cens[2],         # Store 'sigma' value
