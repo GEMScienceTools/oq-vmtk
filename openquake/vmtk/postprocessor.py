@@ -3,6 +3,7 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import lognorm 
 from scipy import stats, optimize
+from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 class postprocessor():
 
@@ -165,6 +166,79 @@ class postprocessor():
                 poes[:,ds] = logit_results.predict(X_range)
             
         return poes
+
+    def calculate_ordinal_fragility(self,
+                                    imls, 
+                                    edps, 
+                                    damage_thresholds,
+                                    intensities=np.round(np.geomspace(0.05, 10.0, 50), 3)):
+        """
+        Fits an ordinal (cumulative) probit model to estimate fragility curves for different damage states.
+    
+        This function estimates the probability of exceeding various damage states using an ordinal 
+        regression model based on observed Engineering Demand Parameters (EDPs) and corresponding 
+        Intensity Measure Levels (IMLs).
+    
+        Parameters
+        ----------
+        imls : array-like
+            Intensity measure levels corresponding to the observed EDPs.
+        edps : array-like
+            Engineering Demand Parameters (EDPs) representing structural responses.
+        damage_thresholds : array-like
+            Damage state thresholds for classifying exceedance levels.
+        intensities : array-like, optional
+            Intensity measure levels for which fragility curves are evaluated (default: np.geomspace(0.05, 10.0, 50)).
+    
+        Returns
+        -------
+        poes : numpy.ndarray
+            A 2D array of exceedance probabilities (CDF values) for each intensity level.
+            Shape: (len(intensities), len(damage_thresholds) + 1), where the last column 
+            represents the probability of exceeding the highest damage state.
+    
+        References
+        -----
+        1) Lallemant, D., Kiremidjian, A., and Burton, H. (2015), Statistical procedures for developing 
+        earthquake damage fragility curves. Earthquake Engng Struct. Dyn., 44, 1373–1389. doi: 10.1002/eqe.2522.
+        
+        2) Nguyen, M. and Lallemant, D. (2022), Order Matters: The Benefits of Ordinal Fragility Curves for Damage and Loss Estimation. Risk Analysis, 42: 1136-1148. https://doi.org/10.1111/risa.13815
+
+        """
+    
+        # Create probabilities of exceedance array
+        poes = np.zeros((len(intensities), len(damage_thresholds) + 1))  # +1 to include the highest damage state
+        
+        # Initialize damage state assignments
+        damage_states = np.zeros(len(edps), dtype=int)
+        
+        # Loop over each EDP and determine the highest exceeded damage state
+        for i, edp in enumerate(edps):
+            exceeded = np.where(edp > damage_thresholds)[0]  # Indices where EDP exceeds thresholds
+            damage_states[i] = exceeded[-1] + 1 if exceeded.size > 0 else 0  # Assign highest exceeded state (0-based)
+              
+        # Assemble DataFrame containing log(IM) and damage state assignment
+        df = pd.DataFrame({'IM': np.log(imls), 'Damage State': damage_states})
+    
+        # Fit the Cumulative Probit Model 
+        X_ordinal = df[['IM']]
+        y_ordinal = df['Damage State']
+    
+        # Create and fit the OrderedModel
+        ordinal_model = OrderedModel(y_ordinal, X_ordinal, distr='probit')
+        ordinal_results = ordinal_model.fit(method='bfgs', disp=False)  # Silent optimization
+        
+        # Generate log-transformed IM values for prediction
+        log_IM_range = np.log(intensities)
+        X_range_ordinal = pd.DataFrame({'IM': log_IM_range})
+    
+        # Predict probabilities for each damage state (PMF)
+        pmf_values = ordinal_results.predict(X_range_ordinal)  # Shape: (len(intensities), num_damage_states)
+    
+        # Convert PMF to CDF (probabilities of exceedance) by cumulative sum across damage states
+        poes = 1 - np.cumsum(pmf_values, axis=1)  # Cumulative sum along damage state axis
+        
+        return poes.values
 
 
     def do_cloud_analysis(self, 
