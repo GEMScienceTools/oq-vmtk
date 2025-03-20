@@ -1,7 +1,5 @@
-[![Windows Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yaml/badge.svg)]
-(https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yaml)
-[![Linux Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yaml/badge.svg)]
-(https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yaml)
+[![Windows Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yaml)
+[![Linux Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yaml)
 
 <a id="readme-top"></a>
 
