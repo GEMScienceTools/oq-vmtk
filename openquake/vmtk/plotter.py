@@ -114,7 +114,7 @@ class plotter:
 
         ax.scatter(cloud_dict['cloud inputs']['imls'], cloud_dict['cloud inputs']['edps'], color=self.colors['gem'][2], s=self.marker_sizes['medium'], alpha=0.5, label='Cloud Data', zorder=0)
         for i in range(len(cloud_dict['cloud inputs']['damage_thresholds'])):
-            ax.scatter(cloud_dict['fragility functions']['medians'][i], cloud_dict['cloud inputs']['damage_thresholds'][i], color=self.colors['fragility'][i], s=self.marker_sizes['large'], alpha=1.0, zorder=2)
+            ax.scatter(cloud_dict['fragility']['medians'][i], cloud_dict['cloud inputs']['damage_thresholds'][i], color=self.colors['fragility'][i], s=self.marker_sizes['large'], alpha=1.0, zorder=2)
 
         ax.plot(cloud_dict['regression']['fitted_x'], cloud_dict['regression']['fitted_y'], linestyle='solid', color=self.colors['gem'][1], lw=self.line_widths['thick'], label='Cloud Regression', zorder=1)
         ax.plot([min(cloud_dict['cloud inputs']['imls']), max(cloud_dict['cloud inputs']['imls'])], [cloud_dict['cloud inputs']['upper_limit'], cloud_dict['cloud inputs']['upper_limit']], '--', color=self.colors['gem'][-1], label='Upper Censoring Limit')
@@ -174,7 +174,7 @@ class plotter:
         fig, ax = plt.subplots(figsize=(6, 6))
         self._set_plot_style(ax, xlabel=xlabel, ylabel='Probability of Exceedance')
 
-        for i in range(len(cloud_dict['medians'])):
+        for i in range(len(cloud_dict['fragility']['medians'])):
             ax.plot(cloud_dict['fragility']['intensities'], cloud_dict['fragility']['poes'][:, i], linestyle='solid', color=self.colors['fragility'][i], lw=self.line_widths['thick'], label=f'DS{i+1}')
 
         ax.set_xlim([0, 5])
@@ -306,7 +306,7 @@ class plotter:
 
         # Cloud Analysis
         self._set_plot_style(ax1, xlabel=cloud_xlabel, ylabel=cloud_ylabel)
-        ax1.scatter(cloud_dict['imls'], cloud_dict['edps'], color=self.colors['gem'][2], s=self.marker_sizes['medium'], alpha=0.5, label='Cloud Data', zorder=0)
+        ax1.scatter(cloud_dict['cloud inputs']['imls'], cloud_dict['cloud inputs']['edps'], color=self.colors['gem'][2], s=self.marker_sizes['medium'], alpha=0.5, label='Cloud Data', zorder=0)
         for i in range(len(cloud_dict['cloud inputs']['damage_thresholds'])):
             ax1.scatter(cloud_dict['fragility']['medians'][i], cloud_dict['cloud inputs']['damage_thresholds'][i], color=self.colors['fragility'][i], s=self.marker_sizes['large'], alpha=1.0, zorder=2)
         ax1.plot(cloud_dict['regression']['fitted_x'], cloud_dict['regression']['fitted_y'], linestyle='solid', color=self.colors['gem'][1], lw=self.line_widths['thick'], label='Cloud Regression', zorder=1)
@@ -318,7 +318,7 @@ class plotter:
 
         # Fragility Analysis
         self._set_plot_style(ax2, xlabel=cloud_xlabel, ylabel='Probability of Exceedance')
-        for i in range(len(cloud_dict['medians'])):
+        for i in range(len(cloud_dict['fragility']['medians'])):
             ax2.plot(cloud_dict['fragility']['intensities'], cloud_dict['fragility']['poes'][:, i], linestyle='solid', color=self.colors['fragility'][i], lw=self.line_widths['thick'], label=f'DS{i+1}')
         ax2.set_xlim([0, 5])
         ax2.set_ylim([0, 1])
