@@ -4,24 +4,73 @@ import matplotlib.pyplot as plt
 import openseespy.opensees as ops
 
 class modeller():
+    """
+    A class to model and analyze multi-degree-of-freedom (MDOF) oscillators using OpenSees.
 
-    """
-    Details
+    This class provides functionality to create, analyze, and visualize structural models 
+    for dynamic and static analyses, including gravity analysis, modal analysis, static 
+    pushover analysis, cyclic pushover analysis, and nonlinear time-history analysis.
+
+    Attributes
+    ----------
+    number_storeys : int
+        The number of storeys in the building model.
+    floor_heights : list
+        List of floor heights in meters.
+    floor_masses : list
+        List of floor masses in tonnes.
+    storey_disps : np.array
+        Array of storey displacements (size = number of storeys, CapPoints).
+    storey_forces : np.array
+        Array of storey forces (size = number of storeys, CapPoints).
+    degradation : bool
+        Boolean to enable or disable hysteresis degradation.
+
+    Methods
     -------
-    Class of functions to model and analyse multi-degree-of-freedom oscillators
-    """
-    
+    __init__(number_storeys, floor_heights, floor_masses, storey_disps, storey_forces, degradation)
+        Initializes the modeller object and validates input parameters.
+    create_Pinching4_material(mat1Tag, mat2Tag, storey_forces, storey_disps, degradation)
+        Creates a Pinching4 material model for the MDOF oscillator.
+    compile_model()
+        Compiles and sets up the MDOF oscillator model in OpenSees.
+    plot_model(display_info=True)
+        Plots the 3D visualization of the OpenSees model.
+    do_gravity_analysis(nG=100, ansys_soe='UmfPack', constraints_handler='Transformation', numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-6, init_iter=500, algorithm_type='Newton', integrator='LoadControl', analysis='Static')
+        Performs gravity analysis on the MDOF system.
+    do_modal_analysis(num_modes=3, solver='-genBandArpack', doRayleigh=False, pflag=False)
+        Performs modal analysis to determine natural frequencies and mode shapes.
+    do_spo_analysis(ref_disp, disp_scale_factor, push_dir, phi, pflag=True, num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', numberer='RCM', test_type='EnergyIncr', init_tol=1.0e-5, init_iter=1000, algorithm_type='KrylovNewton')
+        Performs static pushover analysis (SPO) on the MDOF system.
+    do_cpo_analysis(ref_disp, mu, numCycles, push_dir, dispIncr, pflag=True, num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-5, init_iter=1000, algorithm_type='KrylovNewton')
+        Performs cyclic pushover analysis (CPO) on the MDOF system.
+    do_nrha_analysis(fnames, dt_gm, sf, t_max, dt_ansys, nrha_outdir, pflag=True, xi=0.05, ansys_soe='BandGeneral', constraints_handler='Plain', numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-6, init_iter=50, algorithm_type='Newton')
+        Performs nonlinear time-history analysis (NRHA) on the MDOF system.
+
+    """    
     def __init__(self, number_storeys, floor_heights, floor_masses, storey_disps, storey_forces, degradation):
         """
-        ----------
+        Initializes the modeller object and validates the input parameters.
+
         Parameters
         ----------
-        number_storeys:            int                Number of storeys
-        floor_heights:            list                Floor heights in metres (e.g. [2.5, 3.0])
-        floor_masses:             list                Floor masses in tonnes (e.g. [1000, 1200])
-        storey_disps:            array                Storey displacements (size = nst, CapPoints)
-        storey_forces:           array                Storey forces (size = nst,CapPoints)
-        degradation:              bool                Set True/False to active hysteresis
+        number_storeys : int
+            The number of storeys in the building model.
+        floor_heights : list
+            List of floor heights in meters (e.g., [2.5, 3.0]).
+        floor_masses : list
+            List of floor masses in tonnes (e.g., [1000, 1200]).
+        storey_disps : np.array
+            Array of storey displacements (size = number of storeys, CapPoints).
+        storey_forces : np.array
+            Array of storey forces (size = number of storeys, CapPoints).
+        degradation : bool
+            Boolean to enable or disable hysteresis degradation.
+
+        Raises
+        ------
+        ValueError
+            If the number of entries in `floor_heights` or `floor_masses` does not match `number_storeys`.
         """
 
         ### Run tests on input parameters
@@ -38,21 +87,46 @@ class modeller():
 
     def create_Pinching4_material(self, mat1Tag, mat2Tag, storey_forces, storey_disps, degradation):   
         """
-        Function to create Pinching4 Material Model used for the mdof_material object of stickModel
-        -----
-        Input
-        -----
-        :param mat1Tag:           int                Material Tag #1
-        :param mat2Tag:           int                Material Tag #2
-        :param F:               array                Array of storey forces
-        :param D:               array                Array of storey displacements
-        :param degradation:      bool                Boolean condition to enable/disable degradation in Pinching4
-    
-        -----
-        Output
-        -----
+        Creates a Pinching4 material model for the multi-degree-of-freedom material object in stick model analysis.
+        
+        The Pinching4 material model is used to simulate hysteretic behavior in structures under dynamic loading,
+        including degradation if enabled. The method assigns the material properties to the building storeys based 
+        on the given parameters.
+
+        Parameters
+        ----------
+        mat1Tag : int
+            Material tag for the first material in the Pinching4 model.
+        mat2Tag : int
+            Material tag for the second material in the Pinching4 model.
+        storey_forces : np.array
+            Array of storey forces at each storey in the model.
+        storey_disps : np.array
+            Array of storey displacements corresponding to the forces.
+        degradation : bool
+            Boolean flag to enable or disable hysteresis degradation in the Pinching4 material model.
+
+        Returns
+        -------
         None
-     
+            This method does not return any value but modifies the internal material definitions for the model.
+        
+        References:
+        -----------
+        1) Vamvatsikos D (2011) Software—earthquake, steel dynamics and probability, viewed January 2021.
+        http://users.ntua.gr/divamva/software.html
+        
+        2) Martins, L., Silva, V., Crowley, H. et al. Vulnerability modellers toolkit, an open-source platform
+        for vulnerability analysis. Bull Earthquake Eng 19, 5691–5709 (2021). https://doi.org/10.1007/s10518-021-01187-w
+        
+        3) Minjie Zhu, Frank McKenna, Michael H. Scott, OpenSeesPy: Python library for the OpenSees finite element framework, 
+        SoftwareX, Volume 7, 2018, Pages 6-11, ISSN 2352-7110, https://doi.org/10.1016/j.softx.2017.10.009.
+        (https://www.sciencedirect.com/science/article/pii/S2352711017300584)
+       
+        Notes
+        -----
+        The `mat1Tag` and `mat2Tag` represent different materials used in the Pinching4 hysteretic model, 
+        where the degradation flag controls the material's degradation behavior during the simulation.
         """
     
         force=np.zeros([5,1])
@@ -126,17 +200,38 @@ class modeller():
 
     def compile_model(self):
         """
-        Compiles the multi-degree-of-freedom oscillator
+        Compiles and sets up the multi-degree-of-freedom (MDOF) oscillator model in OpenSees.
 
+        This method constructs the model by defining nodes, assigning masses, imposing boundary conditions, 
+        and creating elements with associated material models for each storey in the building structure. 
+        It also defines rigid elastic materials for restrained degrees of freedom and nonlinear materials 
+        for unrestrained degrees of freedom. The method finally assembles the model for dynamic analysis.
+
+        The process involves:
+        1. Initializing the OpenSees model.
+        2. Creating base and floor nodes.
+        3. Assigning masses and degrees of freedom.
+        4. Applying boundary conditions for the nodes.
+        5. Creating zero-length elements for each storey with their respective material properties.
+        
         Parameters
         ----------
-        None.
+        None
         
         Returns
         -------
-        None.
-
-        """    
+        None
+        
+        Notes
+        -----
+        - The method uses OpenSees' `ops.node`, `ops.mass`, and `ops.element` to define nodes, masses, 
+          and zero-length elements for the MDOF oscillator.
+        - Boundary conditions are applied with the base node being fully fixed, while the upper storeys 
+          have horizontal degrees of freedom released.
+        - The material model used for each storey is a Pinching4 hysteretic model, created by the 
+          `create_Pinching4_material` method.
+        """  
+        
         ### Set model builder
         ops.wipe() # wipe existing model
         ops.model('basic', '-ndm', 3, '-ndf', 6)
@@ -197,18 +292,34 @@ class modeller():
 
     def plot_model(self, display_info=True):
         """
-        Plots the Opensees model
-    
+        Plots the 3D visualization of the OpenSees model, including nodes and elements.
+
+        This method generates a 3D plot of the multi-degree-of-freedom oscillator model defined in OpenSees.
+        It visualizes the nodes and the connections between them (representing structural elements). Nodes 
+        are plotted as either square (base) or circular markers, while the elements are visualized as lines 
+        connecting the nodes. If `display_info` is set to True, the node coordinates and IDs will be displayed 
+        on the plot.
+
         Parameters
         ----------
-        None.
-        
+        display_info : bool, optional
+            If True, displays additional information (coordinates and node ID) next to each node in the plot. 
+            The default is True.
+
         Returns
         -------
-        None.
-    
+        None
+        
+        Notes
+        -----
+        - Nodes are represented as either squares (base node) or circles (upper storey nodes).
+        - Elements (connections between nodes) are represented by blue lines connecting the corresponding nodes.
+        - Node coordinates are retrieved from OpenSees using `ops.nodeCoord` and node masses are retrieved with 
+          `ops.nodeMass`.
+        - Element connectivity (pairs of nodes connected by an element) is retrieved using `ops.eleNodes`.
+        - The plot is created using Matplotlib's 3D plotting functionality.
         """
-               
+        
         # get list of model nodes
         NodeCoordListX = []; NodeCoordListY = []; NodeCoordListZ = [];
         NodeMassList = []
@@ -261,28 +372,77 @@ class modeller():
 ##########################################################################
 #                             ANALYSIS MODULES                           #
 ##########################################################################
-    def do_gravity_analysis(self, nG=100,ansys_soe='UmfPack',constraints_handler='Transformation',
-                            numberer='RCM',test_type='NormDispIncr',init_tol = 1.0e-6, init_iter = 500, 
-                            algorithm_type='Newton' , integrator='LoadControl',analysis='Static'):        
+    def do_gravity_analysis(self, nG=100,
+                            ansys_soe='UmfPack',
+                            constraints_handler='Transformation',
+                            numberer='RCM',
+                            test_type='NormDispIncr',
+                            init_tol = 1.0e-6, 
+                            init_iter = 500, 
+                            algorithm_type='Newton' , 
+                            integrator='LoadControl',
+                            analysis='Static'):        
         """
-        Perform gravity analysis on MDOF
-    
+        Perform a gravity analysis on a multi-degree-of-freedom (MDOF) system in OpenSees.
+
+        This method sets up and runs a gravity analysis using specified parameters for various analysis objects 
+        in OpenSees. The gravity analysis solves for the static equilibrium of the system under self-weight loads 
+        (e.g., gravity loads).
+
         Parameters
         ----------
-        nG:                             int                Number of gravity analysis steps to perform.
-        ansys_soe:                   string                System of equations type.
-        constraints_handler:         string                The constraints handler object determines how the constraint equations are enforced in the analysis. Constraint equations enforce a specified value for a DOF, or a relationship between DOFs.
-        numberer:                    string                The DOF numberer object determines the mapping between equation numbers and degrees-of-freedom – how degrees-of-freedom are numbered.
-        test_type:                   string                This command is used to construct the LinearSOE and LinearSolver objects to store and solve the test of equations in the analysis.
-        init_tol:                     float                Tolerance criteria used to check for convergence.
-        init_iter:                    float                Max number of iterations to check.
-        algorithm_type:              string                The integrator object determines the meaning of the terms in the system of equation object Ax=B.
-        analysis:                    string                The analysis object, which defines what type of analysis is to be performed.
-        
+        nG: int, optional
+            Number of gravity analysis steps to perform. Default is 100.
+
+        ansys_soe: string, optional
+            The system of equations type to be used in the analysis. This defines how the system of equations 
+            will be solved. Default is 'UmfPack' (sparse direct solver).
+
+        constraints_handler: string, optional
+            The constraints handler determines how the constraint equations are enforced in the analysis. 
+            It controls the enforcement of specified values for degrees-of-freedom (DOFs) or relationships 
+            between them. Default is 'Transformation' (transforming the constrained DOFs into active ones).
+
+        numberer: string, optional
+            The degree-of-freedom numberer defines how DOFs are numbered. This is important for system 
+            efficiency in solving. Default is 'RCM' (Reverse Cuthill-McKee, a reordering algorithm).
+
+        test_type: string, optional
+            Defines the test type used to check the convergence of the solution. It is used in constructing 
+            the LinearSOE and LinearSolver objects. Default is 'NormDispIncr' (norm of displacement increment).
+
+        init_tol: float, optional
+            The tolerance criterion for checking convergence. A smaller value means stricter convergence. 
+            Default is 1.0e-6.
+
+        init_iter: int, optional
+            The maximum number of iterations to check for convergence. Default is 500.
+
+        algorithm_type: string, optional
+            Defines the solution algorithm used in the analysis. Common options are 'Newton' (Newton-Raphson) 
+            for solving the system of equations. Default is 'Newton'.
+
+        integrator: string, optional
+            Defines the integrator for the analysis. The integrator dictates how the analysis steps are taken 
+            in time or load. Default is 'LoadControl' (control load increments).
+
+        analysis: string, optional
+            Defines the type of analysis to be performed. 'Static' is typically used for gravity analysis, 
+            but other options (e.g., 'Transient') can be used depending on the type of analysis. Default is 'Static'.
+
         Returns
         -------
         None.
-    
+
+        Notes
+        -----
+        - This method sets up the analysis using OpenSees by defining the system of equations, constraints 
+          handler, numberer, convergence test, solution algorithm, integrator, and analysis type.
+        - The gravity analysis solves for the static equilibrium under self-weight or gravity loads and is 
+          typically used to determine the initial equilibrium state of a structure before dynamic loading.
+        - The analysis can be modified by changing the parameters to adjust solver settings, tolerance, 
+          and other relevant options.
+        - After the analysis is completed, the analysis objects are wiped to ensure a clean state for further analyses.
         """
         
         ### Define the analysis objects and run gravity analysis
@@ -299,23 +459,50 @@ class modeller():
         ### Wipe the analysis objects
         ops.wipeAnalysis()
         
-    def do_modal_analysis(self, num_modes=3, solver = '-genBandArpack', doRayleigh=False, pflag=False):
+    def do_modal_analysis(self, 
+                          num_modes=3, 
+                          solver = '-genBandArpack', 
+                          doRayleigh=False, 
+                          pflag=False):
         """
-        Perform modal analysis on MDOF
-    
+        Perform modal analysis on a multi-degree-of-freedom (MDOF) system to determine its natural frequencies 
+        and mode shapes.
+
+        This method calculates the natural frequencies and corresponding mode shapes of the system. The natural 
+        frequencies are determined by solving the eigenvalue problem, and the mode shapes are normalized 
+        for the system's degrees of freedom. The results can be used to assess the dynamic characteristics 
+        of the system.
+
         Parameters
         ----------
-        num_modes:                      int                Number of modes to consider (default is 3).
-        solver:                      string                Type of solver (default is -genBandArpack).
-        doRayleigh:                    bool                Flag to enable/disable Rayleigh damping
-        pflag:                         bool                Flag to print (or not) the modal analysis report.
-        
+        num_modes: int, optional
+            The number of modes to consider in the analysis. Default is 3. This parameter determines how many 
+            modes will be computed in the modal analysis.
+
+        solver: string, optional
+            The type of solver to use for the eigenvalue problem. Default is '-genBandArpack', which uses a 
+            generalized banded Arnoldi method for large sparse eigenvalue problems.
+
+        doRayleigh: bool, optional
+            Flag to enable or disable Rayleigh damping in the modal analysis. This parameter is not used directly 
+            in this method but can be set in the OpenSees model. Default is False.
+
+        pflag: bool, optional
+            Flag to control whether to print the modal analysis report. If True, the fundamental period and 
+            mode shape will be printed to the console. Default is False.
+
         Returns
         -------
-        T:                            array                Periods of vibration.
-        mode_shape                     list                First mode-based normalised mode-shape
-        """        
-    
+        T: array
+            The periods of vibration for the system, calculated as 2π/ω, where ω are the natural frequencies 
+            obtained from the eigenvalue problem.
+
+        mode_shape: list
+            A list of the normalized mode shapes for the system, with each element representing the displacement 
+            in the x-direction for the corresponding mode. The mode shapes are normalized by the last node's 
+            displacement.
+        """
+        
         ### Get frequency and period        
         self.omega = np.power(ops.eigen(solver, num_modes), 0.5)
         T = 2.0*np.pi/self.omega
@@ -341,35 +528,89 @@ class modeller():
         
         return T, mode_shape
             
-    def do_spo_analysis(self, ref_disp, disp_scale_factor, push_dir, phi, pflag=True, 
-                        num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', 
-                        numberer='RCM', test_type='EnergyIncr', init_tol=1.0e-5, init_iter=1000, 
+    def do_spo_analysis(self, 
+                        ref_disp, 
+                        disp_scale_factor, 
+                        push_dir, 
+                        phi, 
+                        pflag=True, 
+                        num_steps=200, 
+                        ansys_soe='BandGeneral', 
+                        constraints_handler='Transformation', 
+                        numberer='RCM', 
+                        test_type='EnergyIncr', 
+                        init_tol=1.0e-5, 
+                        init_iter=1000, 
                         algorithm_type='KrylovNewton'):
         """
-        Perform static pushover analysis on MDOF
-    
+        Perform static pushover analysis (SPO) on a multi-degree-of-freedom (MDOF) system.
+
+        This method simulates a static pushover analysis where a lateral load pattern is incrementally applied
+        to the structure. The displacement at the control node is increased step by step, and the corresponding
+        base shear, floor displacements, and forces in non-linear elements are recorded. The analysis helps in 
+        evaluating the structural response to lateral loads, such as earthquake forces.
+
         Parameters
         ----------
-        ref_disp:                     float                Reference displacement to analyses are run. Corresponds to yield or equivalent other, such as 1mm.
-        disp_scale_factor:            float                Multiple of ref_disp to which the push is run. So pushover can be run to a specified ductility or displacement.
-        push_dir:                       int                Direction of pushover (1 = X; 2 = Y; 3 = Z)
-        phi:                           list                Shape of lateral load applied, this is one (optional) output of the calibrateModel function and using it here assumes the applied pushover load is first-mode based
-        pflag:                         bool                Flag to print (or not) the static pushover analysis steps
-        num_steps:                      int                Number of spo analysis steps to perform (Default is 200).
-        ansys_soe:                   string                System of equations type (Default is 'BandGeneral').
-        constraints_handler:         string                The constraints handler object determines how the constraint equations are enforced in the analysis. Constraint equations enforce a specified value for a DOF, or a relationship between DOFs (Default is 'Transformation').
-        numberer:                    string                The DOF numberer object determines the mapping between equation numbers and degrees-of-freedom – how degrees-of-freedom are numbered (Default is 'RCM').
-        test_type:                   string                This command is used to construct the LinearSOE and LinearSolver objects to store and solve the test of equations in the analysis (Default is 'EnergyIncr').
-        init_tol:                     float                Tolerance criteria used to check for convergence (Default is 1e-5).
-        init_iter:                    float                Max number of iterations to check (Default is 1000).
-        algorithm_type:              string                The integrator object determines the meaning of the terms in the system of equation object Ax=B (Default is 'KrylovNewton').
-        
+        ref_disp: float
+            The reference displacement at which the analysis starts, corresponding to the yield or other 
+            significant displacement (e.g., 1mm).
+
+        disp_scale_factor: float
+            The scale factor applied to the reference displacement to determine the final displacement.
+            The analysis will be run to this scaled displacement.
+
+        push_dir: int
+            The direction in which the pushover load is applied:
+                1 = X direction
+                2 = Y direction
+                3 = Z direction
+
+        phi: list of floats
+            The lateral load pattern shape. This is typically a mode shape or a predefined load distribution. 
+            For example, it can be the first-mode shape from the calibrateModel function.
+
+        pflag: bool, optional
+            Flag to print (or not) the pushover analysis steps. If True, detailed feedback on each step will be printed. Default is True.
+
+        num_steps: int, optional
+            The number of steps to increment the pushover load. Default is 200.
+
+        ansys_soe: string, optional
+            The type of system of equations solver to use. Default is 'BandGeneral'.
+
+        constraints_handler: string, optional
+            The constraints handler object to determine how constraint equations are enforced. Default is 'Transformation'.
+
+        numberer: string, optional
+            The degree-of-freedom (DOF) numberer object to determine the mapping between equation numbers and degrees-of-freedom. Default is 'RCM'.
+
+        test_type: string, optional
+            The type of test to use for the linear system of equations. Default is 'EnergyIncr'.
+
+        init_tol: float, optional
+            The tolerance criterion to check for convergence. Default is 1.0e-5.
+
+        init_iter: int, optional
+            The maximum number of iterations to perform when checking for convergence. Default is 1000.
+
+        algorithm_type: string, optional
+            The type of algorithm used to solve the system. Default is 'KrylovNewton'.
+
         Returns
         -------
-        spo_disps:                    array                Displacements at each floor
-        spo_rxn:                      array                Base shear as the sum of the reaction at the base 
-        spo_disps_spring:             array                Displacements in the storey zero-length elements
-        spo_forces_spring:            array                Shear forces in the storey zero-length elements
+        spo_disps: array
+            Displacements at each floor level during the pushover analysis.
+
+        spo_rxn: array
+            Base shear recorded as the sum of reactions at the base during the pushover analysis.
+
+        spo_disps_spring: array
+            Displacements in the storey zero-length elements (non-linear springs).
+
+        spo_forces_spring: array
+            Shear forces in the storey zero-length elements (non-linear springs).
+
         """        
 
         # apply the load pattern
@@ -390,12 +631,7 @@ class modeller():
                     ops.load(pattern_nodes[i], 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
                 else:
                     ops.load(pattern_nodes[i], phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0, 0.0) ######### IT STARTS FROM ZERO
-
                     
-                    # if len(pattern_nodes) <= 4:
-                    #     ops.load(pattern_nodes[i], nodeList[i+1]/len(pattern_nodes), 0.0, 0.0, 0.0, 0.0, 0.0) ######### IT STARTS FROM ZERO
-                    # elif len(pattern_nodes) >4:
-                    #     ops.load(pattern_nodes[i], 4/3*nodeList[i+1]/len(pattern_nodes)*(1 - nodeList[i+1]/4/len(pattern_nodes)), 0.0, 0.0, 0.0, 0.0, 0.0) ######### IT STARTS FROM ZERO                        
             elif push_dir == 2:
                 if len(pattern_nodes)==1:
                     ops.load(pattern_nodes[i], 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
@@ -530,35 +766,86 @@ class modeller():
              
         return spo_disps, spo_rxn, spo_disps_spring, spo_forces_spring
     
-    def do_cpo_analysis(self, ref_disp, mu, numCycles, push_dir, dispIncr, pflag=True, 
-                        num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', 
-                        numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-5, init_iter=1000,
+    def do_cpo_analysis(self, 
+                        ref_disp,
+                        mu, 
+                        numCycles, 
+                        push_dir, 
+                        dispIncr, 
+                        pflag=True, 
+                        num_steps=200, 
+                        ansys_soe='BandGeneral', 
+                        constraints_handler='Transformation', 
+                        numberer='RCM', 
+                        test_type='NormDispIncr', 
+                        init_tol=1.0e-5, 
+                        init_iter=1000,
                         algorithm_type='KrylovNewton'):
         """
-        Perform cyclic pushover analysis on MDOF
+        Perform cyclic pushover (CPO) analysis on a Multi-Degree-of-Freedom (MDOF) system.
+    
+        This method performs a cyclic pushover analysis where the structure is subjected 
+        to a series of incremental displacements in the specified direction, both positive 
+        and negative, to simulate cyclic loading (e.g., earthquake-like loading conditions).
+        The pushover analysis is carried out over a specified number of cycles, with each cycle
+        involving displacement increments to achieve the desired ductility.
     
         Parameters
         ----------
-        ref_disp:                     float                Reference displacement to analyses are run. Corresponds to yield or equivalent other, such as 1mm.
-        mu:                           float                Target ductility.
-        numCycles:                    float                Number of cycles.
-        dispIncr:                     float                Number of displacement increments.
-        push_dir:                       int                Direction of pushover (1 = X; 2 = Y; 3 = Z).
-        pflag:                         bool                Flag to print (or not) the static pushover analysis steps (Default is 'True').
-        num_steps:                      int                Number of cpo analysis steps to perform (Default is 200).
-        ansys_soe:                   string                System of equations type. (Default is 'BandGeneral')
-        constraints_handler:         string                The constraints handler object determines how the constraint equations are enforced in the analysis. Constraint equations enforce a specified value for a DOF, or a relationship between DOFs (Default is 'Transformation').
-        numberer:                    string                The DOF numberer object determines the mapping between equation numbers and degrees-of-freedom – how degrees-of-freedom are numbered (Default is 'RCM').
-        test_type:                   string                This command is used to construct the LinearSOE and LinearSolver objects to store and solve the test of equations in the analysis (Default is 'NormDispIncr').
-        init_tol:                     float                Tolerance criteria used to check for convergence (Default is 1e-5).
-        init_iter:                    float                Max number of iterations to check (Default is 1000).
-        algorithm_type:              string                The integrator object determines the meaning of the terms in the system of equation object Ax=B (Default is 'KrylovNewton').
+        ref_disp: float
+            Reference displacement for the pushover analysis (e.g., yield displacement, or a baseline displacement).
         
+        mu: float
+            Target ductility factor, which is used to scale the displacement.
+            The ductility factor represents the displacement at which the structure reaches plastic deformation.
+        
+        numCycles: int
+            The number of displacement cycles to be performed during the analysis.
+        
+        dispIncr: float
+            The number of displacement increments for each loading cycle.
+        
+        push_dir: int
+            Direction of the pushover analysis. 
+            - 1 = X direction
+            - 2 = Y direction
+            - 3 = Z direction
+        
+        pflag: bool, optional, default=True
+            If True, prints feedback during the analysis steps.
+        
+        num_steps: int, optional, default=200
+            The number of steps for the cyclic pushover analysis.
+        
+        ansys_soe: string, optional, default='BandGeneral'
+            System of equations solver to be used for the analysis.
+        
+        constraints_handler: string, optional, default='Transformation'
+            The method used for handling constraint equations, such as enforcing displacement boundary conditions.
+        
+        numberer: string, optional, default='RCM'
+            The numberer method used to assign equation numbers to degrees of freedom.
+        
+        test_type: string, optional, default='NormDispIncr'
+            The type of test to be used for convergence in the solution of the linear system of equations.
+        
+        init_tol: float, optional, default=1e-5
+            The initial tolerance for convergence.
+        
+        init_iter: int, optional, default=1000
+            The maximum number of iterations for the solver to check convergence.
+        
+        algorithm_type: string, optional, default='KrylovNewton'
+            The type of algorithm used to solve the system of equations (e.g., Krylov-Newtown method).
+    
         Returns
         -------
-        cpo_disps:                    array                Displacements at each floor.
-        cpo_rxn:                      array                Base shear as the sum of the reaction at the base.
-    
+        cpo_disps: numpy.ndarray
+            An array containing the displacements at each floor at each step of the analysis.
+        
+        cpo_rxn: numpy.ndarray
+            An array containing the base shear values, calculated as the sum of the reactions at the base.
+        
         """        
 
         # apply the load pattern
@@ -676,42 +963,97 @@ class modeller():
                          test_type='NormDispIncr', init_tol=1.0e-6, init_iter=50, 
                          algorithm_type='Newton'):
         """
-        Perform nonlinear time-history analysis on MDOF
+        Perform nonlinear time-history analysis on a Multi-Degree-of-Freedom (MDOF) system.
+        
+        This method performs a nonlinear time-history analysis where ground motion records are applied to the 
+        system to simulate real-world seismic conditions. The analysis uses step-by-step integration methods 
+        to solve the system's response under dynamic loading.
     
         Parameters
         ----------
-        fnames:                        list                List of the filepaths to the ground motions to be applied in the X Y and Z. At least the X direction is required.
-        dt_gm:                        float                Time-step of the ground motions.
-        sf:                           float                Scale factor to be applied to the records (Typically equal to 9.81).
-        t_max:                        float                Duration of the record.
-        dt_ansys:                     float                Time-step at which to conduct the analysis (Typically smaller than the record dt).
-        nrha_outdir:                 string                Filepath where "TEMPORARY" files are saved and then deleted
-        pflag:                         bool                Flag to print (or not) the nonlinear time-history analysis steps (Default is 'True').
-        xi:                           float                The value of inherent damping (Default is 5% '0.05').
-        ansys_soe:                   string                System of equations type. (Default is 'BandGeneral')
-        constraints_handler:         string                The constraints handler object determines how the constraint equations are enforced in the analysis. Constraint equations enforce a specified value for a DOF, or a relationship between DOFs (Default is 'Plain').
-        numberer:                    string                The DOF numberer object determines the mapping between equation numbers and degrees-of-freedom – how degrees-of-freedom are numbered (Default is 'RCM').
-        test_type:                   string                This command is used to construct the LinearSOE and LinearSolver objects to store and solve the test of equations in the analysis (Default is 'NormDispIncr').
-        init_tol:                     float                Tolerance criteria used to check for convergence (Default is 1e-6).
-        init_iter:                    float                Max number of iterations to check (Default is 50).
-        algorithm_type:              string                The integrator object determines the meaning of the terms in the system of equation object Ax=B (Default is 'Newton').
-                        
+        fnames: list
+            List of file paths to the ground motion records for each direction (X, Y, Z). At least one ground motion 
+            record in the X direction is required.
+        
+        dt_gm: float
+            Time-step of the ground motion records, which is typically the time between each data point in the records.
+        
+        sf: float
+            Scale factor to apply to the ground motion records. Typically equal to the gravitational acceleration (9.81 m/s²).
+        
+        t_max: float
+            The maximum time duration for the analysis. It is typically the total time span of the ground motion record.
+        
+        dt_ansys: float
+            The time-step at which the analysis will be conducted. Typically smaller than the ground motion time-step to 
+            ensure accurate results.
+        
+        nrha_outdir: string
+            Directory where temporary output files (e.g., acceleration records) are saved during the analysis.
+        
+        pflag: bool, optional, default=True
+            Flag to print progress updates during the analysis. If True, the function prints information about the analysis 
+            steps and progress.
+        
+        xi: float, optional, default=0.05
+            The inherent damping ratio used in the analysis. The default is 5% damping (0.05).
+        
+        ansys_soe: string, optional, default='BandGeneral'
+            Type of the system of equations solver to be used in the analysis (e.g., 'BandGeneral', 'FullGeneral', etc.).
+        
+        constraints_handler: string, optional, default='Plain'
+            The method used to handle constraints in the analysis. This handles how boundary conditions or prescribed 
+            displacements are enforced.
+        
+        numberer: string, optional, default='RCM'
+            The numberer object determines the equation numbering used in the analysis. Default is 'RCM' (Reverse Cuthill-McKee).
+        
+        test_type: string, optional, default='NormDispIncr'
+            Type of convergence test used during the analysis to check whether the solution has converged. Default is 'NormDispIncr'.
+        
+        init_tol: float, optional, default=1.0e-6
+            Initial tolerance for the convergence test, used to check if the solution is converging to a sufficiently accurate result.
+        
+        init_iter: int, optional, default=50
+            Maximum number of iterations allowed during each time step for the analysis to converge.
+        
+        algorithm_type: string, optional, default='Newton'
+            Type of algorithm used to solve the system of equations. Default is 'Newton', which uses the Newton-Raphson method.
+    
         Returns
         -------
-        control_nodes:                 list                List of MDOF system floor nodes
-        conv_index:                    list                List containing whether or not analysis has converged (collapse index)
-        node_disps:                   array                Nodal displacements
-        node_accels:                  array                Nodal accelerations
-        peak_drift:                   array                Peak storey drift values (i.e., all storeys per record)
-        peak_accel:                   array                Peak floor acceleration values (i.e., all floors per record)
-        max_peak_drift:               array                Maximum peak storey drift values (i.e., maximum of all storeys per record)
-        max_peak_drift_dir:           array                Direction of maximum peak storey drift value (i.e., X or Y)
-        max_peak_drift_loc:           array                Location of maximum peak storey drift values (i.e., storey ID)
-        max_peak_accel:               array                Maximum peak floor acceleration values (i.e., maximum of all floors per record)
-        max_peak_accel_dir:           array                Direction of maximum peak floor acceleration value (i.e., X or Y)
-        max_peak_accel_loc:           array                Location of maximum peak floor acceleration values (i.e., floor ID) 
-        peak_disp:                    array                Peak displacement values (i.e., all floors per record) 
-    
+        control_nodes: list
+            List of the floor node tags in the MDOF system.
+        
+        conv_index: int
+            Convergence status index: -1 indicates failure, 0 indicates success (converged).
+        
+        peak_drift: numpy.ndarray
+            Array of peak storey drift values for each storey in the X and Y directions (radians).
+        
+        peak_accel: numpy.ndarray
+            Array of peak floor acceleration values for each floor in the X and Y directions (g).
+        
+        max_peak_drift: float
+            The maximum peak storey drift value (radians) across all floors.
+        
+        max_peak_drift_dir: string
+            Direction of the maximum peak storey drift ('X' or 'Y').
+        
+        max_peak_drift_loc: int
+            Location (storey) of the maximum peak storey drift.
+        
+        max_peak_accel: float
+            The maximum peak floor acceleration value (g) across all floors.
+        
+        max_peak_accel_dir: string
+            Direction of the maximum peak floor acceleration ('X' or 'Y').
+        
+        max_peak_accel_loc: int
+            Location (floor) of the maximum peak floor acceleration.
+        
+        peak_disp: numpy.ndarray
+            Array of peak displacement values (in meters) for each floor.  
         """        
     
         # define control nodes
