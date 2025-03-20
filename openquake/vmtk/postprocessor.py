@@ -552,19 +552,24 @@ class postprocessor():
             sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
             sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
             betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
-    
+
             # Compute probabilities of exceedance
+            poes = np.zeros((len(intensities),len(damage_thresholds)))
+
             if fragility_rotation:
                 
                 fragility_method == f'lognormal - rotated around the {rotation_percentile}th percentile'
-                poes = np.array([self.calculate_rotated_fragility(theta,
-                                                                  rotation_percentile, 
-                                                                  sigma_record2record, 
-                                                                  sigma_build2build = sigma_build2build) for theta, sigma_record2record in zip(thetas, sigmas_record2record)]).T        
+                for ds in range(len(damage_thresholds)):
+                    _,_,poes[:,ds] = self.calculate_rotated_fragility(thetas[ds],
+                                                                      rotation_percentile, 
+                                                                      sigmas_record2record[ds], 
+                                                                      sigma_build2build = sigmas_build2build[ds])
             else:            
-                poes = np.array([self.calculate_lognormal_fragility(theta, 
-                                                                    sigma_record2record, 
-                                                                    sigma_build2build = sigma_build2build) for theta, sigma_record2record in zip(thetas, sigmas_record2record)]).T
+
+                for ds in range(len(damage_thresholds)):
+                    poes[:,ds] = self.calculate_lognormal_fragility(thetas[ds], 
+                                                                    sigmas_record2record[ds], 
+                                                                    sigma_build2build = sigmas_build2build[ds])
 
             # Create the dictionary
             cloud_dict = {
@@ -724,8 +729,8 @@ class postprocessor():
                                                              sigma_build2build = sigma_build2build)
             else:
                 poes[:, i] = self.calculate_lognormal_fragility(theta, 
-                                                                   sigma_record2record, 
-                                                                   sigma_build2build = sigma_build2build)
+                                                                sigma_record2record, 
+                                                                sigma_build2build = sigma_build2build)
                 
         
         # Create the msa_dict with all relevant information
