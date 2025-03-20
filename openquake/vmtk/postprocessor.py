@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from scipy.stats import lognorm 
+from scipy.stats import norm, lognorm 
 from scipy import stats, optimize
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
@@ -319,8 +319,7 @@ class postprocessor():
         
         return poes.values
 
-
-    def do_cloud_analysis(self, 
+    def do_cloud_analysis(self,
                           imls, 
                           edps, 
                           damage_thresholds, 
@@ -329,91 +328,244 @@ class postprocessor():
                           sigma_build2build=0.3, 
                           intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
                           fragility_rotation=False,
-                          rotation_percentile = 0.1):
-        
+                          rotation_percentile=0.1,
+                          fragility_method='probit'):
         """
-        Function to perform censored cloud analysis to a set of engineering demand parameters and intensity measure levels
-        Processes cloud analysis and fits linear regression after due consideration of collapse
-        ----------
-        Parameters
-        ----------
-        imls:                    list          Intensity measure levels 
-        edps:                    list          Engineering demand parameters (e.g., maximum interstorey drifts, maximum peak floor acceleration, top displacements, etc.)
-        damage_thresholds        list          EDP-based damage thresholds associated with slight, moderate, extensive and complete damage
-        lower_limit             float          Minimum EDP below which cloud records are filtered out (Typically equal to 0.1 times the yield capacity which is a proxy for no-damage)
-        censored_limit          float          Maximum EDP above which cloud records are filtered out (Typically equal to 1.5 times the ultimate capacity which is a proxy for collapse)
-        sigma_build2build       float          Building-to-building variability or modelling uncertainty (Default is set to 0.3)
-        intensities             array          Array of intensity measure levels to sample the fragility functions
-        fragility_rotation       bool          Bool to indicate whether or not to rotate the fragility function about a target percentile (Default set to False)
-        rotation_percentile     float          Target percentile for fragility function rotation (Default set to 0.1 i.e., 10-th percentile)
-        -------
-        Returns
-        -------
-        cloud_dict:              dict         Cloud analysis outputs (regression coefficients and data, fragility parameters and functions)        
-        """    
-
+        Perform a censored cloud analysis to assess fragility functions for a set of engineering demand parameters (EDPs) 
+        and intensity measure levels (IMLs). This function processes the cloud analysis and fits regression models, 
+        considering both lower and upper limits for censored data. The method is used for deriving fragility functions 
+        such as those in ESRM20.
+    
+        This function allows the application of various fragility function fitting methods (parametric and non-parametric) 
+        and optionally rotates the fragility function around a given percentile.
+    
+        Parameters:
+        -----------
+        imls : list or array
+            A list or array of intensity measure levels (IMLs), representing the levels of seismic intensity considered 
+            for the analysis.
+            
+        edps : list or array
+            A list or array of engineering demand parameters (EDPs) such as maximum interstory drifts, maximum peak 
+            floor acceleration, or top displacements that are used to assess the structural response to the seismic event.
+            
+        damage_thresholds : list
+            A list of damage thresholds associated with different levels of damage (e.g., slight, moderate, extensive, and 
+            complete). These thresholds are used to classify the damage states based on the corresponding EDP values.
+    
+        lower_limit : float
+            The minimum value of EDP below which cloud records are excluded. This is typically set to a small value, 
+            such as 0.1 times the yield capacity, to avoid records with no damage.
+            
+        censored_limit : float
+            The maximum value of EDP above which cloud records are excluded. This is typically set to a value like 
+            1.5 times the ultimate capacity to filter out records corresponding to collapse.
+            
+        sigma_build2build : float, optional, default=0.3
+            The building-to-building variability or modeling uncertainty. This represents the variation in response 
+            from one building to another, and is used to model uncertainty in the fragility function.
+            
+        intensities : array, optional, default=np.geomspace(0.05, 10.0, 50)
+            An array of intensity measure levels used to sample and evaluate the fragility functions. By default, 
+            this is set to a logarithmic space between 0.05 and 10.0 with 50 points.
+    
+        fragility_rotation : bool, optional, default=False
+            A boolean flag to indicate whether or not the fragility function should be rotated about a target percentile.
+            If set to `True`, the function will rotate the fragility curve to match the given percentile.
+            
+        rotation_percentile : float, optional, default=0.1
+            The target percentile (between 0 and 1) around which the fragility function will be rotated, if 
+            `fragility_rotation` is `True`. For example, a value of 0.1 means a rotation to the 10th percentile.
+            
+        fragility_method : str, optional, default='probit'
+            The method used to fit the fragility function. Options include:
+            - 'probit': Probit regression model (default).
+            - 'logit': Logit regression model.
+            - 'ordinal': Ordinal regression model.
+            - 'lognormal': Lognormal distribution model for the fragility function.
+            
+        Returns:
+        --------
+        cloud_dict : dict
+            A dictionary containing the outputs of the cloud analysis, which includes:
+            - 'cloud inputs': Input data used in the analysis (IMLs, EDPs, thresholds, limits).
+            - 'fragility functions': Results of the fragility function fitting, including predicted exceedance probabilities (poes), 
+              fragility method used, and related parameters.
+            - 'regression coefficients': Fitted regression coefficients (b1, b0), sigma values, and fitted data for the model.
+            """
+        
         # Convert inputs to numpy arrays
         imls = np.asarray(imls)
         edps = np.asarray(edps)
         
-        x_array=np.log(imls)
-        y_array=edps
-        
-        # remove displacements below lower limit
-        bool_y_lowdisp=edps>=lower_limit
-        x_array = x_array[bool_y_lowdisp]
-        y_array = y_array[bool_y_lowdisp]
-          
-        # checks if the y value is above the censored limit
-        bool_is_censored=y_array>=censored_limit
-        bool_is_not_censored=y_array<censored_limit
-        
-        # creates an array where all the censored values are set to the limit
-        observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
-        
-        y_array=np.log(edps)
-        
-        def func(x):
-              p = np.array([stats.norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
-              return -np.sum(np.log(p))
-        sol1=optimize.fmin(func,[1,1,1],disp=False)
-        
-        def func2(x):
-              p1 = np.array([stats.norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
-              p2 = np.array([1-stats.norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
-              return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
-        
-        p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
+        # Compute exceedance probabilities using the specified fragility method
+        if fragility_method in ['probit', 'logit']:
+            
+            # Get the probabilities of exceedance
+            poes = self.fit_glm_fragility(imls, edps, damage_thresholds, fragility_method=fragility_method)
+            
+            # Create the dictionary
+            cloud_dict = {
+                
+                # Add a nested dictionary for the inputs of the regression
+                'cloud inputs': {
+                    'imls': imls,                            # Store the intensity measure levels (cloud)
+                    'edps': edps,                            # Store the engineering demand parameters (cloud)
+                    'lower_limit': None,                     # Store the lower limit for censored regression
+                    'upper_limit': None,                     # Store the upper limit for censored regression
+                    'damage_thresholds': damage_thresholds   # Store the demand-based damage state thresholds
+                    },
+                
+                # Add a nested dictionary for fragility functions parameters
+                'fragility functions': {
+                    'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
+                    'intensities': intensities,                   # Store the intensities used for sampling fragility functions
+                    'poes': poes,                                 # Store the probabilities of damage state exceedance
+                    'medians': None,                              # Store the median seismic intensities
+                    'sigma_record2record': None,                  # Store the record-to-record variability
+                    'sigma_build2build': None,                    # Store the modelling uncertainty
+                    'betas_total': None                           # Store the total variability accounting for record-to-record and modelling uncertainties 
+                    },
+                
+                # Add a nested dictionary for regression coefficients
+                'regression coefficients': {
+                    'b1': None,         # Store 'b1' coefficient
+                    'b0': None,         # Store 'b0' coefficient
+                    'sigma': None,      # Store 'sigma' value
+                    'fitted_x': None,   # Store the fitted x-values
+                    'fitted_y': None    # Store the fitted y-values
+                }
+            }
 
-        # Regression fit
-        xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
-        yvec = p_cens[0] * xvec + p_cens[1]
-        
-        # Compute fragility parameters
-        thetas      = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0]) # Median intensities
-        betas_r     = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])      # Record-to-record variability
-        betas_total = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2)) # Total dispersion
-        
-        # Compute probabilities of exceedance
-        if fragility_rotation:
-            poes = np.array([self.get_rotated_fragility_function(theta,
-                                                                 rotation_percentile, 
-                                                                 beta_r, 
-                                                                 sigma_build2build = sigma_build2build) for theta, beta_r in zip(thetas, betas_r)]).T        
-        else:            
-            poes = np.array([self.get_fragility_function(theta, 
-                                                         beta_r, 
-                                                         sigma_build2build = sigma_build2build) for theta, beta_r in zip(thetas, betas_r)]).T
-        
-        cloud_dict = {
-            'imls': imls, 'edps': edps, 'lower_limit': lower_limit, 'upper_limit': censored_limit,
-            'damage_thresholds': damage_thresholds, 'fitted_x': np.exp(xvec), 'fitted_y': np.exp(yvec),
-            'intensities': intensities, 'poes': poes, 'medians': thetas, 'betas_total': betas_total,
-            'b1': p_cens[0], 'b0': p_cens[1], 'sigma': p_cens[2]
-        }
+            
+        elif fragility_method.lower() == 'ordinal':
+
+            # Compute exceedance probabilities using the specified fragility method            
+            poes = self.fit_ordinal_fragility(imls, edps, damage_thresholds)
+            
+            # Create the dictionary
+            cloud_dict = {
+                
+                # Add a nested dictionary for the inputs of the regression
+                'cloud inputs': {
+                    'imls': imls,                            # Store the intensity measure levels (cloud)
+                    'edps': edps,                            # Store the engineering demand parameters (cloud)
+                    'lower_limit': None,                     # Store the lower limit for censored regression
+                    'upper_limit': None,                     # Store the upper limit for censored regression
+                    'damage_thresholds': damage_thresholds   # Store the demand-based damage state thresholds
+                    },
+                
+                # Add a nested dictionary for fragility functions parameters
+                'fragility functions': {
+                    'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
+                    'intensities': intensities,                   # Store the intensities used for sampling fragility functions
+                    'poes': poes,                                 # Store the probabilities of damage state exceedance
+                    'medians': None,                              # Store the median seismic intensities
+                    'sigma_record2record': None,                  # Store the record-to-record variability
+                    'sigma_build2build': None,                    # Store the modelling uncertainty
+                    'betas_total': None                           # Store the total variability accounting for record-to-record and modelling uncertainties 
+                    },
+                
+                # Add a nested dictionary for regression coefficients
+                'regression coefficients': {
+                    'b1': None,         # Store 'b1' coefficient
+                    'b0': None,         # Store 'b0' coefficient
+                    'sigma': None,      # Store 'sigma' value
+                    'fitted_x': None,   # Store the fitted x-values
+                    'fitted_y': None    # Store the fitted y-values
+                }
+            }
+            
+        elif fragility_method.lower() == 'lognormal':
+            
+            # define the arrays for the regression
+            x_array=np.log(imls)
+            y_array=edps
+            
+            # remove displacements below lower limit
+            bool_y_lowdisp=edps>=lower_limit
+            x_array = x_array[bool_y_lowdisp]
+            y_array = y_array[bool_y_lowdisp]
+    
+            # checks if the y value is above the censored limit
+            bool_is_censored=y_array>=censored_limit
+            bool_is_not_censored=y_array<censored_limit
+            
+            # creates an array where all the censored values are set to the limit
+            observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
+            
+            y_array=np.log(edps)
+            
+            def func(x):
+                  p = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
+                  return -np.sum(np.log(p))
+            sol1=optimize.fmin(func,[1,1,1],disp=False)
+            
+            def func2(x):
+                  p1 = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
+                  p2 = np.array([1-norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
+                  return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
+            
+            p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
+    
+            # Regression fit
+            xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
+            yvec = p_cens[0] * xvec + p_cens[1]
+            
+            # Compute fragility parameters from the regressed fit
+            thetas               = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])                                       # Median intensities
+            sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
+            sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
+            betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
+    
+            # Compute probabilities of exceedance
+            if fragility_rotation:
+                
+                fragility_method == f'lognormal - rotated around the {rotation_percentile}th percentile'
+                poes = np.array([self.get_rotated_fragility_function(theta,
+                                                                     rotation_percentile, 
+                                                                     sigma_record2record, 
+                                                                     sigma_build2build = sigma_build2build) for theta, sigma_record2record in zip(thetas, sigmas_record2record)]).T        
+            else:            
+                poes = np.array([self.calculate_lognormal_fragility(theta, 
+                                                                    sigma_record2record, 
+                                                                    sigma_build2build = sigma_build2build) for theta, sigma_record2record in zip(thetas, sigmas_record2record)]).T
+
+            # Create the dictionary
+            cloud_dict = {
+                
+                # Add a nested dictionary for the inputs of the regression
+                'cloud inputs': {
+                    'imls': imls,                            # Store the intensity measure levels (cloud)
+                    'edps': edps,                            # Store the engineering demand parameters (cloud)
+                    'lower_limit': None,                     # Store the lower limit for censored regression
+                    'upper_limit': None,                     # Store the upper limit for censored regression
+                    'damage_thresholds': damage_thresholds   # Store the demand-based damage state thresholds
+                    },
+                
+                # Add a nested dictionary for fragility functions parameters
+                'fragility functions': {
+                    'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
+                    'intensities': intensities,                   # Store the intensities used for sampling fragility functions
+                    'poes': poes,                                 # Store the probabilities of damage state exceedance
+                    'medians': thetas,                            # Store the median seismic intensities
+                    'sigma_record2record': sigmas_record2record,  # Store the record-to-record variability
+                    'sigma_build2build': sigmas_build2build,      # Store the modelling uncertainty
+                    'betas_total': betas_total                    # Store the total variability accounting for record-to-record and modelling uncertainties 
+                    },
+                
+                # Add a nested dictionary for regression coefficients
+                'regression coefficients': {
+                    'b1': p_cens[0],            # Store 'b1' coefficient
+                    'b0': p_cens[1],            # Store 'b0' coefficient
+                    'sigma': p_cens[2],         # Store 'sigma' value
+                    'fitted_x': np.exp(xvec),   # Store the fitted x-values
+                    'fitted_y': np.exp(yvec)    # Store the fitted y-values
+                }
+            }
         
         return cloud_dict
-
+    
     def do_multiple_stripe_analysis(self,
                                     imls, 
                                     edps, 
