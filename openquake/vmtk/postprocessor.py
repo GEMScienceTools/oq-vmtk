@@ -1,22 +1,57 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from scipy.stats import norm, lognorm 
 from scipy import stats, optimize
+from scipy.stats import norm, lognorm 
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 class postprocessor():
 
     """
-    Details
+    Class for post-processing results of nonlinear time-history analysis, including fragility and vulnerability analysis.  
+    
+    This class provides methods to compute fragility functions, perform cloud and multiple stripe analyses, 
+    and calculate vulnerability functions and average annual losses. It supports various fragility fitting 
+    methods, including lognormal, probit, logit, and ordinal models. The class also includes functionality 
+    to handle uncertainty and variability in the analysis.
+    
+    Methods
     -------
-    Class of functions to post-process results of nonlinear time-history analysis
-    """
+    calculate_lognormal_fragility(theta, sigma_record2record, sigma_build2build=0.30, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
+        Computes the probability of exceeding a damage state using a lognormal cumulative distribution function (CDF).
+    
+    calculate_rotated_fragility(theta, percentile, sigma_record2record, sigma_build2build=0.30, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
+        Calculates a rotated fragility function based on a lognormal CDF, adjusting the median intensity to align with a specified target percentile.
+    
+    calculate_glm_fragility(imls, edps, damage_thresholds, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), fragility_method='logit')
+        Computes non-parametric fragility functions using Generalized Linear Models (GLM) with either a Logit or Probit link function.
+    
+    calculate_ordinal_fragility(imls, edps, damage_thresholds, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
+        Fits an ordinal (cumulative) probit model to estimate fragility curves for different damage states.
+    
+    do_cloud_analysis(imls, edps, damage_thresholds, lower_limit, censored_limit, sigma_build2build=0.3, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), fragility_rotation=False, rotation_percentile=0.1, fragility_method='lognormal')
+        Perform a censored cloud analysis to assess fragility functions for a set of engineering demand parameters (EDPs) and intensity measure levels (IMLs).
+    
+    do_multiple_stripe_analysis(imls, edps, damage_thresholds, sigma_build2build=0.3, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), fragility_rotation=False, rotation_percentile=0.10)
+        Perform maximum likelihood estimation (MLE) for fragility curve fitting following a multiple stripe analysis.
+    
+    calculate_sigma_loss(loss)
+        Calculate the uncertainty in the loss estimates based on the method proposed in Silva (2019).
+    
+    get_vulnerability_function(poes, consequence_model, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), uncertainty=True)
+        Calculate the vulnerability function given the probabilities of exceedance and a consequence model.
+    
+    calculate_average_annual_damage_probability(fragility_array, hazard_array, return_period=1, max_return_period=5000)
+        Calculate the Average Annual Damage State Probability (AADP) based on fragility and hazard curves.
+    
+    calculate_average_annual_loss(vulnerability_array, hazard_array, return_period=1, max_return_period=5000)
+        Calculate the Average Annual Loss (AAL) based on vulnerability and hazard curves.
+    
+    """  
     
     def __init__(self):
         pass                
             
-
     def calculate_lognormal_fragility(self,
                                       theta,
                                       sigma_record2record,
