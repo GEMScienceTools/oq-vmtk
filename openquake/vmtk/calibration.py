@@ -3,35 +3,69 @@ from scipy.linalg import eigh
 
 def calibrate_model(nst, gamma, sdof_capacity, isFrame, isSOS):    
     """
-    Function to calibrate MDOF storey force-deformation relationships
-    based on SDOF-based capacity functions
-    -----
-    Input
-    -----
-    nst: float
-        Number of storeys
-    gamma: float
-        SDOF-MDOF transformation factor
-    sdofCapArray: array
-        SDOF spectral displacements-accelerations
-    isFrame: bool
-        Flag for framed or braced building class (True or False)
-    isSOS: bool
-        Flag for building class or model containing a soft-storey or not (True or False)
-    ------
-    Output
-    ------
-    flm_mdof: list 
-        MDOF floor masses
-    stD_mdof: list
-        MDOF storey displacements
-    stF_mdof: list
-        MDOF storey forces
-    phi_mdof: list
-        MDOF expected mode shape
+    Calibrate Multi-Degree-of-Freedom (MDOF) storey force-deformation relationships based on Single-Degree-of-Freedom (SDOF) capacity functions.
+    
+    This function computes the MDOF storey forces, displacements, and mode shape by transforming SDOF-based capacity curves, 
+    accounting for factors such as the number of storeys, building class, and presence of soft-storey or frame structures. 
+    The model applies a series of physical assumptions and simplifications, including uniform mass distribution and 
+    standardized stiffness matrices.
+    
+    Parameters
+    ----------
+    nst : int
+        The number of storeys in the building (must be a positive integer).
         
-    """     
+    gamma : float
+        The SDOF-MDOF transformation factor. This factor adjusts the response of the MDOF system based on the SDOF capacity.
         
+    sdof_capacity : array-like, shape (n, 2 or 3 or 4)
+        The SDOF spectral capacity data, where:
+        - Column 1 represents spectral displacements or accelerations.
+        - Column 2 represents spectral forces or accelerations.
+        - (For a trilinear/quadrilinear capacity curve) Additional columns may represent subsequent branches of the curve.
+
+    isFrame : bool
+        Flag indicating whether the building is a framed structure (True) or braced structure (False).
+        
+    isSOS : bool
+        Flag indicating whether the building contains a soft-storey (True) or not (False).
+        
+    Returns
+    -------
+    flm_mdof : list of float
+        The MDOF floor masses, which are derived based on the mode shape and transformation factor.
+        
+    stD_mdof : list of float
+        The MDOF storey displacements, adjusted for each floor and the applied SDOF capacity curve.
+        
+    stF_mdof : list of float
+        The MDOF storey forces, computed based on the calibrated capacity functions.
+        
+    phi_mdof : list of float
+        The expected mode shape for the MDOF system, normalized to have a unit norm.
+        
+    References
+    ----------
+    1) Lu X, McKenna F, Cheng Q, Xu Z, Zeng X, Mahin SA. An open-source framework for regional earthquake loss 
+    estimation using the city-scale nonlinear time history analysis. Earthquake Spectra. 2020;36(2):806-831. 
+    doi:10.1177/8755293019891724
+    
+    2) Zhen Xu, Xinzheng Lu, Kincho H. Law, A computational framework for regional seismic simulation of buildings with
+    multiple fidelity models, Advances in Engineering Software, Volume 99, 2016, Pages 100-110, ISSN 0965-9978,
+    https://doi.org/10.1016/j.advengsoft.2016.05.014. (https://www.sciencedirect.com/science/article/pii/S0965997816301181)
+    
+    3) EN 1998-1:2004 (Eurocode 8: Design of structures for earthquake resistance - Part 1: General rules, seismic actions, 
+    and rules for buildings)
+    
+    Notes
+    -----
+    - If the building has a soft-storey, a modified stiffness matrix is used with reduced stiffness for the last floor.
+    - The mode shape is derived using a generalized eigenvalue problem with mass and stiffness matrices.
+    - The function handles various types of SDOF capacity curves (bilinear, trilinear, quadrilinear) to calibrate the MDOF system.
+    - The effective mass for the SDOF system is computed assuming uniform mass distribution across floors.
+   
+    
+   """        
         
     # If the building has a soft storey
     if isSOS:
