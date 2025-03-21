@@ -137,8 +137,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'mbt.tex', 'mbt Documentation',
-     'GEM Hazard', 'manual'),
+    (master_doc, 'oq-vmtk.tex', 'oq-vmtk Documentation',
+     'GEM Risk', 'manual'),
 ]
 
 
@@ -147,7 +147,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'mbt', 'mbt Documentation',
+    (master_doc, 'oq-vmtk', 'oq-vmtk Documentation',
      [author], 1)
 ]
 
@@ -158,8 +158,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'mbt', 'mbt Documentation',
-     author, 'mbt', 'One line description of project.',
+    (master_doc, 'oq-vmtk', 'oq-vmtk Documentation',
+     author, 'oq-vmtk', 'One line description of project.',
      'Miscellaneous'),
 ]
 
