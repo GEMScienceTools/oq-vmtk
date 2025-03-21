@@ -362,6 +362,7 @@ class postprocessor():
                           censored_limit, 
                           sigma_build2build=0.3, 
                           intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
+                          cloud_method = 'mle',
                           fragility_rotation=False,
                           rotation_percentile=0.1,
                           fragility_method='lognormal'):
@@ -403,6 +404,11 @@ class postprocessor():
         intensities : array, optional, default=np.geomspace(0.05, 10.0, 50)
             An array of intensity measure levels used to sample and evaluate the fragility functions. By default, 
             this is set to a logarithmic space between 0.05 and 10.0 with 50 points.
+
+        cloud_method : str, optional, default='MLE'
+            The method used to fit the cloud regression. Options include:
+            - 'mle': Maximum likelihood estimation (default).
+            - 'lse': Least square error
     
         fragility_rotation : bool, optional, default=False
             A boolean flag to indicate whether or not the fragility function should be rotated about a target percentile.
@@ -448,7 +454,8 @@ class postprocessor():
                     'edps': edps,                            # Store the engineering demand parameters (cloud)
                     'lower_limit': None,                     # Store the lower limit for censored regression
                     'upper_limit': None,                     # Store the upper limit for censored regression
-                    'damage_thresholds': damage_thresholds   # Store the demand-based damage state thresholds
+                    'damage_thresholds': damage_thresholds,  # Store the demand-based damage state thresholds
+                    'cloud_method': None                     # Store the cloud analysis regression method
                     },
                 
                 # Add a nested dictionary for fragility functions parameters
@@ -487,7 +494,8 @@ class postprocessor():
                     'edps': edps,                            # Store the engineering demand parameters (cloud)
                     'lower_limit': None,                     # Store the lower limit for censored regression
                     'upper_limit': None,                     # Store the upper limit for censored regression
-                    'damage_thresholds': damage_thresholds   # Store the demand-based damage state thresholds
+                    'damage_thresholds': damage_thresholds,  # Store the demand-based damage state thresholds
+                    'cloud_method': None                     # Store the cloud analysis regression method
                     },
                 
                 # Add a nested dictionary for fragility functions parameters
@@ -513,46 +521,85 @@ class postprocessor():
             
         elif fragility_method.lower() == 'lognormal':
             
-            # define the arrays for the regression
-            x_array=np.log(imls)
-            y_array=edps
+            if cloud_method.lower() == 'mle':
+                
+                # define the arrays for the regression
+                x_array=np.log(imls)
+                y_array=edps
+                
+                # remove displacements below lower limit
+                bool_y_lowdisp=edps>=lower_limit
+                x_array = x_array[bool_y_lowdisp]
+                y_array = y_array[bool_y_lowdisp]
+        
+                # checks if the y value is above the censored limit
+                bool_is_censored=y_array>=censored_limit
+                bool_is_not_censored=y_array<censored_limit
+                
+                # creates an array where all the censored values are set to the limit
+                observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
+                
+                y_array=np.log(edps)
+                
+                def func(x):
+                      p = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
+                      return -np.sum(np.log(p))
+                sol1=optimize.fmin(func,[1,1,1],disp=False)
+                
+                def func2(x):
+                      p1 = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
+                      p2 = np.array([1-norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
+                      return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
+                
+                p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
+        
+                # Regression fit
+                xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
+                yvec = p_cens[0] * xvec + p_cens[1]
+                
+                # Compute fragility parameters from the regressed fit
+                thetas               = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])                                       # Median intensities
+                sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
+                sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
+                betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
             
-            # remove displacements below lower limit
-            bool_y_lowdisp=edps>=lower_limit
-            x_array = x_array[bool_y_lowdisp]
-            y_array = y_array[bool_y_lowdisp]
-    
-            # checks if the y value is above the censored limit
-            bool_is_censored=y_array>=censored_limit
-            bool_is_not_censored=y_array<censored_limit
+            elif cloud_method.lower() == 'lse':
+                
+                # Log-transform intensity measure levels
+                log_imls = np.log(imls)
             
-            # creates an array where all the censored values are set to the limit
-            observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
+                # Apply filtering for valid EDPs
+                valid_mask = edps >= lower_limit
+                log_imls, edps = log_imls[valid_mask], edps[valid_mask]
             
-            y_array=np.log(edps)
+                # Apply censoring: replace values above censored_limit
+                is_censored = edps >= censored_limit
+                log_observed_edps = np.log(np.where(is_censored, censored_limit, edps))
+                
+                # Perform linear regression (ordinary least squares)
+                slope, intercept, r_value, p_value, std_err = stats.linregress(log_imls, log_observed_edps)
             
-            def func(x):
-                  p = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
-                  return -np.sum(np.log(p))
-            sol1=optimize.fmin(func,[1,1,1],disp=False)
-            
-            def func2(x):
-                  p1 = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
-                  p2 = np.array([1-norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
-                  return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
-            
-            p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
-    
-            # Regression fit
-            xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
-            yvec = p_cens[0] * xvec + p_cens[1]
-            
-            # Compute fragility parameters from the regressed fit
-            thetas               = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])                                       # Median intensities
-            sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
-            sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
-            betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
+                # Generate fitted regression curve
+                xvec = np.linspace(log_imls.min(), log_imls.max(), 100)
+                yvec = slope * xvec + intercept
+                y_true = slope * log_imls + intercept
+                
+                # Get the residuals 
+                residuals = log_observed_edps-y_true
+                
+                # Get the standard deviation
+                sigma = np.std(residuals)
+                
+                # Assemble the parameters
+                p_cens = [slope, intercept, sigma]
 
+                # Compute fragility parameters from the regressed fit
+                thetas               = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])                                       # Median intensities
+                sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
+                sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
+                betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
+            
+            
             # Compute probabilities of exceedance
             poes = np.zeros((len(intensities),len(damage_thresholds)))
 
@@ -580,7 +627,8 @@ class postprocessor():
                     'edps': edps,                            # Store the engineering demand parameters (cloud)
                     'lower_limit': None,                     # Store the lower limit for censored regression
                     'upper_limit': None,                     # Store the upper limit for censored regression
-                    'damage_thresholds': damage_thresholds   # Store the demand-based damage state thresholds
+                    'damage_thresholds': damage_thresholds,  # Store the demand-based damage state thresholds
+                    'cloud_method': cloud_method.lower()     # Store the cloud analysis regression method
                     },
                 
                 # Add a nested dictionary for fragility functions parameters
