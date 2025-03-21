@@ -43,12 +43,12 @@ variable handling tasks, respectively.
    :caption: Contents:
 
    contents/installation
-   contents/IMCalculator
-   contents/Calibration
-   contents/Modeller
-   contents/Postprocessor
-   contents/SLFGenerator
-   contents/Plotter
+   contents/imc
+   contents/cal
+   contents/mod
+   contents/pos
+   contents/slf
+   contents/plo
 
 
 Indices and tables
