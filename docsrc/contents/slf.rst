@@ -1,7 +1,7 @@
 Storey-Loss Function Generation Module
 ######################################
 
-The `slf_generator` module provides a class ``slf_generator`` to generate Storey Loss Functions
+The ``slf_generator`` module provides a class ``slf_generator`` to generate Storey Loss Functions
 (SLFs) based on fragility, consequence, and quantity data. SLFs establish a direct relationship
 between the expected loss at a specific storey and the engineering demand parameter.
 This class employs a probabilistic approach, utilizing Monte Carlo simulations to model damage,
@@ -13,184 +13,184 @@ Classes
 
 .. class:: slf_generator()
 
-  A class for generating Storey Loss Functions (SLFs) using fragility, consequence, and quantity data. It applies a probabilistic approach to quantify the loss and its distribution across various storeys of a building under seismic loading.
+   A class for generating Storey Loss Functions (SLFs) using fragility, consequence, and quantity data. It applies a probabilistic approach to quantify the loss and its distribution across various storeys of a building under seismic loading.
 
-  **Attributes**:
-  - **edp**: `str`
-    The Engineering Demand Parameter (EDP) for the analysis (e.g., "psd" for Peak Storey Drift or "pfa" for Peak Floor Acceleration).
+   **Attributes**:
 
-  - **typology**: `List[str]`
-    The type of components considered (e.g., "structural" or "non-structural").
+   - **edp**: `str`
+     The Engineering Demand Parameter (EDP) for the analysis (e.g., "psd" for Peak Storey Drift or "pfa" for Peak Floor Acceleration).
 
-  - **edp_bin**: `float`
-    The size of the EDP bin used for discretizing the EDP range.
+   - **typology**: `List[str]`
+     The type of components considered (e.g., "structural" or "non-structural").
 
-  - **edp_range**: `Union[List[float], np.ndarray]`
-    The range of EDP values over which the SLFs are calculated.
+   - **edp_bin**: `float`
+     The size of the EDP bin used for discretizing the EDP range.
 
-  - **grouping_flag**: `bool`
-    Whether to perform performance grouping of components. Default is `True`.
+   - **edp_range**: `Union[List[float], np.ndarray]`
+     The range of EDP values over which the SLFs are calculated.
 
-  - **conversion**: `float`
-    Conversion factor for cost-related values. Default is `1.0`.
+   - **grouping_flag**: `bool`
+     Whether to perform performance grouping of components. Default is `True`.
 
-  - **realizations**: `int`
-    Number of realizations for the Monte Carlo method. Default is `20`.
+   - **conversion**: `float`
+     Conversion factor for cost-related values. Default is `1.0`.
 
-  - **replacement_cost**: `float`
-    Replacement cost of the building (used when normalizing SLFs). Default is `1.0`.
+   - **realizations**: `int`
+     Number of realizations for the Monte Carlo method. Default is `20`.
 
-  - **regression**: `str`
-    Regression function to be used for fitting the loss functions. Supported options are "Weibull" (default), "Papadopoulos", "Gdp" (Generalized Pareto Distribution), and "Lognormal".
+   - **replacement_cost**: `float`
+     Replacement cost of the building (used when normalizing SLFs). Default is `1.0`.
 
-  - **storey**: `Union[int, List[int]]`
-    Storey levels to consider in the analysis. Default is `None`.
+   - **regression**: `str`
+     Regression function to be used for fitting the loss functions. Supported options are "Weibull" (default), "Papadopoulos", "Gdp" (Generalized Pareto Distribution), and "Lognormal".
 
-  - **directionality**: `int`
-    Directionality of the analysis. Default is `None` (non-directional).
+   - **storey**: `Union[int, List[int]]`
+     Storey levels to consider in the analysis. Default is `None`.
 
-  - **correlation_tree**: `correlation_tree_model`
-    Correlation tree for the component data. Default is `None`.
+   - **directionality**: `int`
+     Directionality of the analysis. Default is `None` (non-directional).
 
-  **Methods**:
-  - **\_\_init\_\_**:
-    Initializes the SLF Generator with the provided parameters.
+   - **correlation_tree**: `correlation_tree_model`
+     Correlation tree for the component data. Default is `None`.
 
-    **Parameters**:
-    - **component_data**: `component_data_model`
-      Inventory of component data.
-    - **edp**: `str`
-      Engineering Demand Parameter (EDP) options are: "psd" (Peak Storey Drift) or "pfa" (Peak Floor Acceleration).
-    - **correlation_tree**: `correlation_tree_model`, optional
-      Correlation tree for the component data. Default is `None`.
-    - **typology**: `List[str]`, optional
-      Type of components considered; options are: "ns" (Non-structural) or "s" (Structural). Default is `None`.
-    - **edp_range**: `Union[List[float], np.ndarray]`, optional
-      Range of EDP values. Default is `None`.
-    - **edp_bin**: `float`, optional
-      Size of the EDP bin. Default is `None`.
-    - **grouping_flag**: `bool`, optional
-      Whether to perform performance grouping of components. Default is `True`.
-    - **conversion**: `float`, optional
-      Conversion factor for cost-related values. Default is `1.0`.
-    - **realizations**: `int`, optional
-      Number of realizations for the Monte Carlo method. Default is `20`.
-    - **replacement_cost**: `float`, optional
-      Replacement cost of the building (used when normalizing SLFs). Default is `1.0`.
-    - **regression**: `str`, optional
-      Regression function to be used. Supported options: "Weibull" (default), "Papadopoulos", "Gdp" (Generalized Pareto Distribution), and "Lognormal".
-    - **storey**: `Union[int, List[int]]`, optional
-      Storey levels to consider. Default is `None`.
-    - **directionality**: `int`, optional
-      Directionality of the analysis. Default is `None` (non-directional).
+   **Methods**:
 
-  - **\_define_edp_range**:
-    Defines the range of Engineering Demand Parameters (EDP) based on the provided EDP type.
+   .. method:: __init__(component_data, edp, correlation_tree=None, typology=None, edp_range=None, edp_bin=None, grouping_flag=True, conversion=1.0, realizations=20, replacement_cost=1.0, regression="Weibull", storey=None, directionality=None)
 
-  - **\_get_component_data**:
-    Fetches and processes component data from the provided input.
+      Initializes the SLF Generator with the provided parameters.
 
-  - **\_group_components**:
-    Groups components based on performance and typology if `grouping_flag` is `True`.
+      :param component_data: Inventory of component data.
+      :type component_data: component_data_model
+      :param edp: Engineering Demand Parameter (EDP) options are: "psd" (Peak Storey Drift) or "pfa" (Peak Floor Acceleration).
+      :type edp: str
+      :param correlation_tree: Correlation tree for the component data. Default is `None`.
+      :type correlation_tree: correlation_tree_model, optional
+      :param typology: Type of components considered; options are: "ns" (Non-structural) or "s" (Structural). Default is `None`.
+      :type typology: List[str], optional
+      :param edp_range: Range of EDP values. Default is `None`.
+      :type edp_range: Union[List[float], np.ndarray], optional
+      :param edp_bin: Size of the EDP bin. Default is `None`.
+      :type edp_bin: float, optional
+      :param grouping_flag: Whether to perform performance grouping of components. Default is `True`.
+      :type grouping_flag: bool, optional
+      :param conversion: Conversion factor for cost-related values. Default is `1.0`.
+      :type conversion: float, optional
+      :param realizations: Number of realizations for the Monte Carlo method. Default is `20`.
+      :type realizations: int, optional
+      :param replacement_cost: Replacement cost of the building (used when normalizing SLFs). Default is `1.0`.
+      :type replacement_cost: float, optional
+      :param regression: Regression function to be used. Supported options: "Weibull" (default), "Papadopoulos", "Gdp" (Generalized Pareto Distribution), and "Lognormal".
+      :type regression: str, optional
+      :param storey: Storey levels to consider. Default is `None`.
+      :type storey: Union[int, List[int]], optional
+      :param directionality: Directionality of the analysis. Default is `None` (non-directional).
+      :type directionality: int, optional
 
-  - **\_get_correlation_tree**:
-    Loads and processes the correlation tree if provided.
+   .. method:: _define_edp_range()
+      Defines the range of Engineering Demand Parameters (EDP) based on the provided EDP type.
 
-  - **fragility_function**:
-    Derives fragility functions for each component based on the provided data.
+   .. method:: _get_component_data()
+      Fetches and processes component data from the provided input.
 
-    **Returns**:
-    - `dict`: Fragility functions associated with each damage state and component.
-    - `np.ndarray`: Mean values of cost functions.
-    - `np.ndarray`: Covariances of cost functions.
+   .. method:: _group_components()
+      Groups components based on performance and typology if `grouping_flag` is `True`.
 
-  - **do_monte_carlo_simulations**:
-    Performs Monte Carlo simulations to sample damage states for each component.
+   .. method:: _get_correlation_tree()
+      Loads and processes the correlation tree if provided.
 
-    **Parameters**:
-    - **fragilities**: `fragility_model`
-      Fragility functions of all components at all damage states.
+   .. method:: fragility_function()
+      Derives fragility functions for each component based on the provided data.
 
-    **Returns**:
-    - `ds_model`: Sampled damage states of each component for each simulation.
+      :return: Fragility functions associated with each damage state and component.
+      :rtype: dict
+      :return: Mean values of cost functions.
+      :rtype: np.ndarray
+      :return: Covariances of cost functions.
+      :rtype: np.ndarray
 
-  - **validate_ds_dependence**:
-    Validates damage state dependencies based on the correlation tree.
+   .. method:: do_monte_carlo_simulations(fragilities)
+      Performs Monte Carlo simulations to sample damage states for each component.
 
-    **Parameters**:
-    - **damage_state**: `ds_model`
-      Sampled damage states of each component for each simulation.
+      :param fragilities: Fragility functions of all components at all damage states.
+      :type fragilities: fragility_model
+      :return: Sampled damage states of each component for each simulation.
+      :rtype: ds_model
 
-    **Returns**:
-    - `ds_model`: Sampled damage states after enforcing dependencies.
+   .. method:: validate_ds_dependence(damage_state)
+      Validates damage state dependencies based on the correlation tree.
 
-  - **calculate_costs**:
-    Calculates repair and replacement costs for each component based on the sampled damage states.
+      :param damage_state: Sampled damage states of each component for each simulation.
+      :type damage_state: ds_model
+      :return: Sampled damage states after enforcing dependencies.
+      :rtype: ds_model
 
-    **Parameters**:
-    - **damage_state**: `ds_model`
-      Sampled damage states for each component.
-    - **means_cost**: `np.ndarray`
-      Mean values of the cost functions.
-    - **covs_cost**: `np.ndarray`
-      Covariances of the cost functions.
+   .. method:: calculate_costs(damage_state, means_cost, covs_cost)
+      Calculates repair and replacement costs for each component based on the sampled damage states.
 
-    **Returns**:
-    - `cost_model`: Total replacement costs in absolute values.
-    - `cost_model`: Total replacement costs as a ratio of the replacement cost.
-    - `simulation_model`: Repair costs associated with each component and simulation.
+      :param damage_state: Sampled damage states for each component.
+      :type damage_state: ds_model
+      :param means_cost: Mean values of the cost functions.
+      :type means_cost: np.ndarray
+      :param covs_cost: Covariances of the cost functions.
+      :type covs_cost: np.ndarray
+      :return: Total replacement costs in absolute values.
+      :rtype: cost_model
+      :return: Total replacement costs as a ratio of the replacement cost.
+      :rtype: cost_model
+      :return: Repair costs associated with each component and simulation.
+      :rtype: simulation_model
 
-  - **perform_regression**:
-    Performs regression analysis on the loss and loss ratio data to estimate fitted loss functions.
+   .. method:: perform_regression(loss, loss_ratio, regression_type=None, percentiles=[0.16, 0.50, 0.84])
+      Performs regression analysis on the loss and loss ratio data to estimate fitted loss functions.
 
-    **Parameters**:
-    - **loss**: `cost_model`
-      DataFrame containing loss values for each component and damage state.
-    - **loss_ratio**: `cost_model`
-      DataFrame containing loss ratio values for each component and damage state.
-    - **regression_type**: `str`, optional
-      The regression model to be used. Supported options: "Weibull", "Papadopoulos", "Gdp", and "Lognormal". Default is `None`.
-    - **percentiles**: `List[float]`, optional
-      List of percentiles for which the loss and loss ratio values will be computed. Default is `[0.16, 0.50, 0.84]`.
+      :param loss: DataFrame containing loss values for each component and damage state.
+      :type loss: cost_model
+      :param loss_ratio: DataFrame containing loss ratio values for each component and damage state.
+      :type loss_ratio: cost_model
+      :param regression_type: The regression model to be used. Supported options: "Weibull", "Papadopoulos", "Gdp", and "Lognormal". Default is `None`.
+      :type regression_type: str, optional
+      :param percentiles: List of percentiles for which the loss and loss ratio values will be computed. Default is `[0.16, 0.50, 0.84]`.
+      :type percentiles: List[float], optional
+      :return: Quantiles of the loss and loss ratio data.
+      :rtype: loss_model
+      :return: The fitted loss function based on the selected regression model.
+      :rtype: fitted_loss_model
+      :return: The parameters of the fitted loss function.
+      :rtype: fitting_parameters_model
+      :return: The maximum error of the regression as a percentage.
+      :rtype: float
+      :return: The cumulative error of the regression as a percentage.
+      :rtype: float
 
-    **Returns**:
-    - `loss_model`: Quantiles of the loss and loss ratio data.
-    - `fitted_loss_model`: The fitted loss function based on the selected regression model.
-    - `fitting_parameters_model`: The parameters of the fitted loss function.
-    - `float`: The maximum error of the regression as a percentage.
-    - `float`: The cumulative error of the regression as a percentage.
+   .. method:: estimate_accuracy(y, yhat)
+      Estimates the prediction accuracy by calculating the maximum and cumulative errors as a percentage relative to the maximum observed value.
 
-  - **estimate_accuracy**:
-    Estimates the prediction accuracy by calculating the maximum and cumulative errors as a percentage relative to the maximum observed value.
+      :param y: Observations or true values.
+      :type y: np.ndarray
+      :param yhat: Predicted values.
+      :type yhat: np.ndarray
+      :return: Maximum error in percentage.
+      :rtype: float
+      :return: Cumulative error in percentage.
+      :rtype: float
 
-    **Parameters**:
-    - **y**: `np.ndarray`
-      Observations or true values.
-    - **yhat**: `np.ndarray`
-      Predicted values.
+   .. method:: transform_output(losses_fitted, typology=None)
+      Transforms the fitted Storey Loss Function (SLF) output into a structured format.
 
-    **Returns**:
-    - `float`: Maximum error in percentage.
-    - `float`: Cumulative error in percentage.
+      :param losses_fitted: Fitted loss functions containing the mean values of the storey loss functions.
+      :type losses_fitted: fitted_loss_model
+      :param typology: Type of component considered in the analysis. Default is `None`.
+      :type typology: str, optional
+      :return: A dictionary containing the SLF output with primary attributes.
+      :rtype: slf_model
 
-  - **transform_output**:
-    Transforms the fitted Storey Loss Function (SLF) output into a structured format.
+   .. method:: generate()
+      Generates Storey Loss Functions (SLFs) for each performance group.
 
-    **Parameters**:
-    - **losses_fitted**: `fitted_loss_model`
-      Fitted loss functions containing the mean values of the storey loss functions.
-    - **typology**: `str`, optional
-      Type of component considered in the analysis. Default is `None`.
-
-    **Returns**:
-    - `slf_model`: A dictionary containing the SLF output with primary attributes.
-
-  - **generate**:
-    Generates Storey Loss Functions (SLFs) for each performance group.
-
-    **Returns**:
-    - `Dict[slf_model]`: A dictionary where the key is the group identifier and the value is the SLF for that group.
-    - `Dict`: A dictionary storing intermediate data such as component data, fragility functions, total losses, repair costs, damage states, and regression results.
+      :return: A dictionary where the key is the group identifier and the value is the SLF for that group.
+      :rtype: Dict[slf_model]
+      :return: A dictionary storing intermediate data such as component data, fragility functions, total losses, repair costs, damage states, and regression results.
+      :rtype: Dict
 
 Example Usage
 ------------
@@ -221,16 +221,17 @@ Example Usage
 
 References
 ----------
-1) Ramirez, C. and Miranda, E., (2009) "Building-specific loss estimation methods
-and tools for simplified performance-based earthquake engineering", John A. Blume
-Earthquake Engineering Center, Department of Civil and Environmental Engineering,
-Stanford University.
 
-2) Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Story loss functions for seismic
-design and assessment: Development of tools and application," Earthquake Spectra 2021;
-37(4): 2813–2839. DOI: 10.1177/87552930211023523.
+1. Ramirez, C. and Miranda, E., (2009) "Building-specific loss estimation methods
+   and tools for simplified performance-based earthquake engineering", John A. Blume
+   Earthquake Engineering Center, Department of Civil and Environmental Engineering,
+   Stanford University.
 
-3) Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Development of a Python-Based
-torey Loss Function Generator," COMPDYN 2021 - 8th International Conference on
-Computational Methods in Structural Dynamics and Earthquake Engineering, 2021.
-DOI: 10.7712/120121.8659.18567.
+2. Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Story loss functions for seismic
+   design and assessment: Development of tools and application," Earthquake Spectra 2021;
+   37(4): 2813–2839. DOI: 10.1177/87552930211023523.
+
+3. Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Development of a Python-Based
+   Storey Loss Function Generator," COMPDYN 2021 - 8th International Conference on
+   Computational Methods in Structural Dynamics and Earthquake Engineering, 2021.
+   DOI: 10.7712/120121.8659.18567.
