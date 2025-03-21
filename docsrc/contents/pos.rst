@@ -36,7 +36,6 @@ Classes
       :return: An array of exceedance probabilities corresponding to each intensity measure level.
       :rtype: numpy.ndarray
 
-
    .. method:: calculate_rotated_fragility(theta, percentile, sigma_record2record, sigma_build2build=0.30, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
 
       Calculates a rotated fragility function based on a lognormal CDF, adjusting the median intensity to align with a specified target percentile.
@@ -53,7 +52,6 @@ Classes
       :type intensities: array-like, optional
       :return: The new median intensity, total standard deviation, and probabilities of exceedance.
       :rtype: tuple(float, float, array-like)
-
 
    .. method:: calculate_glm_fragility(imls, edps, damage_thresholds, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), fragility_method='logit')
 
@@ -72,7 +70,6 @@ Classes
       :return: A 2D array where each column represents the probability of exceeding a specific damage state at each intensity level.
       :rtype: numpy.ndarray
 
-
    .. method:: calculate_ordinal_fragility(imls, edps, damage_thresholds, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
 
       Fits an ordinal (cumulative) probit model to estimate fragility curves for different damage states.
@@ -87,7 +84,6 @@ Classes
       :type intensities: array-like, optional
       :return: A 2D array of exceedance probabilities (CDF values) for each intensity level.
       :rtype: numpy.ndarray
-
 
    .. method:: do_cloud_analysis(imls, edps, damage_thresholds, lower_limit, censored_limit, sigma_build2build=0.3, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), fragility_rotation=False, rotation_percentile=0.1, fragility_method='lognormal')
 
@@ -146,7 +142,6 @@ Classes
       :return: The uncertainty (sigma) associated with the mean loss ratio, and the parameters of a beta distribution (a and b).
       :rtype: tuple(list or array, list or array, list or array)
 
-
    .. method:: get_vulnerability_function(poes, consequence_model, intensities=np.round(np.geomspace(0.05, 10.0, 50), 3), uncertainty=True)
 
       Calculate the vulnerability function given the probabilities of exceedance and a consequence model.
@@ -192,41 +187,41 @@ Classes
       :return: The average annual loss.
       :rtype: float
 
-
 References
 ----------
-1) Porter, K. (2017). "When Addressing Epistemic Uncertainty in a Lognormal Fragility Function,
-How Should One Adjust the Median?", *Proceedings of the 16th World Conference on Earthquake Engineering
-(16WCEE)*, Santiago, Chile.
 
-2) Charvet, I., Ioannou, I., Rossetto, T., Suppasri, A., and Imamura, F. (2014). "Empirical fragility
-assessment of buildings affected by the 2011 Great East Japan tsunami using improved statistical models",
-*Natural Hazards*, 73, 951–973, 2014. 
+1. Porter, K. (2017). "When Addressing Epistemic Uncertainty in a Lognormal Fragility Function,
+   How Should One Adjust the Median?", *Proceedings of the 16th World Conference on Earthquake Engineering
+   (16WCEE)*, Santiago, Chile.
 
-3) Lahcene, E., Ioannou, I., Suppasri, A., Pakoksung, K., Paulik, R., Syamsidik, S., Bouchette, F.,
-and Imamura, F. (2021). "Characteristics of building fragility curves for seismic and non-seismic tsunamis:
-case studies of the 2018 Sunda Strait, 2018 Sulawesi–Palu, and 2004 Indian Ocean tsunamis,
-*Natural Hazards Earth System Sciences*, 21, 2313–2344, https://doi.org/10.5194/nhess-21-2313-2021.
+2. Charvet, I., Ioannou, I., Rossetto, T., Suppasri, A., and Imamura, F. (2014). "Empirical fragility
+   assessment of buildings affected by the 2011 Great East Japan tsunami using improved statistical models",
+   *Natural Hazards*, 73, 951–973, 2014.
 
-4) Lallemant, D., Kiremidjian, A., and Burton, H. (2015). "Statistical procedures for developing
-earthquake damage fragility curves", *Earthquake Engineering and Structural Dynamics, 44, 1373–1389. doi: 10.1002/eqe.2522.
+3. Lahcene, E., Ioannou, I., Suppasri, A., Pakoksung, K., Paulik, R., Syamsidik, S., Bouchette, F.,
+   and Imamura, F. (2021). "Characteristics of building fragility curves for seismic and non-seismic tsunamis:
+   case studies of the 2018 Sunda Strait, 2018 Sulawesi–Palu, and 2004 Indian Ocean tsunamis",
+   *Natural Hazards Earth System Sciences*, 21, 2313–2344, https://doi.org/10.5194/nhess-21-2313-2021.
 
-5) Jalayer, F., Ebrahamian, H., Trevlopoulos, K., and Bradley, B. (2023). "Empirical tsunami fragility modelling
-for hierarchical damage levels", *Natural Hazards and Earth System Sciences*, 23(2), 909–931.
-https://doi.org/10.5194/nhess-23-909-2023
+4. Lallemant, D., Kiremidjian, A., and Burton, H. (2015). "Statistical procedures for developing
+   earthquake damage fragility curves", *Earthquake Engineering and Structural Dynamics*, 44, 1373–1389. doi: 10.1002/eqe.2522.
 
-6) Baker, J.W. (2015). "Efficient Analytical Fragility Function Fitting Using Dynamic Structural Analysis",
-*Earthquake Spectra*. 2015;31(1):579-599. doi:10.1193/021113EQS025M
+5. Jalayer, F., Ebrahamian, H., Trevlopoulos, K., and Bradley, B. (2023). "Empirical tsunami fragility modelling
+   for hierarchical damage levels", *Natural Hazards and Earth System Sciences*, 23(2), 909–931.
+   https://doi.org/10.5194/nhess-23-909-2023
 
-7) Singhal A., Kiremidjian AS. Method for probabilistic evaluation of seismic structural damage.
-Journal of Structural Engineering 1996; 122: 1459–1467. DOI:10.1061/(ASCE)0733-9445(1996)122:12(1459)
+6. Baker, J.W. (2015). "Efficient Analytical Fragility Function Fitting Using Dynamic Structural Analysis",
+   *Earthquake Spectra*. 2015;31(1):579-599. doi:10.1193/021113EQS025M
 
-8) Bird J.F., Bommer J.J., Bray J.D., Sancio R., Spence R.J.S., (2004). "Comparing loss estimation with observed damage in a zone
-of ground failure: a study of the 1999 Kocaeli Earthquake in Turkey", *Bulletin of Earthquake Engineering* 2004; 2:
-329–360. DOI: 10.1007/s10518-004-3804-0
+7. Singhal A., Kiremidjian AS. Method for probabilistic evaluation of seismic structural damage.
+   Journal of Structural Engineering 1996; 122: 1459–1467. DOI:10.1061/(ASCE)0733-9445(1996)122:12(1459)
 
-9) Nguyen, M., and Lallemant, D. (2022). "Order Matters: The Benefits of Ordinal Fragility Curves for Damage and Loss Estimation". *Risk Analysis*,
-42: 1136-1148. https://doi.org/10.1111/risa.13815
+8. Bird J.F., Bommer J.J., Bray J.D., Sancio R., Spence R.J.S., (2004). "Comparing loss estimation with observed damage in a zone
+   of ground failure: a study of the 1999 Kocaeli Earthquake in Turkey", *Bulletin of Earthquake Engineering* 2004; 2:
+   329–360. DOI: 10.1007/s10518-004-3804-0
 
-10) Silva, V. (2019). "Uncertainty and correlation in seismic vulnerability functions of building classes."
-*Earthquake Spectra*. DOI: 10.1193/013018eqs031m.
+9. Nguyen, M., and Lallemant, D. (2022). "Order Matters: The Benefits of Ordinal Fragility Curves for Damage and Loss Estimation". *Risk Analysis*,
+   42: 1136-1148. https://doi.org/10.1111/risa.13815
+
+10. Silva, V. (2019). "Uncertainty and correlation in seismic vulnerability functions of building classes."
+    *Earthquake Spectra*. DOI: 10.1193/013018eqs031m.
