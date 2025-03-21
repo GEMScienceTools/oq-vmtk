@@ -193,7 +193,7 @@ Classes
       :rtype: Dict
 
 Example Usage
-------------
+-------------
 
 .. code-block:: python
 
