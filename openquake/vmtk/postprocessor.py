@@ -522,41 +522,51 @@ class postprocessor():
         elif fragility_method.lower() == 'lognormal':
             
             if cloud_method.lower() == 'mle':
-                
-                # define the arrays for the regression
-                x_array=np.log(imls)
-                y_array=edps
-                
-                # remove displacements below lower limit
-                bool_y_lowdisp=edps>=lower_limit
-                x_array = x_array[bool_y_lowdisp]
-                y_array = y_array[bool_y_lowdisp]
-        
-                # checks if the y value is above the censored limit
-                bool_is_censored=y_array>=censored_limit
-                bool_is_not_censored=y_array<censored_limit
-                
-                # creates an array where all the censored values are set to the limit
-                observed=np.log((y_array*bool_is_not_censored)+(censored_limit*bool_is_censored))
-                
-                y_array=np.log(edps)
-                
-                def func(x):
-                      p = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed))],dtype=float)
-                      return -np.sum(np.log(p))
-                sol1=optimize.fmin(func,[1,1,1],disp=False)
-                
-                def func2(x):
-                      p1 = np.array([norm.pdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==0],dtype=float)
-                      p2 = np.array([1-norm.cdf(observed[i], loc=x[1]+x[0]*x_array[i], scale=x[2]) for i in range(len(observed)) if bool_is_censored[i]==1],dtype=float)
-                      return -np.sum(np.log(p1[p1 != 0]))-np.sum(np.log(p2[p2 != 0]))
-                
-                p_cens=optimize.fmin(func2,[sol1[0],sol1[1],sol1[2]],disp=False)
-        
+
+                # Define the arrays for the regression
+                x_array = np.log(imls)
+                y_array = edps
+            
+                # Remove displacements below the lower limit
+                mask_lowdisp = y_array >= lower_limit
+                x_array = x_array[mask_lowdisp]
+                y_array = y_array[mask_lowdisp]
+            
+                # Check if the y value is above the censored limit
+                mask_censored = y_array >= censored_limit
+                mask_not_censored = y_array < censored_limit
+            
+                # Create an array where all the censored values are set to the limit
+                observed = np.log(np.where(mask_censored, censored_limit, y_array))
+            
+                # Define the likelihood function for uncensored data
+                def likelihood_uncensored(params):
+                    slope, intercept, scale = params
+                    residuals = observed - (intercept + slope * x_array)
+                    log_pdf = norm.logpdf(residuals, loc=0, scale=scale)
+                    return -np.sum(log_pdf[mask_not_censored])
+            
+                # Define the likelihood function for censored data
+                def likelihood_censored(params):
+                    slope, intercept, scale = params
+                    residuals = observed - (intercept + slope * x_array)
+                    log_sf = norm.logsf(residuals[mask_censored], loc=0, scale=scale)
+                    log_pdf = norm.logpdf(residuals[mask_not_censored], loc=0, scale=scale)
+                    return -np.sum(log_pdf) - np.sum(log_sf)
+            
+                # Initial guess for optimization
+                initial_guess = [1, 1, 1]
+            
+                # Optimize for uncensored data
+                sol_uncensored = optimize.fmin(likelihood_uncensored, initial_guess, disp=False)
+            
+                # Optimize for censored data using the uncensored solution as the initial guess
+                p_cens = optimize.fmin(likelihood_censored, sol_uncensored, disp=False)
+            
                 # Regression fit
                 xvec = np.linspace(np.log(min(imls)), np.log(max(imls)), 100)
-                yvec = p_cens[0] * xvec + p_cens[1]
-                
+                yvec = p_cens[0] * xvec + p_cens[1]    
+                                
                 # Compute fragility parameters from the regressed fit
                 thetas               = np.exp((np.log(damage_thresholds) - p_cens[1]) / p_cens[0])                                       # Median intensities
                 sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
@@ -598,8 +608,7 @@ class postprocessor():
                 sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
                 sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
                 betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
-            
-            
+                        
             # Compute probabilities of exceedance
             poes = np.zeros((len(intensities),len(damage_thresholds)))
 
@@ -607,10 +616,10 @@ class postprocessor():
                 
                 fragility_method == f'lognormal - rotated around the {rotation_percentile}th percentile'
                 for ds in range(len(damage_thresholds)):
-                    _,_,poes[:,ds] = self.calculate_rotated_fragility(thetas[ds],
-                                                                      rotation_percentile, 
-                                                                      sigmas_record2record[ds], 
-                                                                      sigma_build2build = sigmas_build2build[ds])
+                    thetas[ds],betas_total[ds],poes[:,ds] = self.calculate_rotated_fragility(thetas[ds],
+                                                                                             rotation_percentile, 
+                                                                                             sigmas_record2record[ds], 
+                                                                                             sigma_build2build = sigmas_build2build[ds])
             else:            
 
                 for ds in range(len(damage_thresholds)):
