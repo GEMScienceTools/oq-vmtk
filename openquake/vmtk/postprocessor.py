@@ -444,7 +444,14 @@ class postprocessor():
             
             # Get the probabilities of exceedance
             poes = self.calculate_glm_fragility(imls, edps, damage_thresholds, fragility_method=fragility_method)
-            
+
+            # TODO: Test this assumption 
+            # [Experimental Code]: Compute "dummy" fragility parameters from the GLM model
+            thetas               = [np.interp(0.50, poes[:,ds], intensities)  for ds in range(len(damage_thresholds))]                                                                       # Dummy Median intensities
+            sigmas_record2record = [np.abs(0.50*(np.log(np.interp(0.84,poes[:,ds], intensities))-np.log(np.interp(0.16,poes[:,ds], intensities)))) for ds in range(len(damage_thresholds))]  # Dummy Record-to-record variability
+            sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                                                                        # Modelling uncertainty
+            betas_total          = [np.sqrt(sigma_record2record**2+sigma_build2build**2) for sigma_record2record, sigma_build2build in zip (sigmas_record2record, sigmas_build2build)]       # Dummy Total Dispersion
+    
             # Create the dictionary
             cloud_dict = {
                 
@@ -458,15 +465,15 @@ class postprocessor():
                     'cloud_method': None                     # Store the cloud analysis regression method
                     },
                 
-                # Add a nested dictionary for fragility functions parameters
+                # [Experimental Code]: Add a nested dictionary for fragility functions parameters
                 'fragility': {
                     'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
                     'intensities': intensities,                   # Store the intensities used for sampling fragility functions
                     'poes': poes,                                 # Store the probabilities of damage state exceedance
-                    'medians': None,                              # Store the median seismic intensities
-                    'sigma_record2record': None,                  # Store the record-to-record variability
-                    'sigma_build2build': None,                    # Store the modelling uncertainty
-                    'betas_total': None                           # Store the total variability accounting for record-to-record and modelling uncertainties 
+                    'medians': thetas,                            # Store the median seismic intensities
+                    'sigma_record2record': sigmas_record2record,  # Store the record-to-record variability
+                    'sigma_build2build': sigmas_build2build,      # Store the modelling uncertainty
+                    'betas_total': betas_total                    # Store the total variability accounting for record-to-record and modelling uncertainties 
                     },
                 
                 # Add a nested dictionary for regression coefficients
@@ -479,11 +486,18 @@ class postprocessor():
                 }
             }
 
-            
+
         elif fragility_method.lower() == 'ordinal':
 
             # Compute exceedance probabilities using the specified fragility method            
-            poes = self.fit_ordinal_fragility(imls, edps, damage_thresholds)
+            poes = self.calculate_ordinal_fragility(imls, edps, damage_thresholds)
+
+            # TODO: Test this assumption 
+            # [Experimental Code]: Compute "dummy" fragility parameters from the GLM model
+            thetas               = [np.interp(0.50, poes[:,ds], intensities)  for ds in range(len(damage_thresholds))]                                                                       # Dummy Median intensities
+            sigmas_record2record = [np.abs(0.50*(np.log(np.interp(0.84,poes[:,ds], intensities))-np.log(np.interp(0.16,poes[:,ds], intensities)))) for ds in range(len(damage_thresholds))]  # Dummy Record-to-record variability
+            sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                                                                        # Modelling uncertainty
+            betas_total          = [np.sqrt(sigma_record2record**2+sigma_build2build**2) for sigma_record2record, sigma_build2build in zip (sigmas_record2record, sigmas_build2build)]       # Dummy Total Dispersion
             
             # Create the dictionary
             cloud_dict = {
@@ -498,15 +512,15 @@ class postprocessor():
                     'cloud_method': None                     # Store the cloud analysis regression method
                     },
                 
-                # Add a nested dictionary for fragility functions parameters
+                # [Experimental Code]: Add a nested dictionary for fragility functions parameters
                 'fragility': {
                     'fragility_method': fragility_method.lower(), # Store the fragility fitting methodology
                     'intensities': intensities,                   # Store the intensities used for sampling fragility functions
                     'poes': poes,                                 # Store the probabilities of damage state exceedance
-                    'medians': None,                              # Store the median seismic intensities
-                    'sigma_record2record': None,                  # Store the record-to-record variability
-                    'sigma_build2build': None,                    # Store the modelling uncertainty
-                    'betas_total': None                           # Store the total variability accounting for record-to-record and modelling uncertainties 
+                    'medians': thetas,                            # Store the median seismic intensities
+                    'sigma_record2record': sigmas_record2record,  # Store the record-to-record variability
+                    'sigma_build2build': sigmas_build2build,      # Store the modelling uncertainty
+                    'betas_total': betas_total                    # Store the total variability accounting for record-to-record and modelling uncertainties 
                     },
                 
                 # Add a nested dictionary for regression coefficients
@@ -572,7 +586,10 @@ class postprocessor():
                 sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
                 sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
                 betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
-            
+
+                # Compute probabilities of exceedance
+                poes = np.zeros((len(intensities),len(damage_thresholds)))
+                
             elif cloud_method.lower() == 'lse':
                 
                 # Log-transform intensity measure levels
@@ -608,13 +625,12 @@ class postprocessor():
                 sigmas_record2record = np.full(len(damage_thresholds), p_cens[2] / p_cens[0])                                            # Record-to-record variability
                 sigmas_build2build   = np.full(len(damage_thresholds), sigma_build2build)                                                # Modelling uncertainty
                 betas_total          = np.full(len(damage_thresholds), np.sqrt((p_cens[2] / p_cens[0])**2 + sigma_build2build**2))       # Total dispersion
-                        
-            # Compute probabilities of exceedance
-            poes = np.zeros((len(intensities),len(damage_thresholds)))
+                
+                # Compute probabilities of exceedance
+                poes = np.zeros((len(intensities),len(damage_thresholds)))
 
             if fragility_rotation:
-                
-                fragility_method == f'lognormal - rotated around the {rotation_percentile}th percentile'
+                fragility_method = f'lognormal - rotated around the {rotation_percentile}th percentile'
                 for ds in range(len(damage_thresholds)):
                     thetas[ds],betas_total[ds],poes[:,ds] = self.calculate_rotated_fragility(thetas[ds],
                                                                                              rotation_percentile, 
@@ -634,8 +650,8 @@ class postprocessor():
                 'cloud inputs': {
                     'imls': imls,                            # Store the intensity measure levels (cloud)
                     'edps': edps,                            # Store the engineering demand parameters (cloud)
-                    'lower_limit': None,                     # Store the lower limit for censored regression
-                    'upper_limit': None,                     # Store the upper limit for censored regression
+                    'lower_limit': lower_limit,              # Store the lower limit for censored regression
+                    'upper_limit': censored_limit,           # Store the upper limit for censored regression
                     'damage_thresholds': damage_thresholds,  # Store the demand-based damage state thresholds
                     'cloud_method': cloud_method.lower()     # Store the cloud analysis regression method
                     },
