@@ -70,7 +70,7 @@ class TestPostprocessor(unittest.TestCase):
                                                fragility_method = 'lognormal')
 
         # Check if keys exist
-        for key in ['cloud inputs', 'fragility functions', 'regression']:
+        for key in ['cloud inputs', 'fragility', 'regression']:
             self.assertIn(key, cloud_dict, f"Key '{key}' not found in cloud_dict")
         
         # Assert values within tolerance
