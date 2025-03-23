@@ -168,7 +168,7 @@ You can follow the instructions indicated in the [contributing guidelines](./con
 
 # 🌟 Contributors
 
-Contributors are gratefully acknowledged and listed in CONTRIBUTORS.txt.
+Contributors are gratefully acknowledged.
 
 <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=GEMScienceTools/vulnerability-toolkit" alt="contrib.rocks image" />
