@@ -16,3 +16,4 @@ https://wheelhouse.openquake.org/v3/windows/py310/llvmlite-0.41.1-cp310-cp310-wi
 https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
 https://wheelhouse.openquake.org/v3/py/openseespywin-3.6.0.3-py3-none-any.whl
 https://wheelhouse.openquake.org/v3/py/click-8.1.7-py3-none-any.whl
+https://wheelhouse.openquake.org/v3/py/pydantic-2.10.6-py3-none-any.whl
