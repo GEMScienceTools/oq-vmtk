@@ -1,64 +1,9 @@
 ### Import libraries
 import os
 import re
-import math
 import pickle
 import numpy as np
-from scipy import stats
 
-def fun_lognormal(x, sigma, mu):
-    """
-    Function to reproduce or fit a Lognormal function to data
-    -----
-    Input
-    -----
-    :param x:                list                x-axis data
-    :param sigma:           float                fitting coefficient
-    :param mu:              float                fitting coefficient
-
-    ------
-    Output
-    ------
-    Data following Lognormal distribution
-    """    
-    return stats.norm.cdf(np.log(x), loc=np.log(mu), scale=sigma)
-
-def fun_weibull(x, a, b, c):
-    """
-    Function to reproduce or fit a Weibull function to data
-    -----
-    Input
-    -----
-    :param x:                list                x-axis data
-    :param a:               float                fitting coefficient
-    :param b:               float                fitting coefficient
-    :param c:               float                fitting coefficient
-
-    ------
-    Output
-    ------
-    Data following Weibull distribution
-    """    
-    return a * (1 - np.exp(-(x / b) ** c))
-
-
-def fun_logit(x,a,b):
-    """
-    Function to reproduce or fit a Logistic function to data
-    -----
-    Input
-    -----
-    :param x:                list                x-axis data
-    :param a:               float                fitting coefficient
-    :param b:               float                fitting coefficient
-
-    ------
-    Output
-    ------
-    Data following Logistic distribution
-    """    
-
-    return np.exp(-(a+b*np.log(x)))/(1+np.exp(-(a+b*np.log(x))))
 
 ### Function to look for substrings
 def find_between( s, first, last ):
@@ -120,7 +65,6 @@ def export_to_pkl(path, var):
     with open(path, 'wb') as file:
         return pickle.dump(var, file)
 
-### Function to read one column file
 def read_one_column_file(file_name):
     """
     Function to read one column file
@@ -140,7 +84,6 @@ def read_one_column_file(file_name):
             x.append(float(number))
     return x
 
-### Function to read two-column file
 def read_two_column_file(file_name):
     """
     Function to read two column file
@@ -223,28 +166,6 @@ def select_files(folder=".", start="", end="", contain="", include_path=False):
         assert len(files) != 0, '\nNo files selected\n'
         files.sort()
         return files
-
-def RSE(y_true, y_predicted):
-    """
-    Function to calculate the relative squared error for uncertainty quantification in regression
-    -----
-    Input
-    -----
-    :param y_true:         list or array          Empirical data
-    :param y_predicted:    list or array          Predicted data from regression
-
-    ------
-    Output
-    ------
-    rse:                           float          Relative squared error
-
-    """    
- 
-    y_true = np.array(y_true)
-    y_predicted = np.array(y_predicted)
-    RSS = np.sum(np.square(y_true - y_predicted))
-    rse = math.sqrt(RSS / (len(y_true) - 2))
-    return rse
 
 def remove_elements_at_indices(test_list, idx_list):
     """
