@@ -37,6 +37,10 @@ jobs:
         run: |
           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
           C:\Users\runneradmin\openquake\Scripts\activate.ps1
+          $PY_VER="py${{ matrix.python-version }}"
+          $py = $PY_VER.replace(".","")
+          set PIP_DEFAULT_TIMEOUT=100
+          python -m pip install -r requirements-$py-win64.txt
           pip install -e .
       - name: Run tests
         run: |
