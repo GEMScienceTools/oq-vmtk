@@ -43,7 +43,7 @@ jobs:
           PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
           echo $PY_VER
           export PIP_DEFAULT_TIMEOUT=100
-          pip install -r requirements-$PY_VER-linux64.txt
+          pip install -r requirements-$PY_VER-linux.txt
           pip install -e .
       - name: Run tests
         run: |
