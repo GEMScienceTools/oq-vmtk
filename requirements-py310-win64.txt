@@ -1,6 +1,7 @@
 # vmtk requirements
 # From OQ wheels
 #
+https://wheelhouse.openquake.org/v3/windows/py310/statsmodels-0.14.4-cp310-cp310-win_amd64.whl
 https://wheelhouse.openquake.org/v3/windows/py310/pandas-2.0.3-cp310-cp310-win_amd64.whl
 https://wheelhouse.openquake.org/v3/windows/py310/fiona-1.9.5-cp310-cp310-win_amd64.whl
 https://wheelhouse.openquake.org/v3/windows/py310/GDAL-3.7.3-cp310-cp310-win_amd64.whl
