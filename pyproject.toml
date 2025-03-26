@@ -48,6 +48,8 @@ dependencies = [
     "numpy >= 1.26.2",
     "numba >= 0.58.1",
     "pandas >= 2.0.3",
+    "statsmodels >= 0.14.4",
+    "pydantic >= 2.10.6 ",
 ]
 
 

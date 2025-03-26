@@ -1,6 +1,7 @@
 # vmtk requirements
 # From OQ wheels
 #
+https://wheelhouse.openquake.org/v3/linux/py310/statsmodels-0.14.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py310/numpy-1.23.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py310/pyproj-3.6.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/v3/linux/py310/GDAL-3.7.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -13,6 +14,7 @@ https://wheelhouse.openquake.org/v3/linux/py310/matplotlib-3.8.2-cp310-cp310-man
 https://wheelhouse.openquake.org/v3/linux/py310/llvmlite-0.41.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 #
 #
-https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
-https://wheelhouse.openquake.org/v3/py/openseespylinux-3.6.0.3-py3-none-any.whl
+openseespy==3.7.0.4
+openseespylinux==3.7.0.4
 https://wheelhouse.openquake.org/v3/py/click-8.1.7-py3-none-any.whl
+https://wheelhouse.openquake.org/v3/py/pydantic-2.10.6-py3-none-any.whl

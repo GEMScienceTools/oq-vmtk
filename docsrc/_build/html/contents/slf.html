@@ -1,0 +1,490 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storey-Loss Function Generation Module &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Plotter Module" href="plo.html" />
+    <link rel="prev" title="Postprocessing Module" href="pos.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">IM Calculator Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">Model Calibration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">Model Building Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">Postprocessing Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Storey-Loss Function Generation Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#slf_generator"><code class="docutils literal notranslate"><span class="pre">slf_generator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.__init__"><code class="docutils literal notranslate"><span class="pre">slf_generator.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator._define_edp_range"><code class="docutils literal notranslate"><span class="pre">slf_generator._define_edp_range()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator._get_component_data"><code class="docutils literal notranslate"><span class="pre">slf_generator._get_component_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator._group_components"><code class="docutils literal notranslate"><span class="pre">slf_generator._group_components()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator._get_correlation_tree"><code class="docutils literal notranslate"><span class="pre">slf_generator._get_correlation_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.fragility_function"><code class="docutils literal notranslate"><span class="pre">slf_generator.fragility_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.do_monte_carlo_simulations"><code class="docutils literal notranslate"><span class="pre">slf_generator.do_monte_carlo_simulations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.validate_ds_dependence"><code class="docutils literal notranslate"><span class="pre">slf_generator.validate_ds_dependence()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.calculate_costs"><code class="docutils literal notranslate"><span class="pre">slf_generator.calculate_costs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.perform_regression"><code class="docutils literal notranslate"><span class="pre">slf_generator.perform_regression()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.estimate_accuracy"><code class="docutils literal notranslate"><span class="pre">slf_generator.estimate_accuracy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.transform_output"><code class="docutils literal notranslate"><span class="pre">slf_generator.transform_output()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slf_generator.generate"><code class="docutils literal notranslate"><span class="pre">slf_generator.generate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#example-usage">Example Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Storey-Loss Function Generation Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/slf.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="storey-loss-function-generation-module">
+<h1>Storey-Loss Function Generation Module<a class="headerlink" href="#storey-loss-function-generation-module" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">slf_generator</span></code> module provides a class <code class="docutils literal notranslate"><span class="pre">slf_generator</span></code> to generate Storey Loss Functions
+(SLFs) based on fragility, consequence, and quantity data. SLFs establish a direct relationship
+between the expected loss at a specific storey and the engineering demand parameter.
+This class employs a probabilistic approach, utilizing Monte Carlo simulations to model damage,
+assess the associated loss, and determine its distribution within a storey, considering a
+user-defined inventory of damageable components.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="slf_generator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slf_generator</span></span><a class="headerlink" href="#slf_generator" title="Link to this definition"></a></dt>
+<dd><p>A class for generating Storey Loss Functions (SLFs) using fragility, consequence, and quantity data. It applies a probabilistic approach to quantify the loss and its distribution across various storeys of a building under seismic loading.</p>
+<p><strong>Attributes</strong>:</p>
+<ul class="simple">
+<li><p><strong>edp</strong>: <cite>str</cite>
+The Engineering Demand Parameter (EDP) for the analysis (e.g., “psd” for Peak Storey Drift or “pfa” for Peak Floor Acceleration).</p></li>
+<li><p><strong>typology</strong>: <cite>List[str]</cite>
+The type of components considered (e.g., “structural” or “non-structural”).</p></li>
+<li><p><strong>edp_bin</strong>: <cite>float</cite>
+The size of the EDP bin used for discretizing the EDP range.</p></li>
+<li><p><strong>edp_range</strong>: <cite>Union[List[float], np.ndarray]</cite>
+The range of EDP values over which the SLFs are calculated.</p></li>
+<li><p><strong>grouping_flag</strong>: <cite>bool</cite>
+Whether to perform performance grouping of components. Default is <cite>True</cite>.</p></li>
+<li><p><strong>conversion</strong>: <cite>float</cite>
+Conversion factor for cost-related values. Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>realizations</strong>: <cite>int</cite>
+Number of realizations for the Monte Carlo method. Default is <cite>20</cite>.</p></li>
+<li><p><strong>replacement_cost</strong>: <cite>float</cite>
+Replacement cost of the building (used when normalizing SLFs). Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>regression</strong>: <cite>str</cite>
+Regression function to be used for fitting the loss functions. Supported options are “Weibull” (default), “Papadopoulos”, “Gdp” (Generalized Pareto Distribution), and “Lognormal”.</p></li>
+<li><p><strong>storey</strong>: <cite>Union[int, List[int]]</cite>
+Storey levels to consider in the analysis. Default is <cite>None</cite>.</p></li>
+<li><p><strong>directionality</strong>: <cite>int</cite>
+Directionality of the analysis. Default is <cite>None</cite> (non-directional).</p></li>
+<li><p><strong>correlation_tree</strong>: <cite>correlation_tree_model</cite>
+Correlation tree for the component data. Default is <cite>None</cite>.</p></li>
+</ul>
+<p><strong>Methods</strong>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_bin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grouping_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conversion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replacement_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Weibull'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes the SLF Generator with the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>component_data</strong> (<em>component_data_model</em>) – Inventory of component data.</p></li>
+<li><p><strong>edp</strong> (<em>str</em>) – Engineering Demand Parameter (EDP) options are: “psd” (Peak Storey Drift) or “pfa” (Peak Floor Acceleration).</p></li>
+<li><p><strong>correlation_tree</strong> (<em>correlation_tree_model</em><em>, </em><em>optional</em>) – Correlation tree for the component data. Default is <cite>None</cite>.</p></li>
+<li><p><strong>typology</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Type of components considered; options are: “ns” (Non-structural) or “s” (Structural). Default is <cite>None</cite>.</p></li>
+<li><p><strong>edp_range</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em><em>, </em><em>optional</em>) – Range of EDP values. Default is <cite>None</cite>.</p></li>
+<li><p><strong>edp_bin</strong> (<em>float</em><em>, </em><em>optional</em>) – Size of the EDP bin. Default is <cite>None</cite>.</p></li>
+<li><p><strong>grouping_flag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to perform performance grouping of components. Default is <cite>True</cite>.</p></li>
+<li><p><strong>conversion</strong> (<em>float</em><em>, </em><em>optional</em>) – Conversion factor for cost-related values. Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>realizations</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of realizations for the Monte Carlo method. Default is <cite>20</cite>.</p></li>
+<li><p><strong>replacement_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – Replacement cost of the building (used when normalizing SLFs). Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>regression</strong> (<em>str</em><em>, </em><em>optional</em>) – Regression function to be used. Supported options: “Weibull” (default), “Papadopoulos”, “Gdp” (Generalized Pareto Distribution), and “Lognormal”.</p></li>
+<li><p><strong>storey</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Storey levels to consider. Default is <cite>None</cite>.</p></li>
+<li><p><strong>directionality</strong> (<em>int</em><em>, </em><em>optional</em>) – Directionality of the analysis. Default is <cite>None</cite> (non-directional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator._define_edp_range">
+<span class="sig-name descname"><span class="pre">_define_edp_range</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator._define_edp_range" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Defines</span> <span class="pre">the</span> <span class="pre">range</span> <span class="pre">of</span> <span class="pre">Engineering</span> <span class="pre">Demand</span> <span class="pre">Parameters</span> <span class="pre">(EDP)</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">provided</span> <span class="pre">EDP</span> <span class="pre">type.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator._get_component_data">
+<span class="sig-name descname"><span class="pre">_get_component_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator._get_component_data" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Fetches</span> <span class="pre">and</span> <span class="pre">processes</span> <span class="pre">component</span> <span class="pre">data</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">provided</span> <span class="pre">input.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator._group_components">
+<span class="sig-name descname"><span class="pre">_group_components</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator._group_components" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Groups</span> <span class="pre">components</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">performance</span> <span class="pre">and</span> <span class="pre">typology</span> <span class="pre">if</span> <span class="pre">`grouping_flag`</span> <span class="pre">is</span> <span class="pre">`True`.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator._get_correlation_tree">
+<span class="sig-name descname"><span class="pre">_get_correlation_tree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator._get_correlation_tree" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Loads</span> <span class="pre">and</span> <span class="pre">processes</span> <span class="pre">the</span> <span class="pre">correlation</span> <span class="pre">tree</span> <span class="pre">if</span> <span class="pre">provided.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.fragility_function">
+<span class="sig-name descname"><span class="pre">fragility_function</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.fragility_function" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Derives</span> <span class="pre">fragility</span> <span class="pre">functions</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">component</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">provided</span> <span class="pre">data.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Fragility functions associated with each damage state and component.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mean values of cost functions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Covariances of cost functions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.do_monte_carlo_simulations">
+<span class="sig-name descname"><span class="pre">do_monte_carlo_simulations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fragilities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.do_monte_carlo_simulations" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Performs</span> <span class="pre">Monte</span> <span class="pre">Carlo</span> <span class="pre">simulations</span> <span class="pre">to</span> <span class="pre">sample</span> <span class="pre">damage</span> <span class="pre">states</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">component.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fragilities</strong> (<em>fragility_model</em>) – Fragility functions of all components at all damage states.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sampled damage states of each component for each simulation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ds_model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.validate_ds_dependence">
+<span class="sig-name descname"><span class="pre">validate_ds_dependence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage_state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.validate_ds_dependence" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Validates</span> <span class="pre">damage</span> <span class="pre">state</span> <span class="pre">dependencies</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">correlation</span> <span class="pre">tree.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>damage_state</strong> (<em>ds_model</em>) – Sampled damage states of each component for each simulation.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sampled damage states after enforcing dependencies.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ds_model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.calculate_costs">
+<span class="sig-name descname"><span class="pre">calculate_costs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">means_cost</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covs_cost</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.calculate_costs" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Calculates</span> <span class="pre">repair</span> <span class="pre">and</span> <span class="pre">replacement</span> <span class="pre">costs</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">component</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">sampled</span> <span class="pre">damage</span> <span class="pre">states.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>damage_state</strong> (<em>ds_model</em>) – Sampled damage states for each component.</p></li>
+<li><p><strong>means_cost</strong> (<em>np.ndarray</em>) – Mean values of the cost functions.</p></li>
+<li><p><strong>covs_cost</strong> (<em>np.ndarray</em>) – Covariances of the cost functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Total replacement costs in absolute values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>cost_model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Total replacement costs as a ratio of the replacement cost.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>cost_model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Repair costs associated with each component and simulation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>simulation_model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.perform_regression">
+<span class="sig-name descname"><span class="pre">perform_regression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regression_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.16,</span> <span class="pre">0.50,</span> <span class="pre">0.84]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.perform_regression" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Performs</span> <span class="pre">regression</span> <span class="pre">analysis</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">loss</span> <span class="pre">and</span> <span class="pre">loss</span> <span class="pre">ratio</span> <span class="pre">data</span> <span class="pre">to</span> <span class="pre">estimate</span> <span class="pre">fitted</span> <span class="pre">loss</span> <span class="pre">functions.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loss</strong> (<em>cost_model</em>) – DataFrame containing loss values for each component and damage state.</p></li>
+<li><p><strong>loss_ratio</strong> (<em>cost_model</em>) – DataFrame containing loss ratio values for each component and damage state.</p></li>
+<li><p><strong>regression_type</strong> (<em>str</em><em>, </em><em>optional</em>) – The regression model to be used. Supported options: “Weibull”, “Papadopoulos”, “Gdp”, and “Lognormal”. Default is <cite>None</cite>.</p></li>
+<li><p><strong>percentiles</strong> (<em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – List of percentiles for which the loss and loss ratio values will be computed. Default is <cite>[0.16, 0.50, 0.84]</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Quantiles of the loss and loss ratio data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>loss_model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fitted loss function based on the selected regression model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fitted_loss_model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The parameters of the fitted loss function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fitting_parameters_model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The maximum error of the regression as a percentage.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The cumulative error of the regression as a percentage.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.estimate_accuracy">
+<span class="sig-name descname"><span class="pre">estimate_accuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yhat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.estimate_accuracy" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Estimates</span> <span class="pre">the</span> <span class="pre">prediction</span> <span class="pre">accuracy</span> <span class="pre">by</span> <span class="pre">calculating</span> <span class="pre">the</span> <span class="pre">maximum</span> <span class="pre">and</span> <span class="pre">cumulative</span> <span class="pre">errors</span> <span class="pre">as</span> <span class="pre">a</span> <span class="pre">percentage</span> <span class="pre">relative</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">maximum</span> <span class="pre">observed</span> <span class="pre">value.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – Observations or true values.</p></li>
+<li><p><strong>yhat</strong> (<em>np.ndarray</em>) – Predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum error in percentage.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Cumulative error in percentage.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.transform_output">
+<span class="sig-name descname"><span class="pre">transform_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">losses_fitted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.transform_output" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Transforms</span> <span class="pre">the</span> <span class="pre">fitted</span> <span class="pre">Storey</span> <span class="pre">Loss</span> <span class="pre">Function</span> <span class="pre">(SLF)</span> <span class="pre">output</span> <span class="pre">into</span> <span class="pre">a</span> <span class="pre">structured</span> <span class="pre">format.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>losses_fitted</strong> (<em>fitted_loss_model</em>) – Fitted loss functions containing the mean values of the storey loss functions.</p></li>
+<li><p><strong>typology</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of component considered in the analysis. Default is <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the SLF output with primary attributes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>slf_model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slf_generator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slf_generator.generate" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Generates</span> <span class="pre">Storey</span> <span class="pre">Loss</span> <span class="pre">Functions</span> <span class="pre">(SLFs)</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">performance</span> <span class="pre">group.</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary where the key is the group identifier and the value is the SLF for that group.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[slf_model]</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary storing intermediate data such as component data, fragility functions, total losses, repair costs, damage states, and regression results.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">slf_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">slf_generator</span>
+
+<span class="c1"># Example component data</span>
+<span class="n">component_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;inventory.csv&#39;</span><span class="p">)</span>
+
+<span class="c1"># Initialize SLF Generator</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">slf_generator</span><span class="p">(</span><span class="n">component_data</span><span class="o">=</span><span class="n">component_data</span><span class="p">,</span>
+                      <span class="n">edp</span><span class="o">=</span><span class="s2">&quot;psd&quot;</span><span class="p">,</span>
+                      <span class="n">typology</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;structural&quot;</span><span class="p">],</span>
+                      <span class="n">edp_range</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                      <span class="n">edp_bin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                      <span class="n">realizations</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                      <span class="n">replacement_cost</span><span class="o">=</span><span class="mf">1000000.0</span><span class="p">,</span>
+                      <span class="n">regression</span><span class="o">=</span><span class="s2">&quot;Weibull&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate SLFs</span>
+<span class="n">out</span><span class="p">,</span> <span class="n">cache</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+
+<span class="c1"># Access the results</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># Fitted SLFs</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cache</span><span class="p">)</span>  <span class="c1"># Intermediate data and empirical statistics</span>
+</pre></div>
+</div>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Ramirez, C. and Miranda, E., (2009) “Building-specific loss estimation methods
+and tools for simplified performance-based earthquake engineering”, John A. Blume
+Earthquake Engineering Center, Department of Civil and Environmental Engineering,
+Stanford University.</p></li>
+<li><p>Shahnazaryan, D., O’Reilly, G.J., Monteiro R. “Story loss functions for seismic
+design and assessment: Development of tools and application,” Earthquake Spectra 2021;
+37(4): 2813–2839. DOI: 10.1177/87552930211023523.</p></li>
+<li><p>Shahnazaryan, D., O’Reilly, G.J., Monteiro R. “Development of a Python-Based
+Storey Loss Function Generator,” COMPDYN 2021 - 8th International Conference on
+Computational Methods in Structural Dynamics and Earthquake Engineering, 2021.
+DOI: 10.7712/120121.8659.18567.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pos.html" class="btn btn-neutral float-left" title="Postprocessing Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plo.html" class="btn btn-neutral float-right" title="Plotter Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
