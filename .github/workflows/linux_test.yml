@@ -1,4 +1,4 @@
-name: Linux tests
+name: Linux tests and Page deployment
 on:
   pull_request:
   workflow_dispatch:
