@@ -14,7 +14,7 @@ https://wheelhouse.openquake.org/v3/linux/py311/matplotlib-3.8.2-cp311-cp311-man
 https://wheelhouse.openquake.org/v3/linux/py311/llvmlite-0.41.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 #
 #
-https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
-https://wheelhouse.openquake.org/v3/py/openseespylinux-3.6.0.3-py3-none-any.whl
+openseespy==3.7.0.4
+openseespylinux==3.7.0.4
 https://wheelhouse.openquake.org/v3/py/click-8.1.7-py3-none-any.whl
 https://wheelhouse.openquake.org/v3/py/pydantic-2.10.6-py3-none-any.whl
