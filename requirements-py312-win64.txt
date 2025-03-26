@@ -16,7 +16,7 @@ https://wheelhouse.openquake.org/v3/windows/py312/llvmlite-0.43.0-cp312-cp312-wi
 #
 #https://wheelhouse.openquake.org/v3/py/openseespy-3.6.0.3-py3-none-any.whl
 #https://wheelhouse.openquake.org/v3/py/openseespywin-3.6.0.3-py3-none-any.whl
-openseespy==3.7.0.4
-openseespywin==3.7.0.4
+openseespy==3.7.0.3.1
+openseespywin==3.7.0.3.1
 https://wheelhouse.openquake.org/v3/py/click-8.1.7-py3-none-any.whl
 https://wheelhouse.openquake.org/v3/py/pydantic-2.10.6-py3-none-any.whl
