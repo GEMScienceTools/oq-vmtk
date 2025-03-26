@@ -53,7 +53,7 @@ jobs:
 
 
   pages:
-    need: vulnerability_test
+    needs: vulnerability_test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
