@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storey-Loss Function Generation Module &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Plotter Module" href="Plotter.html" />
+    <link rel="prev" title="Postprocessing Module" href="Postprocessor.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IMCalculator.html">IM Calculator Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Calibration.html">Model Calibration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modeller.html">Model Building Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Postprocessor.html">Postprocessing Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Storey-Loss Function Generation Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#slf_generator"><code class="docutils literal notranslate"><span class="pre">slf_generator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#example-usage">Example Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Plotter.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Storey-Loss Function Generation Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/SLFGenerator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="storey-loss-function-generation-module">
+<h1>Storey-Loss Function Generation Module<a class="headerlink" href="#storey-loss-function-generation-module" title="Link to this heading"></a></h1>
+<p>The <cite>slf_generator</cite> module provides a class <code class="docutils literal notranslate"><span class="pre">slf_generator</span></code> to generate Storey Loss Functions
+(SLFs) based on fragility, consequence, and quantity data. SLFs establish a direct relationship
+between the expected loss at a specific storey and the engineering demand parameter.
+This class employs a probabilistic approach, utilizing Monte Carlo simulations to model damage,
+assess the associated loss, and determine its distribution within a storey, considering a
+user-defined inventory of damageable components.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="slf_generator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slf_generator</span></span><a class="headerlink" href="#slf_generator" title="Link to this definition"></a></dt>
+<dd><p>A class for generating Storey Loss Functions (SLFs) using fragility, consequence, and quantity data. It applies a probabilistic approach to quantify the loss and its distribution across various storeys of a building under seismic loading.</p>
+<p><strong>Attributes</strong>:
+- <strong>edp</strong>: <cite>str</cite></p>
+<blockquote>
+<div><p>The Engineering Demand Parameter (EDP) for the analysis (e.g., “psd” for Peak Storey Drift or “pfa” for Peak Floor Acceleration).</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>typology</strong>: <cite>List[str]</cite>
+The type of components considered (e.g., “structural” or “non-structural”).</p></li>
+<li><p><strong>edp_bin</strong>: <cite>float</cite>
+The size of the EDP bin used for discretizing the EDP range.</p></li>
+<li><p><strong>edp_range</strong>: <cite>Union[List[float], np.ndarray]</cite>
+The range of EDP values over which the SLFs are calculated.</p></li>
+<li><p><strong>grouping_flag</strong>: <cite>bool</cite>
+Whether to perform performance grouping of components. Default is <cite>True</cite>.</p></li>
+<li><p><strong>conversion</strong>: <cite>float</cite>
+Conversion factor for cost-related values. Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>realizations</strong>: <cite>int</cite>
+Number of realizations for the Monte Carlo method. Default is <cite>20</cite>.</p></li>
+<li><p><strong>replacement_cost</strong>: <cite>float</cite>
+Replacement cost of the building (used when normalizing SLFs). Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>regression</strong>: <cite>str</cite>
+Regression function to be used for fitting the loss functions. Supported options are “Weibull” (default), “Papadopoulos”, “Gdp” (Generalized Pareto Distribution), and “Lognormal”.</p></li>
+<li><p><strong>storey</strong>: <cite>Union[int, List[int]]</cite>
+Storey levels to consider in the analysis. Default is <cite>None</cite>.</p></li>
+<li><p><strong>directionality</strong>: <cite>int</cite>
+Directionality of the analysis. Default is <cite>None</cite> (non-directional).</p></li>
+<li><p><strong>correlation_tree</strong>: <cite>correlation_tree_model</cite>
+Correlation tree for the component data. Default is <cite>None</cite>.</p></li>
+</ul>
+<p><strong>Methods</strong>:
+- <strong>__init__</strong>:</p>
+<blockquote>
+<div><p>Initializes the SLF Generator with the provided parameters.</p>
+<p><strong>Parameters</strong>:
+- <strong>component_data</strong>: <cite>component_data_model</cite></p>
+<blockquote>
+<div><p>Inventory of component data.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>edp</strong>: <cite>str</cite>
+Engineering Demand Parameter (EDP) options are: “psd” (Peak Storey Drift) or “pfa” (Peak Floor Acceleration).</p></li>
+<li><p><strong>correlation_tree</strong>: <cite>correlation_tree_model</cite>, optional
+Correlation tree for the component data. Default is <cite>None</cite>.</p></li>
+<li><p><strong>typology</strong>: <cite>List[str]</cite>, optional
+Type of components considered; options are: “ns” (Non-structural) or “s” (Structural). Default is <cite>None</cite>.</p></li>
+<li><p><strong>edp_range</strong>: <cite>Union[List[float], np.ndarray]</cite>, optional
+Range of EDP values. Default is <cite>None</cite>.</p></li>
+<li><p><strong>edp_bin</strong>: <cite>float</cite>, optional
+Size of the EDP bin. Default is <cite>None</cite>.</p></li>
+<li><p><strong>grouping_flag</strong>: <cite>bool</cite>, optional
+Whether to perform performance grouping of components. Default is <cite>True</cite>.</p></li>
+<li><p><strong>conversion</strong>: <cite>float</cite>, optional
+Conversion factor for cost-related values. Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>realizations</strong>: <cite>int</cite>, optional
+Number of realizations for the Monte Carlo method. Default is <cite>20</cite>.</p></li>
+<li><p><strong>replacement_cost</strong>: <cite>float</cite>, optional
+Replacement cost of the building (used when normalizing SLFs). Default is <cite>1.0</cite>.</p></li>
+<li><p><strong>regression</strong>: <cite>str</cite>, optional
+Regression function to be used. Supported options: “Weibull” (default), “Papadopoulos”, “Gdp” (Generalized Pareto Distribution), and “Lognormal”.</p></li>
+<li><p><strong>storey</strong>: <cite>Union[int, List[int]]</cite>, optional
+Storey levels to consider. Default is <cite>None</cite>.</p></li>
+<li><p><strong>directionality</strong>: <cite>int</cite>, optional
+Directionality of the analysis. Default is <cite>None</cite> (non-directional).</p></li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p><strong>_define_edp_range</strong>:
+Defines the range of Engineering Demand Parameters (EDP) based on the provided EDP type.</p></li>
+<li><p><strong>_get_component_data</strong>:
+Fetches and processes component data from the provided input.</p></li>
+<li><p><strong>_group_components</strong>:
+Groups components based on performance and typology if <cite>grouping_flag</cite> is <cite>True</cite>.</p></li>
+<li><p><strong>_get_correlation_tree</strong>:
+Loads and processes the correlation tree if provided.</p></li>
+<li><p><strong>fragility_function</strong>:
+Derives fragility functions for each component based on the provided data.</p>
+<p><strong>Returns</strong>:
+- <cite>dict</cite>: Fragility functions associated with each damage state and component.
+- <cite>np.ndarray</cite>: Mean values of cost functions.
+- <cite>np.ndarray</cite>: Covariances of cost functions.</p>
+</li>
+<li><p><strong>do_monte_carlo_simulations</strong>:
+Performs Monte Carlo simulations to sample damage states for each component.</p>
+<p><strong>Parameters</strong>:
+- <strong>fragilities</strong>: <cite>fragility_model</cite></p>
+<blockquote>
+<div><p>Fragility functions of all components at all damage states.</p>
+</div></blockquote>
+<p><strong>Returns</strong>:
+- <cite>ds_model</cite>: Sampled damage states of each component for each simulation.</p>
+</li>
+<li><p><strong>validate_ds_dependence</strong>:
+Validates damage state dependencies based on the correlation tree.</p>
+<p><strong>Parameters</strong>:
+- <strong>damage_state</strong>: <cite>ds_model</cite></p>
+<blockquote>
+<div><p>Sampled damage states of each component for each simulation.</p>
+</div></blockquote>
+<p><strong>Returns</strong>:
+- <cite>ds_model</cite>: Sampled damage states after enforcing dependencies.</p>
+</li>
+<li><p><strong>calculate_costs</strong>:
+Calculates repair and replacement costs for each component based on the sampled damage states.</p>
+<p><strong>Parameters</strong>:
+- <strong>damage_state</strong>: <cite>ds_model</cite></p>
+<blockquote>
+<div><p>Sampled damage states for each component.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>means_cost</strong>: <cite>np.ndarray</cite>
+Mean values of the cost functions.</p></li>
+<li><p><strong>covs_cost</strong>: <cite>np.ndarray</cite>
+Covariances of the cost functions.</p></li>
+</ul>
+<p><strong>Returns</strong>:
+- <cite>cost_model</cite>: Total replacement costs in absolute values.
+- <cite>cost_model</cite>: Total replacement costs as a ratio of the replacement cost.
+- <cite>simulation_model</cite>: Repair costs associated with each component and simulation.</p>
+</li>
+<li><p><strong>perform_regression</strong>:
+Performs regression analysis on the loss and loss ratio data to estimate fitted loss functions.</p>
+<p><strong>Parameters</strong>:
+- <strong>loss</strong>: <cite>cost_model</cite></p>
+<blockquote>
+<div><p>DataFrame containing loss values for each component and damage state.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>loss_ratio</strong>: <cite>cost_model</cite>
+DataFrame containing loss ratio values for each component and damage state.</p></li>
+<li><p><strong>regression_type</strong>: <cite>str</cite>, optional
+The regression model to be used. Supported options: “Weibull”, “Papadopoulos”, “Gdp”, and “Lognormal”. Default is <cite>None</cite>.</p></li>
+<li><p><strong>percentiles</strong>: <cite>List[float]</cite>, optional
+List of percentiles for which the loss and loss ratio values will be computed. Default is <cite>[0.16, 0.50, 0.84]</cite>.</p></li>
+</ul>
+<p><strong>Returns</strong>:
+- <cite>loss_model</cite>: Quantiles of the loss and loss ratio data.
+- <cite>fitted_loss_model</cite>: The fitted loss function based on the selected regression model.
+- <cite>fitting_parameters_model</cite>: The parameters of the fitted loss function.
+- <cite>float</cite>: The maximum error of the regression as a percentage.
+- <cite>float</cite>: The cumulative error of the regression as a percentage.</p>
+</li>
+<li><p><strong>estimate_accuracy</strong>:
+Estimates the prediction accuracy by calculating the maximum and cumulative errors as a percentage relative to the maximum observed value.</p>
+<p><strong>Parameters</strong>:
+- <strong>y</strong>: <cite>np.ndarray</cite></p>
+<blockquote>
+<div><p>Observations or true values.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>yhat</strong>: <cite>np.ndarray</cite>
+Predicted values.</p></li>
+</ul>
+<p><strong>Returns</strong>:
+- <cite>float</cite>: Maximum error in percentage.
+- <cite>float</cite>: Cumulative error in percentage.</p>
+</li>
+<li><p><strong>transform_output</strong>:
+Transforms the fitted Storey Loss Function (SLF) output into a structured format.</p>
+<p><strong>Parameters</strong>:
+- <strong>losses_fitted</strong>: <cite>fitted_loss_model</cite></p>
+<blockquote>
+<div><p>Fitted loss functions containing the mean values of the storey loss functions.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>typology</strong>: <cite>str</cite>, optional
+Type of component considered in the analysis. Default is <cite>None</cite>.</p></li>
+</ul>
+<p><strong>Returns</strong>:
+- <cite>slf_model</cite>: A dictionary containing the SLF output with primary attributes.</p>
+</li>
+<li><p><strong>generate</strong>:
+Generates Storey Loss Functions (SLFs) for each performance group.</p>
+<p><strong>Returns</strong>:
+- <cite>Dict[slf_model]</cite>: A dictionary where the key is the group identifier and the value is the SLF for that group.
+- <cite>Dict</cite>: A dictionary storing intermediate data such as component data, fragility functions, total losses, repair costs, damage states, and regression results.</p>
+</li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">slf_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">slf_generator</span>
+
+<span class="c1"># Example component data</span>
+<span class="n">component_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;inventory.csv&#39;</span><span class="p">)</span>
+
+<span class="c1"># Initialize SLF Generator</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">slf_generator</span><span class="p">(</span><span class="n">component_data</span><span class="o">=</span><span class="n">component_data</span><span class="p">,</span>
+                      <span class="n">edp</span><span class="o">=</span><span class="s2">&quot;psd&quot;</span><span class="p">,</span>
+                      <span class="n">typology</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;structural&quot;</span><span class="p">],</span>
+                      <span class="n">edp_range</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                      <span class="n">edp_bin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                      <span class="n">realizations</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                      <span class="n">replacement_cost</span><span class="o">=</span><span class="mf">1000000.0</span><span class="p">,</span>
+                      <span class="n">regression</span><span class="o">=</span><span class="s2">&quot;Weibull&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate SLFs</span>
+<span class="n">out</span><span class="p">,</span> <span class="n">cache</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+
+<span class="c1"># Access the results</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># Fitted SLFs</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cache</span><span class="p">)</span>  <span class="c1"># Intermediate data and empirical statistics</span>
+</pre></div>
+</div>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<p>1) Ramirez, C. and Miranda, E., (2009) “Building-specific loss estimation methods
+and tools for simplified performance-based earthquake engineering”, John A. Blume
+Earthquake Engineering Center, Department of Civil and Environmental Engineering,
+Stanford University.</p>
+<p>2) Shahnazaryan, D., O’Reilly, G.J., Monteiro R. “Story loss functions for seismic
+design and assessment: Development of tools and application,” Earthquake Spectra 2021;
+37(4): 2813–2839. DOI: 10.1177/87552930211023523.</p>
+<p>3) Shahnazaryan, D., O’Reilly, G.J., Monteiro R. “Development of a Python-Based
+torey Loss Function Generator,” COMPDYN 2021 - 8th International Conference on
+Computational Methods in Structural Dynamics and Earthquake Engineering, 2021.
+DOI: 10.7712/120121.8659.18567.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Postprocessor.html" class="btn btn-neutral float-left" title="Postprocessing Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Plotter.html" class="btn btn-neutral float-right" title="Plotter Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
