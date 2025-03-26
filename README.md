@@ -98,7 +98,6 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 
    **For Windows Users:** Install the appropriate requirements file based on your Python version:
    ```bash
-   pip install -r requirements-py310-win64.txt  # Python 3.10
    pip install -r requirements-py311-win64.txt  # Python 3.11
    pip install -r requirements-py312-win64.txt  # Python 3.12
    ```
