@@ -155,7 +155,7 @@ This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agp
 
 # 📚 Documentation
 
-[WIP]
+For detailed documentation and user guidance on using the toolkit for vulnerability modeling, including installation instructions, key functionalities, and example workflows, please visit: [VMTK Documentation](https://gemsciencetools.github.io/oq-vmtk/)
 
 # 📑 References
 
