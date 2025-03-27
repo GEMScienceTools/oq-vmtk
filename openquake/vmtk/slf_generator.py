@@ -579,7 +579,7 @@ class slf_generator:
         # Validate base fields
         id_set = set()
         for row in component_data:
-            model = component_data_model.parse_obj(row)
+            model = component_data_model.model_validate(row)
             if model.Component_ID is not None and model.Component_ID in id_set:
                 raise ValueError(f'Duplicate ITEM: {model.Component_ID}')
             id_set.add(model.Component_ID)
@@ -613,7 +613,7 @@ class slf_generator:
         # Validate base fields
         id_set = set()
         for row in corr_dict:
-            model = correlation_tree_model.parse_obj(row)
+            model = correlation_tree_model.model_validate(row)
             if model.ITEM in id_set:
                 raise ValueError(f'Duplicate ITEM: {model.ITEM}')
             id_set.add(model.ITEM)
