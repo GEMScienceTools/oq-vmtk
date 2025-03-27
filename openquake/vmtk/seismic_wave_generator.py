@@ -261,7 +261,7 @@ def process_single_subfault(i: int, j: int, i0: int, j0: int, dl: float, dw: flo
         i_onebased, j_onebased, i0_onebased, j0_onebased, num_subfaults_length, num_subfaults_width, no_effective_subfaults
     )
     
-    # ALL subfaults are active in EXSIM
+    # ALL subfaults are active
     active_subfaults[i, j] = 1
     
     # Store n_pulsing_subs for later use in corner frequency calculation
@@ -572,7 +572,7 @@ def compute_point_source_distance(R, h_ref, Fdip, Fstrike, Az):
 def number_of_pulsing_subs(i, j, i0, j0, num_subfaults_length, num_subfaults_width, no_effective_subfaults):
     """
     Determines the number of pulsing subfaults around the given subfault (i, j).
-    Adjusted to align with MATLAB's FUNNP logic.
+    .
     """
     # Compute Rmax and Rmin
     r_max = max(abs(i - i0) + 1, abs(j - j0) + 1)
@@ -580,12 +580,11 @@ def number_of_pulsing_subs(i, j, i0, j0, num_subfaults_length, num_subfaults_wid
 
     n = 0  # Counter for active subfaults
 
-    # Iterate over the entire fault grid (adjusted for MATLAB indexing)
+    # Iterate over the entire fault grid 
     for ii in range(1, num_subfaults_length + 1):
         for jj in range(1, num_subfaults_width + 1):
-            # Adjust i0, j0 for MATLAB-style indexing
             r = max(abs(ii - (i0 + 1)) + 1, abs(jj - (j0 + 1)) + 1)
-            if r_min < r < r_max:  # Adjust condition to match MATLAB
+            if r_min < r < r_max:  
                 n += 1
 
     return n
@@ -692,7 +691,6 @@ def calculate_random_hypocenters(
 def calc_psa_cdm(at, dt, Tr, psi=0.05):
     """
     Implementation of the Central Difference Method (CDM) for PSA calculation.
-    Converted from the provided MATLAB code.
     
     Parameters:
     at : numpy array
@@ -731,7 +729,6 @@ def calc_psa_cdm(at, dt, Tr, psi=0.05):
             continue
             
         for j in range(1, NT):
-            # Central difference update formula (converted from MATLAB)
             u[i, j+1] = (-(at[j]) + A[i] * u[i, j] + B[i] * u[i, j-1]) / C[i]
     
     # Calculate response spectra
