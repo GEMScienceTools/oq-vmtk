@@ -1567,158 +1567,10 @@ def plot_resultsV(selection_params, target_sa, IMs, simulated_spectra, SaKnown, 
         plt.show()
 
 
-def write_output(rec_idx, IMs, output_dir, output_file, metadata):
-    """
-    Output results to a text file
-    
-    Parameters:
-    -----------
-    rec_idx : numpy.ndarray
-        Indices of selected motions in original database
-    IMs : IntensityMeasures
-        Selected intensity measures
-    output_dir : str
-        Directory for output files
-    output_file : str
-        Name of output file
-    metadata : dict
-        Information about the database and selected records
-    """
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Create output file
-    output_path = os.path.join(output_dir, output_file)
-    
-    with open(output_path, 'w') as f:
-        f.write("# Selected Ground Motions\n")
-        f.write("#\n")
-        f.write("# Record_ID  Scale_Factor  Filename\n")
-        f.write("#\n")
-        
-        for i, (idx, scale) in enumerate(zip(rec_idx, IMs.scaleFac)):
-            f.write(f"{idx:8d}  {scale:12.5f}  {metadata['filenames'][idx]}\n")
-    
-    print(f"Output written to {output_path}")
-
-
-def download_time_series(output_dir, rec_idx, metadata):
-    """
-    Copy selected time series to the working directory
-    
-    Parameters:
-    -----------
-    output_dir : str
-        Directory for output files
-    rec_idx : numpy.ndarray
-        Indices of selected motions
-    metadata : dict
-        Information about the database and selected records
-    """
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-    
-    print(f"Attempting to copy time series files to {output_dir}")
-    
-    # Determine database type based on directory location
-    try:
-        dir_location = metadata['dirLocation'][0]
-        
-        # NGA-West1 data
-        if 'nga_files' in dir_location:
-            for i, idx in enumerate(rec_idx):
-                # Check if multiple components exist
-                if isinstance(metadata['Filename'][idx], list) or isinstance(metadata['Filename'][idx], np.ndarray):
-                    n_comp = len(metadata['Filename'][idx])
-                else:
-                    n_comp = 1
-                
-                for j in range(n_comp):
-                    # Construct source URL or path
-                    if n_comp == 1:
-                        source = os.path.join(metadata['dirLocation'][idx], metadata['Filename'][idx])
-                        dest = os.path.join(output_dir, f"GM{i+1}.txt")
-                    else:
-                        source = os.path.join(metadata['dirLocation'][idx], metadata['Filename'][idx][j])
-                        dest = os.path.join(output_dir, f"GM{i+1}_comp{j+1}.txt")
-                    
-                    # Try to download or copy
-                    try:
-                        if source.startswith(('http://', 'https://')):
-                            # Use requests for downloading
-                            with requests.get(source, stream=True) as r:
-                                r.raise_for_status()
-                                with open(dest, 'wb') as f:
-                                    for chunk in r.iter_content(chunk_size=8192):
-                                        f.write(chunk)
-                        else:
-                            # Use shutil for local file copying
-                            shutil.copy2(source, dest)
-                        print(f"  Successfully copied {os.path.basename(source)} to {dest}")
-                    except Exception as e:
-                        print(f"  Error copying {source}: {str(e)}")
-        
-        # BBP data
-        elif 'bbpvault' in dir_location:
-            print("  BroadBand Platform data are currently not available for download")
-        
-        # NGA-West2 data
-        elif 'ngawest2' in dir_location:
-            print("  NGA-West2 data are currently not available for download")
-        
-        # CyberShake data
-        elif 'CyberShake' in dir_location:
-            for i, idx in enumerate(rec_idx):
-                # Check if multiple components exist
-                if isinstance(metadata['Filename'][idx], list) or isinstance(metadata['Filename'][idx], np.ndarray):
-                    n_comp = len(metadata['Filename'][idx])
-                else:
-                    n_comp = 1
-                
-                for j in range(n_comp):
-                    # Construct source path
-                    if n_comp == 1:
-                        source = os.path.join(metadata['dirLocation'][idx], metadata['Filename'][idx])
-                        dest = os.path.join(output_dir, f"GM{i+1}.txt")
-                    else:
-                        source = os.path.join(metadata['dirLocation'][idx], metadata['Filename'][idx][j])
-                        dest = os.path.join(output_dir, f"GM{i+1}_comp{j+1}.txt")
-                    
-                    # Copy file
-                    try:
-                        shutil.copy2(source, dest)
-                        print(f"  Successfully copied {os.path.basename(source)} to {dest}")
-                    except Exception as e:
-                        print(f"  Error copying {source}: {str(e)}")
-        
-        # Unknown database
-        else:
-            print("  Unknown database format")
-            
-    except Exception as e:
-        print(f"  Error identifying database type: {str(e)}")
-        # Fallback to simplified approach
-        for i, idx in enumerate(rec_idx):
-            try:
-                filename = metadata['filenames'][idx] if 'filenames' in metadata else f"record_{idx}.acc"
-                print(f"  Would copy {filename} to {output_dir}")
-            except:
-                print(f"  Would copy record {idx} to {output_dir}")
-
-
 
 def download_time_series(output_dir, rec_idx, metadata):
     """
     Extract selected time series from NGA-West2 zip file to the working directory
-    
-    Parameters:
-    -----------
-    output_dir : str
-        Directory for output files
-    rec_idx : numpy.ndarray
-        Indices of selected motions
-    metadata : dict
-        Information about the database and selected records
     """
     import zipfile
     import os
@@ -1729,29 +1581,39 @@ def download_time_series(output_dir, rec_idx, metadata):
     
     print(f"Extracting time series files to {output_dir}")
     
-    # Read RSN numbers from the output file that's already been created
-    output_file_path = os.path.join(output_dir, "Output_File.dat")
+    # Read RSN numbers from the output file
+    output_file_path = os.path.join(output_dir, "M6p5_R10_rock_Output.dat")
     rsn_numbers = []
     
     if os.path.exists(output_file_path):
         with open(output_file_path, 'r') as f:
             lines = f.readlines()
+            found_table = False
+            
             for line in lines:
-                # Skip header lines
-                if line.startswith("Record Number") or line.startswith("To retrieve") or line.strip() == "":
+                # Skip until we find the table header
+                if "Record Number\t" in line:
+                    found_table = True
                     continue
                 
-                # Parse the RSN from the line (should be in column 2)
+                # Skip empty lines and header
+                if not found_table or not line.strip():
+                    continue
+                
+                # Parse the tab-separated line
                 parts = line.strip().split('\t')
-                if len(parts) >= 2:
+                if len(parts) >= 3:
                     try:
+                        # The RSN is in the second column
                         rsn = int(parts[1])
                         rsn_numbers.append(rsn)
-                    except ValueError:
+                    except (ValueError, IndexError):
                         pass
     
-    if not rsn_numbers:
-        print("WARNING: Could not read RSN numbers from Output_File.dat")
+    if rsn_numbers:
+        print(f"Found {len(rsn_numbers)} RSN numbers: {rsn_numbers[:5]}...")
+    else:
+        print("WARNING: Could not read RSN numbers from the output file")
         # Fallback to using NGA_num if available
         if 'NGA_num' in metadata and len(metadata['NGA_num']) > 0:
             for idx in rec_idx:
@@ -1762,14 +1624,10 @@ def download_time_series(output_dir, rec_idx, metadata):
                     pass
     
     # Path to the NGA_W2.zip file - adjust as needed
-    #zip_path = "NGA_W2.zip"  # Change this to the actual path
-    zip_path = r"C:\Users\35191\Documents\NGA_W2.zip"
-
+    zip_path = r"C:\Users\35191\Documents\NGA_W2.zip"  # Update this path
     
-    # Check if the zip file exists
     if not os.path.exists(zip_path):
         print(f"ERROR: Zip file not found at {zip_path}")
-        print("Please specify the correct path to NGA_W2.zip")
         return
     
     print(f"Looking for RSN numbers: {rsn_numbers}")
@@ -1782,25 +1640,36 @@ def download_time_series(output_dir, rec_idx, metadata):
             # List all files in the zip
             file_list = zip_ref.namelist()
             
+            # Filter out macOS metadata files
+            file_list = [f for f in file_list if not f.startswith('__MACOSX/') and not os.path.basename(f).startswith('._')]
+            
             # For each selected ground motion
             for i, rsn in enumerate(rsn_numbers):
                 # Find files that match the RSN pattern
                 rsn_pattern = f"RSN{rsn}_"
-                # Consider the subdirectory structure
                 rsn_files = [f for f in file_list if rsn_pattern in f and f.endswith('.AT2')]
                 
                 if not rsn_files:
-                    # Try pattern with subdirectory
+                    # Try with subdirectory
                     rsn_files = [f for f in file_list if f"NGA_W2/RSN{rsn}_" in f and f.endswith('.AT2')]
                 
                 if not rsn_files:
-                    # Try with alternate RSN patterns
+                    # Try more permissive patterns
                     rsn_files = [f for f in file_list if f"RSN{rsn}" in f and f.endswith('.AT2')]
                     rsn_files.extend([f for f in file_list if f"NGA_W2/RSN{rsn}" in f and f.endswith('.AT2')])
+                
+                # Remove any macOS metadata files that might have slipped through
+                rsn_files = [f for f in rsn_files if not os.path.basename(f).startswith('._')]
                 
                 if rsn_files:
                     # Extract each matching file (up to 2 for horizontal components)
                     for j, rsn_file in enumerate(rsn_files[:2]):
+                        # Check file size in zip to avoid extracting tiny metadata files
+                        file_info = zip_ref.getinfo(rsn_file)
+                        if file_info.file_size < 5000:  # Skip suspiciously small files
+                            print(f"  WARNING: File {rsn_file} is too small ({file_info.file_size} bytes), skipping")
+                            continue
+                            
                         # Determine output filename
                         base_name = os.path.basename(rsn_file)
                         out_path = os.path.join(output_dir, f"GM{i+1}_comp{j+1}.AT2")
@@ -1821,17 +1690,15 @@ def download_time_series(output_dir, rec_idx, metadata):
                 print("No files were extracted")
                 
                 # Print some example filenames to help troubleshoot
-                print("\nExample filenames in the zip:")
-                sample_files = [f for f in file_list if f.endswith('.AT2')][:10]
-                for f in sample_files:
+                valid_files = [f for f in file_list if f.endswith('.AT2') and not os.path.basename(f).startswith('._')][:10]
+                print("\nExample valid filenames in the zip:")
+                for f in valid_files:
                     print(f"  {f}")
 
     except zipfile.BadZipFile:
         print(f"Error: {zip_path} is not a valid zip file")
     except Exception as e:
         print(f"Error extracting files: {str(e)}")
-
-
 
 def write_output(rec_idx, IMs, output_dir, output_file, metadata):
     """
@@ -1923,38 +1790,297 @@ def write_output(rec_idx, IMs, output_dir, output_file, metadata):
 
 
 
-def main():
-    """Main function to run the ground motion selection process"""
+def get_default_parameters():
+    """
+    Get default parameters for ground motion selection
+    
+    Returns:
+    --------
+    dict
+        Dictionary containing all default parameters
+    """
+    params = {
+        # Ground motion database and selection
+        "database_file": "NGA_W2_meta_data",
+        "conditional": False,          # Use conditional spectrum? (False: unconditional)
+        "components": 2,               # 1: single-component, 2: two-component selection
+        "rotD": 50,                    # 50: use SaRotD50, 100: use SaRotD100
+        
+        # Spectral periods and scaling
+        "num_motions": 30,             # Number of ground motions to select
+        "cond_period": 1.5,            # Conditioning period (s)
+        "period_min": 0.1,             # Minimum period of interest (s)
+        "period_max": 10.0,            # Maximum period of interest (s)
+        "num_periods": 30,             # Number of periods between min and max
+        "sa_cond": None,               # Target Sa at conditioning period (optional)
+        
+        # Vertical component
+        "match_vertical": False,       # Match vertical spectrum?
+        "period_min_v": 0.01,          # Minimum vertical period (s)
+        "period_max_v": 10.0,          # Maximum vertical period (s)
+        "weight_v": 0.5,               # Weight for vertical spectrum matching
+        "scale_v_separate": True,      # Scale vertical components separately?
+        
+        # Scaling and error options
+        "allow_scaling": True,         # Allow records to be scaled?
+        "max_scale_factor": 10.0,      # Maximum scale factor
+        "tolerance": 10,               # Tolerable percent error to skip optimization
+        "error_metric": "SSE",         # "SSE": sum squared error, "KS": K-S statistic
+        "error_penalty": 0,            # Penalty for spectra far from target
+        "error_weights": [1.0, 2.0, 0.3], # Weights for [mean, stdev, skewness] errors
+        "optimization_loops": 2,       # Number of optimization loops
+        "use_variance": True,          # Use computed variance vs. target of 0
+        
+        # Rupture scenario
+        "magnitude": 6.5,              # Earthquake magnitude
+        "distance_jb": 11,             # Joyner-Boore distance (km)
+        "epsilon": 1.9,                # Target epsilon (for conditional selection)
+        "vs30": 259,                   # Shear wave velocity (m/s)
+        "z1": 999,                     # Depth to Vs=1.0 km/s horizon (km), 999=unknown
+        "region": 1,                   # 0: global, 1: California, 2: Japan, 3: China/Turkey
+        "fault_type": 1,               # 0: unspecified, 1: strike-slip, 2: normal, 3: reverse
+        
+        # Additional rupture parameters
+        "distance_rup": 11,            # Rupture distance (km)
+        "distance_x": 11,              # Horizontal distance (km)
+        "width": 15,                   # Down-dip rupture width (km)
+        "depth_tor": 0,                # Depth to top of rupture (km)
+        "depth_bor": 15,               # Depth to bottom of rupture (km)
+        "dip": 90,                     # Fault dip angle (deg)
+        "rake": 0,                     # Rake angle (deg)
+        "hanging_wall": 0,             # Hanging wall flag
+        "z2p5": 1,                     # Depth to Vs=2.5 km/s (km)
+        "hypo_depth": 10,              # Hypocentral depth (km)
+        
+        # Ground motion database filtering
+        "vs30_min": float('-inf'),     # Minimum Vs30 to consider (m/s)
+        "vs30_max": float('inf'),      # Maximum Vs30 to consider (m/s)
+        "mag_min": 6.0,                # Minimum magnitude to consider
+        "mag_max": 8.2,                # Maximum magnitude to consider
+        "dist_min": 0,                 # Minimum distance to consider (km)
+        "dist_max": 50,                # Maximum distance to consider (km)
+        "exclude_records": [],         # List of record IDs to exclude
+        
+        # OpenQuake integration
+        "use_openquake": True,         # Use OpenQuake hazardlib GMMs?
+        "gmm_name": "BooreEtAl2014",   # OpenQuake GMM to use
+        
+        # Runtime options
+        "show_plots": True,            # Generate plots?
+        "copy_files": True,            # Extract time series files?
+        "random_seed": 0,              # Random seed (0 for random)
+        "num_trials": 20,              # Number of Monte Carlo trials
+        "output_dir": "Data",          # Output directory
+        "output_file": "Output_File.dat" # Output filename
+    }
+    
+    return params
+
+
+def create_selection_params(params):
+    """
+    Create a SelectionParams object with custom parameters
+    
+    Parameters:
+    -----------
+    params : dict
+        Dictionary with parameter values
+    
+    Returns:
+    --------
+    SelectionParams
+        Initialized object
+    """
+    sp = SelectionParams()
+    
+    # Ground motion database and selection
+    sp.database_file = params["database_file"]
+    sp.cond = 1 if params["conditional"] else 0
+    sp.arb = params["components"]
+    sp.RotD = params["rotD"]
+    
+    # Spectral periods and scaling
+    sp.nGM = params["num_motions"]
+    sp.Tcond = params["cond_period"]
+    sp.Tmin = params["period_min"]
+    sp.Tmax = params["period_max"]
+    sp.TgtPer = np.logspace(np.log10(sp.Tmin), np.log10(sp.Tmax), params["num_periods"])
+    sp.SaTcond = params["sa_cond"]
+    
+    # Vertical component
+    sp.matchV = 1 if params["match_vertical"] else 0
+    sp.TminV = params["period_min_v"]
+    sp.TmaxV = params["period_max_v"]
+    sp.weightV = params["weight_v"]
+    sp.sepScaleV = 1 if params["scale_v_separate"] else 0
+    sp.TgtPerV = np.logspace(np.log10(sp.TminV), np.log10(sp.TmaxV), 20)
+    
+    # Scaling and error options
+    sp.isScaled = 1 if params["allow_scaling"] else 0
+    sp.maxScale = params["max_scale_factor"]
+    sp.tol = params["tolerance"]
+    sp.optType = 0 if params["error_metric"] == "SSE" else 1
+    sp.penalty = params["error_penalty"]
+    sp.weights = params["error_weights"]
+    sp.nLoop = params["optimization_loops"]
+    sp.useVar = 1 if params["use_variance"] else 0
+    
+    # OpenQuake integration
+    sp.use_openquake = params["use_openquake"]
+    sp.gmm_name = params["gmm_name"]
+    
+    return sp
+
+
+def create_rupture(params):
+    """
+    Create a Rupture object with custom parameters
+    
+    Parameters:
+    -----------
+    params : dict
+        Dictionary with parameter values
+    
+    Returns:
+    --------
+    Rupture
+        Initialized object
+    """
+    rup = Rupture()
+    
+    # Basic parameters
+    rup.M_bar = params["magnitude"]
+    rup.Rjb = params["distance_jb"]
+    rup.eps_bar = params["epsilon"]
+    rup.Vs30 = params["vs30"]
+    rup.z1 = params["z1"]
+    rup.region = params["region"]
+    rup.Fault_Type = params["fault_type"]
+    
+    # Additional parameters
+    rup.Rrup = params["distance_rup"]
+    rup.Rx = params["distance_x"]
+    rup.W = params["width"]
+    rup.Ztor = params["depth_tor"]
+    rup.Zbot = params["depth_bor"]
+    rup.dip = params["dip"]
+    rup.lambda_ = params["rake"]
+    rup.Fhw = params["hanging_wall"]
+    rup.Z2p5 = params["z2p5"]
+    rup.Zhyp = params["hypo_depth"]
+    
+    # Set fault mechanism flags
+    if rup.Fault_Type == 3:  # Reverse
+        rup.FRV = 1
+        rup.FNM = 0
+    elif rup.Fault_Type == 2:  # Normal
+        rup.FRV = 0
+        rup.FNM = 1
+    else:  # Strike-slip or unspecified
+        rup.FRV = 0
+        rup.FNM = 0
+    
+    return rup
+
+
+def create_allowed_records(params):
+    """
+    Create an AllowedRecords object with custom parameters
+    
+    Parameters:
+    -----------
+    params : dict
+        Dictionary with parameter values
+    
+    Returns:
+    --------
+    AllowedRecords
+        Initialized object
+    """
+    ar = AllowedRecords()
+    
+    ar.Vs30 = [params["vs30_min"], params["vs30_max"]]
+    ar.Mag = [params["mag_min"], params["mag_max"]]
+    ar.D = [params["dist_min"], params["dist_max"]]
+    ar.idxInvalid = params["exclude_records"]
+    
+    return ar
+
+def export_scale_factors(rec_idx, scale_factors, output_dir):
+    """
+    Export scale factors to a separate file for easy use in other applications
+    
+    Parameters:
+    -----------
+    rec_idx : numpy.ndarray
+        Indices of selected motions (Record Sequence Numbers)
+    scale_factors : numpy.ndarray
+        Scale factors for each selected motion
+    output_dir : str
+        Directory for output files
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Define output file path
+    sf_file_path = os.path.join(output_dir, "SF.txt")
+    
+    # Write scale factors to file
+    with open(sf_file_path, 'w') as f:
+        f.write("# Ground Motion Scale Factors\n")
+        f.write("# GM_ID\tRSN\tScale_Factor\n")
+        f.write("#---------------------------\n")
+        
+        for i, (rsn, sf) in enumerate(zip(rec_idx, scale_factors)):
+            gm_id = f"GM{i+1}"
+            f.write(f"{gm_id}\t{rsn}\t{sf:.4f}\n")
+    
+    print(f"Scale factors exported to {sf_file_path}")
+
+    
+def select_ground_motions(custom_params=None):
+    """
+    Select earthquake ground motions with response spectra matching a target scenario.
+    
+    Parameters:
+    -----------
+    custom_params : dict, optional
+        Dictionary of parameters to override defaults
+        
+    Returns:
+    --------
+    dict
+        Results of the ground motion selection process
+    """
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(script_dir)  # Change to script directory to ensure correct paths
+    os.chdir(script_dir)
+    
+    # Get default parameters and update with custom ones
+    params = get_default_parameters()
+    if custom_params:
+        params.update(custom_params)
     
     print("Starting ground motion selection process")
+    print(f"Scenario: M{params['magnitude']}, R={params['distance_jb']}km, Vs30={params['vs30']}m/s")
+    print(f"{'Conditional' if params['conditional'] else 'Unconditional'} spectrum with {params['num_motions']} ground motions")
     
-    # Initialize parameters
-    selection_params = SelectionParams()
-    rup = Rupture()
-    allowed_recs = AllowedRecords()
+    # Create parameter objects with custom values
+    selection_params = create_selection_params(params)
+    rup = create_rupture(params)
+    allowed_recs = create_allowed_records(params)
     IMs = IntensityMeasures()
-    
-    # User control parameters
-    show_plots = True
-    copy_files = True
-    seed_value = 0
-    n_trials = 20
-    output_dir = 'Data'
-    output_file = 'Output_File.dat'
-    
-    # OpenQuake GMM parameters
-    use_openquake = True  # Set to True to use OpenQuake GMMs
-    # Don't use Allen2012 - it's designed for Australian earthquakes
-    gmm_name = 'BooreEtAl2014'  # More appropriate for global/US earthquakes
     
     # Assign rupture parameters to selection_params for reference
     selection_params.rup = rup
     
-    # Add OpenQuake GMM info to selection_params
-    selection_params.use_openquake = use_openquake
-    selection_params.gmm_name = gmm_name
+    # Results dictionary
+    results = {
+        'success': False,
+        'target_spectrum': None,
+        'selected_records': None,
+        'scale_factors': None,
+        'error': None
+    }
     
     # Load and screen the database
     try:
@@ -1968,12 +2094,17 @@ def main():
             IMs.sampleBigV = np.log(selection_params.SaKnownV[:, selection_params.indPerV])
         
         # Compute target means and covariances
-        print(f"Computing target spectrum using {'OpenQuake ' + gmm_name if use_openquake else 'built-in BSSA 2014'} GMM")
+        gmm_name = params["gmm_name"] if params["use_openquake"] else "built-in BSSA 2014"
+        print(f"Computing target spectrum using {gmm_name} GMM")
         target_sa = get_target_spectrum(known_per, selection_params, ind_per, rup)
-        plot_target_spectrum(target_sa, selection_params)
+        results['target_spectrum'] = target_sa
+        
+        if params["show_plots"]:
+            plot_target_spectrum(target_sa, selection_params)
         
         # Simulate response spectra
-        simulated_spectra = simulate_spectra(target_sa, selection_params, seed_value, n_trials)
+        simulated_spectra = simulate_spectra(target_sa, selection_params, 
+                                           params["random_seed"], params["num_trials"])
         
         # Find best matches
         if selection_params.matchV == 1:
@@ -2004,7 +2135,7 @@ def main():
                 IMs = optimize_ground_motions(selection_params, target_sa, IMs)
         
         # Plot results
-        if show_plots:
+        if params["show_plots"]:
             if selection_params.matchV == 1:
                 plot_resultsV(selection_params, target_sa, IMs, simulated_spectra, SaKnown, known_per)
             else:
@@ -2012,19 +2143,67 @@ def main():
         
         # Output results
         rec_idx = metadata['allowedIndex'][IMs.recID]
-        write_output(rec_idx, IMs, output_dir, output_file, metadata)
+        write_output(rec_idx, IMs, params["output_dir"], params["output_file"], metadata)
         
+        # Export scale factors to separate file
+        export_scale_factors(rec_idx, IMs.scaleFac, params["output_dir"])
+        
+
         # Copy time series if requested
-        if copy_files:
-            download_time_series(output_dir, rec_idx, metadata)
+        if params["copy_files"]:
+            download_time_series(params["output_dir"], rec_idx, metadata)
+        
+        # Store results
+        results['success'] = True
+        results['selected_records'] = rec_idx
+        results['scale_factors'] = IMs.scaleFac
+        results['record_info'] = {
+            'magnitude': params['magnitude'],
+            'distance': params['distance_jb'],
+            'vs30': params['vs30'],
+            'conditional': params['conditional'],
+            'cond_period': params['cond_period'] if params['conditional'] else None
+        }
         
         print("Ground motion selection complete")
         
     except Exception as e:
         print(f"Error during ground motion selection: {str(e)}")
+        results['error'] = str(e)
         import traceback
         traceback.print_exc()
+    
+    return results
 
 
 if __name__ == "__main__":
-    main()
+    # Example usage with parameter overrides
+    
+    # Example 1: M6.5 strike-slip earthquake at 10km, rock site
+    rock_site_params = {
+        "magnitude": 7.5,
+        "distance_jb": 10,
+        "vs30": 760,
+        "vs30_min": 200,  # Minimum Vs30 to consider (m/s)
+        "vs30_max": 900,  # Maximum Vs30 to consider (m/s)
+
+        "conditional": True,
+        "cond_period": 1.0,
+        "num_motions": 20,
+        
+        # Key improvements:
+        "optimization_loops": 5,             # Increase from 2 to 5
+        "max_scale_factor": 3.0,            # Increase from 10 to 15
+        "error_weights": [1.0, 1.0, 0.1],    # Adjust to balance mean/stddev errors
+        
+        # Filter database to more relevant records
+        "mag_min": 6,                      # Target larger earthquakes
+        "dist_max": 100,                      # Allow slightly larger distances
+
+        "output_file": "M6p5_R10_rock_Output.dat",
+        
+        # GMM specification
+        "use_openquake": True,                # Use OpenQuake hazardlib
+        "gmm_name": "BooreEtAl2014"         
+    }
+    select_ground_motions(rock_site_params)
