@@ -27,7 +27,7 @@
     <a href="https://gemsciencetools.github.io/oq-vmtk/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/GEMScienceTools/oq-vmtk/demos">View Demos</a>
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos">View Demos</a>
     ·
     <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
