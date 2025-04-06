@@ -24,7 +24,7 @@
   <p align="center">
     This repository contains an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for regional vulnerability and risk calculations. The vulnerability toolkit is developed by the Global Earthquake Model (GEM) Foundation and its collaborators.
     <br />
-    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docs"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docsrc"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/demos">View Demos</a>
