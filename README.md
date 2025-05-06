@@ -93,6 +93,9 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    source .venv/Scripts/activate  # On Linux
    ```
 
+<img src="imgs/virtual-env.gif" alt="Logo" >
+
+
 ### 3. Install Dependencies
    Install the required packages listed in `requirements.txt`.
 
