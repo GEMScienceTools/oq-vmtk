@@ -123,6 +123,9 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    pip install -e .
    ```
 
+ <img src="imgs/requirements-packaging.gif" alt="Logo" >
+
+
 ## 📼 Demos
 
 The repository includes demo scripts that showcase the functionality of the vulnerability-modellers-toolkit (oq-vmtk). You can find them in the demos folder of the repository.
