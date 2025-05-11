@@ -24,14 +24,14 @@
   <p align="center">
     This repository contains an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for regional vulnerability and risk calculations. The vulnerability toolkit is developed by the Global Earthquake Model (GEM) Foundation and its collaborators.
     <br />
-    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/docs"><strong>Explore the docs »</strong></a>
+    <a href="https://gemsciencetools.github.io/oq-vmtk/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/demos">View Demos</a>
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos">View Demos</a>
     ·
-    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
-    <a href="https://github.com/GEMScienceTools/vulnerability-toolkit/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -93,6 +93,9 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    source .venv/Scripts/activate  # On Linux
    ```
 
+<img src="imgs/virtual-env.gif" alt="Logo" >
+
+
 ### 3. Install Dependencies
    Install the required packages listed in `requirements.txt`.
 
@@ -114,11 +117,17 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    python --version
    ```
 
+<img src="imgs/requirements.gif" alt="Logo" >
+
+
 ### 4. Install the Package
    Install the `oq-vmtk` package in editable mode:
    ```bash
    pip install -e .
    ```
+
+<img src="imgs/packaging.gif" alt="Logo" >
+
 
 ## 📼 Demos
 
