@@ -117,11 +117,17 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    python --version
    ```
 
+<img src="imgs/requirements.gif" alt="Logo" >
+
+
 ### 4. Install the Package
    Install the `oq-vmtk` package in editable mode:
    ```bash
    pip install -e .
    ```
+
+<img src="imgs/packaging.gif" alt="Logo" >
+
 
 ## 📼 Demos
 
