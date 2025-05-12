@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IM Calculator Module &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Model Calibration Module" href="Calibration.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">IM Calculator Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#im_calculator.IMCalculator"><code class="docutils literal notranslate"><span class="pre">IMCalculator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_spectrum"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_spectrum()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_sa"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_sa()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_saavg"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_saavg()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_saavg_user_defined"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_saavg_user_defined()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_velocity_displacement_history"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_velocity_displacement_history()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_amplitude_ims"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_amplitude_ims()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_arias_intensity"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_arias_intensity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_cav"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_cav()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_significant_duration"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_significant_duration()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_duration_ims"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_duration_ims()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#im_calculator.IMCalculator.get_FIV3"><code class="docutils literal notranslate"><span class="pre">IMCalculator.get_FIV3()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Calibration.html">Model Calibration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modeller.html">Model Building Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Postprocessor.html">Postprocessing Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SLFGenerator.html">Storey-Loss Function Generation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Plotter.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">IM Calculator Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/IMCalculator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-im_calculator">
+<span id="im-calculator-module"></span><h1>IM Calculator Module<a class="headerlink" href="#module-im_calculator" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">im_calculator</span></code> module provides a class <code class="docutils literal notranslate"><span class="pre">IMCalculator</span></code> that calculates
+various intensity measures (IMs) from ground-motion records, such as response
+spectra, amplitude-based IMs (e.g., peak ground acceleration, peak ground velocity,
+peak ground displacement), structure-dependent IMs (e.g., spectral acceleration and
+average spectral acceleration), Arias Intensity, Cumulative Absolute Velocity (CAV),
+and significant duration. The module also supports the computation of velocity and
+displacement histories, as well as advanced IMs like the filtered incremental velocity (FIV3).</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">im_calculator.</span></span><span class="sig-name descname"><span class="pre">IMCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator" title="Link to this definition"></a></dt>
+<dd><p>A class to compute various intensity measures (IMs) from a ground-motion record.</p>
+<p><strong>Attributes</strong>:
+- <strong>acc</strong>: <cite>list or np.array</cite></p>
+<blockquote>
+<div><p>The acceleration time series (m/s² or g).</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>dt</strong>: <cite>float</cite>
+The time step of the accelerogram (s).</p></li>
+<li><p><strong>damping</strong>: <cite>float</cite>
+The damping ratio (default is 5%).</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>acc</strong> (<em>list</em><em> or </em><em>np.array</em>) – The acceleration time series (m/s² or g).</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – The time step of the accelerogram (s).</p></li>
+<li><p><strong>damping</strong> (<em>float</em><em>, </em><em>optional</em>) – The damping ratio (default is 5%).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_spectrum">
+<span class="sig-name descname"><span class="pre">get_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(1e-5,</span> <span class="pre">4.0,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_spectrum" title="Link to this definition"></a></dt>
+<dd><p>Computes the response spectrum using the Newmark-beta method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>periods</strong> (<em>np.array</em>) – List of periods to compute spectral response (s).</p></li>
+<li><p><strong>damping_ratio</strong> (<em>float</em>) – Damping ratio (default is 5%).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Periods, spectral displacement (m), spectral velocity (m/s), and spectral acceleration (g).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(np.array, np.array, np.array, np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_sa">
+<span class="sig-name descname"><span class="pre">get_sa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">period</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_sa" title="Link to this definition"></a></dt>
+<dd><p>Computes the spectral acceleration at a given period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>period</strong> (<em>float</em>) – The target period (s).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Spectral acceleration (g) at the given period.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_saavg">
+<span class="sig-name descname"><span class="pre">get_saavg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">period</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_saavg" title="Link to this definition"></a></dt>
+<dd><p>Computes the geometric mean of spectral accelerations over a range of periods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>period</strong> (<em>float</em>) – Conditioning period (s).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Average spectral acceleration at the given period.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_saavg_user_defined">
+<span class="sig-name descname"><span class="pre">get_saavg_user_defined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">periods_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_saavg_user_defined" title="Link to this definition"></a></dt>
+<dd><p>Computes the geometric mean of spectral accelerations for a user-defined list of periods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>periods_list</strong> (<em>list</em><em> or </em><em>np.array</em>) – List of user-defined periods (s) for spectral acceleration calculation.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Geometric mean of spectral accelerations over user-defined periods.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_velocity_displacement_history">
+<span class="sig-name descname"><span class="pre">get_velocity_displacement_history</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_velocity_displacement_history" title="Link to this definition"></a></dt>
+<dd><p>Computes velocity and displacement history with baseline drift correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Velocity time-history (m/s) and displacement time-history (m).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple(np.array, np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_amplitude_ims">
+<span class="sig-name descname"><span class="pre">get_amplitude_ims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_amplitude_ims" title="Link to this definition"></a></dt>
+<dd><p>Computes amplitude-based intensity measures, including PGA, PGV, and PGD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Peak ground acceleration (g), peak ground velocity (m/s), and peak ground displacement (m).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple(float, float, float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_arias_intensity">
+<span class="sig-name descname"><span class="pre">get_arias_intensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_arias_intensity" title="Link to this definition"></a></dt>
+<dd><p>Computes the Arias Intensity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Arias intensity (m/s).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_cav">
+<span class="sig-name descname"><span class="pre">get_cav</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_cav" title="Link to this definition"></a></dt>
+<dd><p>Computes the Cumulative Absolute Velocity (CAV).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Cumulative absolute velocity (m/s).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_significant_duration">
+<span class="sig-name descname"><span class="pre">get_significant_duration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_significant_duration" title="Link to this definition"></a></dt>
+<dd><p>Computes the significant duration (time between 5% and 95% of Arias intensity).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>float</em><em>, </em><em>optional</em>) – Start threshold for significant duration (default is 5%).</p></li>
+<li><p><strong>end</strong> (<em>float</em><em>, </em><em>optional</em>) – End threshold for significant duration (default is 95%).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Significant Duration (s).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_duration_ims">
+<span class="sig-name descname"><span class="pre">get_duration_ims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_duration_ims" title="Link to this definition"></a></dt>
+<dd><p>Computes duration-based intensity measures: Arias Intensity, CAV, and 5%-95% significant duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Arias Intensity (m/s), Cumulative Absolute Velocity (m/s), and 5%-95% Significant Duration (s).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple(float, float, float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="im_calculator.IMCalculator.get_FIV3">
+<span class="sig-name descname"><span class="pre">get_FIV3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">period</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#im_calculator.IMCalculator.get_FIV3" title="Link to this definition"></a></dt>
+<dd><p>Computes the filtered incremental velocity (FIV3) intensity measure for a given ground motion record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>period</strong> (<em>float</em>) – The period (in seconds) used to filter the ground motion record.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – A period factor that defines the length of the time window used for filtering.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – A cut-off frequency factor that influences the low-pass filter applied to the ground motion record.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FIV3 intensity measure, filtered incremental velocity time series, time series, filtered acceleration time history, peaks, and troughs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(float, np.array, np.array, np.array, np.array, np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<p>1) Cordova, P.P., Deierlein, G.G., Mehanny, S.S., and Cornell, C.A. (2000). “Development of
+a two-parameter seismic intensity measure and probabilistic assessment procedure” in
+<em>Proceedings of the 2nd US–Japan Workshop on Performance-Based Earthquake Engineering
+Methodology for RC Building Structures</em> (Sapporo, Hokkaido, 2000).</p>
+<p>2) Eads, L., Miranda, E., and Lignos, D.G. (2015). “Average spectral acceleration as an
+intensity measure for collapse risk assessment”, <em>Earthquake Engineering and Structural Dynamics</em>,
+44, 2057–2073. doi: 10.1002/eqe.2575.</p>
+<p>3) Kempton, J.J., and Stewart J.P. (2006). “Prediction equations for significant duration
+of earthquake ground motions considering site and near-source effects”, <em>Earthquake Spectra</em>,
+22(4), 985-1013.</p>
+<p>4) Arias, A. (1970). “A measure of earthquake intensity”, in <em>Seismic Design for Nuclear
+Power Plants</em> (R.J. Hansen, ed.). The MIT Press, Cambridge, MA. 438-483.</p>
+<p>5) Dávalos, H. and Miranda, E. (2019). “Filtered incremental velocity: A novel approach
+in intensity measures for seismic collapse estimation.” <em>Earthquake Engineering &amp; Structural Dynamics</em>,
+48(12), 1384–1405. DOI: 10.1002/eqe.3205.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Calibration.html" class="btn btn-neutral float-right" title="Model Calibration Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
