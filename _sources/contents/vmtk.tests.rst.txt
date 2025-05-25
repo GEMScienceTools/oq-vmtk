@@ -1,0 +1,53 @@
+vmtk.tests package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   vmtk.tests.test_data
+
+Submodules
+----------
+
+vmtk.tests.test\_calibration\_modeller module
+---------------------------------------------
+
+.. automodule:: vmtk.tests.test_calibration_modeller
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.tests.test\_imcalculator module
+------------------------------------
+
+.. automodule:: vmtk.tests.test_imcalculator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.tests.test\_postprocessor module
+-------------------------------------
+
+.. automodule:: vmtk.tests.test_postprocessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.tests.test\_slf\_generator module
+--------------------------------------
+
+.. automodule:: vmtk.tests.test_slf_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: vmtk.tests
+   :members:
+   :undoc-members:
+   :show-inheritance:
