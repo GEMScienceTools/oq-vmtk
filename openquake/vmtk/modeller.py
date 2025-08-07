@@ -42,7 +42,7 @@ class modeller():
         Performs modal analysis to determine natural frequencies and mode shapes.
     do_spo_analysis(ref_disp, disp_scale_factor, push_dir, phi, pflag=True, num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', numberer='RCM', test_type='EnergyIncr', init_tol=1.0e-5, init_iter=1000, algorithm_type='KrylovNewton')
         Performs static pushover analysis (SPO) on the MDOF system.
-    do_cpo_analysis(ref_disp, mu, numCycles, push_dir, dispIncr, pflag=True, num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-5, init_iter=1000, algorithm_type='KrylovNewton')
+    do_cpo_analysis(ref_disp, mu_levels, push_dir, dispIncr, pflag=True, num_steps=200, ansys_soe='BandGeneral', constraints_handler='Transformation', numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-5, init_iter=1000, algorithm_type='KrylovNewton')
         Performs cyclic pushover analysis (CPO) on the MDOF system.
     do_nrha_analysis(fnames, dt_gm, sf, t_max, dt_ansys, nrha_outdir, pflag=True, xi=0.05, ansys_soe='BandGeneral', constraints_handler='Plain', numberer='RCM', test_type='NormDispIncr', init_tol=1.0e-6, init_iter=50, algorithm_type='Newton')
         Performs nonlinear time-history analysis (NRHA) on the MDOF system.
@@ -642,7 +642,7 @@ class modeller():
                 if len(pattern_nodes)==1:
                     ops.load(pattern_nodes[i], 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
                 else:
-                    ops.load(pattern_nodes[i], 0.0, 0.0, nodeList[i]/len(pattern_nodes), 0.0, 0.0, 0.0)
+                    ops.load(pattern_nodes[i], 0.0, 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0)
 
         # Set up the initial objects
         ops.system(ansys_soe)
@@ -768,8 +768,7 @@ class modeller():
 
     def do_cpo_analysis(self,
                         ref_disp,
-                        mu,
-                        numCycles,
+                        mu_levels,
                         push_dir,
                         dispIncr,
                         phi,
@@ -796,14 +795,10 @@ class modeller():
         ref_disp: float
             Reference displacement for the pushover analysis (e.g., yield displacement, or a baseline displacement).
 
-        mu: float
-            Target ductility factor, which is used to scale the displacement.
-            The ductility factor represents the displacement at which the structure reaches plastic deformation.
+        mu_levels: list
+            Target ductility factors, which is used to scale the displacement at each cycle.
 
-        numCycles: int
-            The number of displacement cycles to be performed during the analysis.
-
-        dispIncr: float
+        dispIncr: int
             The number of displacement increments for each loading cycle.
 
         push_dir: int
@@ -853,6 +848,10 @@ class modeller():
 
         """
 
+        # check ductility targets
+        if mu_levels is None:
+            mu_levels = [1, 2, 4, 6, 8, 10]
+
         # apply the load pattern
         ops.timeSeries("Linear", 1) # create timeSeries
         ops.pattern("Plain",1,1) # create a plain load pattern
@@ -862,6 +861,10 @@ class modeller():
         control_node = nodeList[-1]
         pattern_nodes = nodeList[1:]
         rxn_nodes = [nodeList[0]]
+
+        # quality control
+        assert len(phi) == len(pattern_nodes), "phi length must match pattern_nodes"
+        assert len(self.floor_masses) == len(pattern_nodes), "floor_masses length mismatch"
 
         # we can integrate modal patterns, inverse triangular, etc.
         for i in np.arange(len(pattern_nodes)):
@@ -881,7 +884,7 @@ class modeller():
                 if len(pattern_nodes)==1:
                     ops.load(pattern_nodes[i], 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
                 else:
-                    ops.load(pattern_nodes[i], 0.0, 0.0, nodeList[i]/len(pattern_nodes), 0.0, 0.0, 0.0)
+                    ops.load(pattern_nodes[i], 0.0, 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0)
 
         # Set up the initial objects
         ops.system(ansys_soe)
@@ -890,25 +893,38 @@ class modeller():
         ops.test(test_type, init_tol, init_iter)
         ops.algorithm(algorithm_type)
 
-     	#create the list of displacements
-        cycleDispList = (numCycles* [ref_disp*mu, -2.0*ref_disp*mu, ref_disp*mu])
+        # Internally create push-pull cycle list with positive and negative displacements
+        cycleDispList = []
+        for mu in mu_levels:
+            cycleDispList.append(ref_disp * mu)   # push positive
+            cycleDispList.append(-ref_disp * mu)  # push negative
         dispNoMax = len(cycleDispList)
 
+
         # Give some feedback if requested
-        if pflag is True:
-            print(f"\n------ Cyclic Pushover Analysis of Node # {control_node} for {numCycles} cycles to ductility: {mu}---------")
+        if pflag:
+            print(f"\n------ Cyclic Pushover with ductility levels: {mu_levels} ------")
 
         # Recording base shear
-        cpo_rxn = np.array([0.])
-        # Recording top displacement
-        cpo_top_disp = np.array([ops.nodeResponse(control_node, push_dir,1)])
-        # Recording all displacements to estimate drifts
-        cpo_disps = np.array([[ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes]])
+        cpo_rxn = [0.0]
+        cpo_rxn = np.array(cpo_rxn)
 
+        # Recording top displacement
+        cpo_top_disp = [ops.nodeDisp(control_node, push_dir)]
+        cpo_top_disp = np.array(cpo_top_disp)
+
+        # Recording all displacements to estimate drifts
+        cpo_disps = [[ops.nodeDisp(node, push_dir) for node in pattern_nodes]]
+        cpo_disps = np.array(cpo_disps)
+
+        # Initialize dissipated energy tracker
+        energy_steps = [0.0]  # Initial energy is zero
 
         for d in range(dispNoMax):
             numIncr = dispIncr
-            dU = cycleDispList[d]/(1.0*numIncr)
+            current_disp = ops.nodeDisp(control_node, push_dir)
+            target_disp = cycleDispList[d]
+            dU = (target_disp - current_disp) / numIncr
             ops.integrator('DisplacementControl', control_node, push_dir, dU)
             ops.analysis('Static')
 
@@ -954,24 +970,38 @@ class modeller():
                 curr_disp = ops.nodeDisp(control_node, push_dir)
                 print('Currently pushed node ' + str(control_node) + ' to ' + str(curr_disp))
 
-            # Get the results
-            cpo_top_disp = np.append(cpo_top_disp, ops.nodeResponse(
-            control_node, push_dir, 1))
+            # Get current displacement and base shear
+            curr_disp = ops.nodeResponse(control_node, push_dir, 1)
+            cpo_top_disp = np.append(cpo_top_disp, curr_disp)
 
+            # Append displacement vector for all floors
             cpo_disps = np.append(cpo_disps, np.array([
-            [ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes]
+                [ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes]
             ]), axis=0)
 
+            # Calculate current base shear
             ops.reactions()
             temp = 0
             for n in rxn_nodes:
                 temp += ops.nodeReaction(n, push_dir)
-            cpo_rxn = np.append(cpo_rxn, -temp)
+            curr_rxn = -temp
+            cpo_rxn = np.append(cpo_rxn, curr_rxn)
 
+            # Calculate incremental energy (trapezoid rule)
+            if len(cpo_top_disp) >= 2:
+                dU = cpo_top_disp[-1] - cpo_top_disp[-2]
+                avg_F = 0.5 * (cpo_rxn[-1] + cpo_rxn[-2])
+                dE = abs(avg_F * dU)  # Energy in kN·m (assuming displacements in meters and force in kN)
+                energy_steps.append(energy_steps[-1] + dE)
+
+        pseudo_steps = np.arange(len(energy_steps))  # or use actual step counter if you prefer
+        cpo_energy = np.column_stack((pseudo_steps, energy_steps))
+        assert np.all(np.diff(cpo_energy[:,1]) >= 0), "Energy should be cumulative and increasing"
+        
         ### Wipe the analysis objects
         ops.wipeAnalysis()
 
-        return cpo_disps, cpo_rxn
+        return cpo_disps, cpo_rxn, cpo_energy
 
     def do_nrha_analysis(self, fnames, dt_gm, sf, t_max, dt_ansys, nrha_outdir,
                          pflag=True, xi = 0.05, ansys_soe='BandGeneral',
