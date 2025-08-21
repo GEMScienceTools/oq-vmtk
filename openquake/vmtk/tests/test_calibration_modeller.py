@@ -7,7 +7,7 @@ from openquake.vmtk.calibration import calibrate_model
 from openquake.vmtk.modeller import modeller
 
 class TestModeller(unittest.TestCase):
-    
+
     def setUp(self):
         """
         Set up the modeller instance for each test.
@@ -18,13 +18,13 @@ class TestModeller(unittest.TestCase):
         self.gamma = 1.33
         self.damping = 0.05
         self.degradation = True
-        self.sdof_capacity = np.array([[0.00060789, 0.00486316, 0.02420000, 0.04353684], 
+        self.sdof_capacity = np.array([[0.00060789, 0.00486316, 0.02420000, 0.04353684],
                                        [0.10315200, 0.20630401, 0.12378241, 0.12502023]]).T
-        self.isSOS = False  
-        self.isFrame = False 
+        self.isSOS = False
+        self.isFrame = False
         self.fnames = [os.path.join(cd, 'test_data', 'acceleration.txt')]
         self.dt_gm = 0.005
-        self.t_max = 30.0 
+        self.t_max = 30.0
         self.temp_folder = os.path.join(cd, 'test_data', 'temp')
         os.makedirs(self.temp_folder, exist_ok=True)
 
@@ -36,7 +36,7 @@ class TestModeller(unittest.TestCase):
                                      [0.06152551, 0.12305102, 0.07383061, 0.07456892]])
         self.phi_test = np.array([0.65138782, 1.])
         self.T_test= 0.154
-        
+
         # Initialize the model here so that it is ready for all tests
         self.model = modeller(self.number_storeys,
                               self.storey_heights,
@@ -54,45 +54,45 @@ class TestModeller(unittest.TestCase):
                                                      self.isFrame,
                                                      self.isSOS)
 
-        self.assertEqual(masses, self.masses_test)  
+        self.assertEqual(masses, self.masses_test)
         np.testing.assert_allclose(disps, self.disps_test, atol=1e-8)  # Specify absolute tolerance
         np.testing.assert_allclose(forces, self.forces_test, atol=1e-8)
         np.testing.assert_allclose(phi, self.phi_test, atol=1e-8)
-    
+
     def test_modeller(self):
         # The model is already initialized in setUp, so no need to reinitialize it
         self.model.compile_model()
-    
+
     def test_gravity_analysis(self):
         # The model is initialized in setUp, so we can directly call this method
         self.model.do_gravity_analysis()
-        
+
     def test_modal_analysis(self):
 
         num_modes = 3
         T, phi = self.model.do_modal_analysis(num_modes=num_modes)  # Do modal analysis and get period of vibration
-        self.assertAlmostEqual(T[0], self.T_test, places= 4)  
+        self.assertAlmostEqual(T[0], self.T_test, places= 4)
         self.assertAlmostEqual(phi[0], self.phi_test[0], places=4)
 
     def test_do_spo_analysis(self):
-        
+
         self.model.do_spo_analysis(0.01, 5, 1, self.phi_test, pflag=False)
-        
+
     def test_do_cpo_analysis(self):
-        
-        self.model.do_cpo_analysis(0.01, 5, 2, 1, 2, pflag=False)
+
+        self.model.do_cpo_analysis(0.01, [1,5,10], 1, 2, self.phi_test, pflag=False)
         
     def test_do_nrha_analysis(self):
 
         num_modes = 3
         T, phi = self.model.do_modal_analysis(num_modes=num_modes)  # Do modal analysis and get period of vibration (necessary for nltha)
-        self.model.do_nrha_analysis(self.fnames, 
-                                    self.dt_gm, 
-                                    9.81, 
-                                    self.t_max, 
-                                    0.001, 
+        self.model.do_nrha_analysis(self.fnames,
+                                    self.dt_gm,
+                                    9.81,
+                                    self.t_max,
+                                    0.001,
                                     self.temp_folder,
-                                    pflag=False, 
+                                    pflag=False,
                                     xi = self.damping)
         # Remove temporary folder
         shutil.rmtree(self.temp_folder)
