@@ -1,6 +1,6 @@
 Component ID,Description,EDP,Typology,Performance Group,Quantity,Damage States,"DS1, Median","DS2, Median","DS3, Median","DS4, Median","DS5, Median","DS1, Total Dispersion","DS2, Total Dispersion","DS3, Total Dispersion","DS4, Total Dispersion","DS5, Total Dispersion","DS1, Cost","DS2, Cost","DS3, Cost","DS4, Cost","DS5, Cost","DS1, Cost Dispersion","DS2, Cost Dispersion","DS3, Cost Dispersion","DS4, Cost Dispersion","DS5, Cost Dispersion","DS1, Best Fit","DS2, Best Fit","DS3, Best Fit","DS4, Best Fit","DS5, Best Fit"
-1,Cladding - Gross Wall Area,PSD,NS,1,0.0715353408,2,0.0338,0.0383,,,,0.4,0.4,,,,491.5519090297441,491.5519090297441,,,,0.17,0.17,,,,Lognormal,Lognormal,,,
-2,Cladding - Windows & Glazing Area,PSD,NS,1,0.013935456,2,0.0338,0.0383,,,,0.4,0.4,,,,491.5519090297441,491.5519090297441,,,,0.17,0.17,,,,Lognormal,Lognormal,,,
+1,Cladding - Gross Wall Area,PSD,NS,1,0.0715353408,2,0.0338,0.0383,,,,0.4,0.4,,,,235.6619090297441,491.5519090297441,,,,0.17,0.17,,,,Lognormal,Lognormal,,,
+2,Cladding - Windows & Glazing Area,PSD,NS,1,0.013935456,2,0.0338,0.0383,,,,0.4,0.4,,,,235.6619090297441,491.5519090297441,,,,0.17,0.17,,,,Lognormal,Lognormal,,,
 3,Doors,PSD,NS,1,0.15,1,0.0188,,,,,0.38,,,,,754.0,,,,,0.3,,,,,Lognormal,,,,
 4,Windows,PSD,NS,1,0.22,1,0.0188,,,,,0.38,,,,,347.0,,,,,0.3,,,,,Lognormal,,,,
 5,Gypsum Partitions,PSD,NS,1,0.21,4,0.0018,0.0046,0.0105,0.0188,,0.52,0.54,0.4,0.38,,62.00000000000001,117.0,234.0,234.0,,0.4814,0.5559,0.1959,0.1959,,Lognormal,Lognormal,,,
