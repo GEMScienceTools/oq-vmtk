@@ -38,29 +38,30 @@
 
 # ✨ Key Features
 
-The OQ-VMTK is a powerful toolkit developed by scientists at the Global Earthquake Model (GEM) Foundation. Designed for earthquake engineers and catastrophe modellers, it provides a comprehensive OpenSees-based platform for running representative (idealised) models, developing fragility and vulnerability assessments, and offering extensive flexibility in defining seismic demand, structural capacity, damage criteria, and damage-to-loss conversion.
+The OQ-VMTK is a powerful toolkit developed by scientists at the Global Earthquake Model (GEM) Foundation. Designed for earthquake engineers and catastrophe modellers, it provides a comprehensive platform powered by OpenSees for running representative (idealised) models, developing fragility and vulnerability assessments, and offering extensive flexibility in defining seismic demand, structural capacity, damage criteria, and damage-to-loss conversion.
 
-## 🏗️ Single/Multi-Degree-of-Freedom System Modeling
-- Effortlessly create single- and multi-degree-of-freedom models using intuitive low-level parameters.
+## 🏗️ Single- and Multi-Degree-of-Freedom Systems Calibration and Modeling
 - Define structures with key attributes like storey count, first-mode transformation factors, and force-deformation relationships.
+- Effortlessly create and visualize single- (SDOF) and multi-degree-of-freedom (MDOF) stick-and-mass models using intuitive low-level parameters.
+- Calibrate multi-degree-of-freedom stick-and-mass models based on SDOF parameters.
 
 ## 🔍 Comprehensive Analysis Suite
 ### 📊 Linear & Nonlinear Analysis
 - **Modal Analysis:** Extract vibration periods and mode shapes with precision.
 - **Gravity Analysis:** Perform gravity analysis and ensure system stability before running advanced simulations.
-- **Nonlinear Static Analysis:** Perform static and cyclic pushover tests to assess the system's lateral load resisting capacity, dissipated energy and other metrics.
-- **Dynamic Time-History Analysis:** Simulate dynamic response of structures using selected ground-motion records.
+- **Nonlinear Static Analyses:** Perform static and cyclic pushover tests to assess the system's lateral load resisting capacity, dissipated energy and other metrics.
+- **Nonlinear Time-History Analyses:** Simulate dynamic response of structures using ground-motion records and extract peak response quantities such as peak storey drifts, peak displacements and peak floor accelerations.
 
 ### 🌍 Seismic Fragility & Vulnerability Assessment
-- **Fragility Analysis:** Characterize EDP|IM relationships using Cloud Analysis and determine damage exceedance probabilities (accounting for record-to-record variability & modeling uncertainty).
-- **Storey Loss Function Generation:** Generate storey loss functions based on user-specific inventory of structural and nonstructural components and building contents.
-- **Vulnerability Analysis:** Derive vulnerability functions to estimate economic and human-based decision variables, incorporating damage-to-loss ratios and/or storey loss functions.
+- **Fragility Analysis:** Conduct probabilistic seismic demand modeling to establish relationships between engineering demand parameters (EDPs) and intensity measures (IMs) using nonlinear time-history analyses (e.g., cloud analysis, multiple stripe analyses). Estimate damage exceedance probabilities while accounting for record-to-record variability and modeling uncertainty. Multiple approaches are supported, including conventional methods (e.g., lognormal cumulative distribution functions) and advanced techniques (e.g., generalized linear models and ordinal models).
+- **Storey Loss Function Generation:** Develop storey-level loss functions based on a user-defined inventory of structural components, nonstructural components, and building contents.
+- **Vulnerability Analysis:** Derive vulnerability functions to evaluate both economic and human-centered decision variables. These functions integrate damage-to-loss ratios and/or storey loss functions, with explicit treatment of uncertainties associated with loss conditional on ground-shaking intensity.
 
 ### 📈 Powerful Visualization & Plotting Tools
 - Generate insightful plots for:
   - **Model Overview:** Nodes and elements in your OpenSees model.
-  - **Cloud Analysis Results:** Fitted IM|EDP relationships.
-  - **Seismic Demand Profiles:** Peak storey drifts and floor accelerations.
+  - **Cloud Analysis Results:** Visualize probabilistic seismic demand models (i.e., IM-EDP data and fitted relationships).
+  - **Seismic Demand Profiles:** Visualize peak storey drifts and peak floor accelerations distributions along the height of idealised systems.
   - **Fragility Functions:** Visualize probability-based structural performance.
   - **Storey Loss Functions:** Visualize storey loss function simulations and models.
   - **Vulnerability Functions:** Understand risk and loss estimates.
