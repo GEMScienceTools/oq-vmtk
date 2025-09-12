@@ -6,7 +6,7 @@ from matplotlib.lines import Line2D
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 from matplotlib.animation import FuncAnimation
-    
+
 class plotter:
     """
     A class for creating and customizing various types of plots for structural analysis results.
@@ -63,7 +63,7 @@ class plotter:
     - The `plot_slf_model` method visualizes Storey Loss Function (SLF) results.
     - The `animate_model_run` method creates animations of seismic responses.
 
-    """    
+    """
 
     def __init__(self):
         # Define default styles
@@ -110,62 +110,62 @@ class plotter:
             plt.savefig(f'{output_directory}/{plot_label}.png', dpi=self.resolution, format='png')
         plt.show()
 
-    def duplicate_for_drift(self, 
-                            peak_drift_list, 
+    def duplicate_for_drift(self,
+                            peak_drift_list,
                             control_nodes):
-        """Creates data to process box plots for peak storey drifts."""  
+        """Creates data to process box plots for peak storey drifts."""
         x = []; y = []
         for i in range(len(control_nodes)-1):
             y.extend((float(control_nodes[i]),float(control_nodes[i+1])))
             x.extend((peak_drift_list[i],peak_drift_list[i]))
         y.append(float(control_nodes[i+1]))
         x.append(0.0)
-        
+
         return x, y
 
-    def plot_cloud_analysis(self, 
-                            cloud_dict, 
-                            output_directory=None, 
+    def plot_cloud_analysis(self,
+                            cloud_dict,
+                            output_directory=None,
                             plot_label='cloud_analysis_plot',
-                            xlabel='Peak Ground Acceleration, PGA [g]', 
+                            xlabel='Peak Ground Acceleration, PGA [g]',
                             ylabel=r'Maximum Peak Storey Drift, $\theta_{max}$ [%]'):
-        
+
         """
-        Generate a cloud analysis plot with scatter points and regression line, 
-        visualizing the relationship between Peak Ground Acceleration (PGA) 
+        Generate a cloud analysis plot with scatter points and regression line,
+        visualizing the relationship between Peak Ground Acceleration (PGA)
         and Maximum Peak Storey Drift.
-    
-        This method plots cloud data, damage thresholds, a fitted regression line, 
-        and upper and lower censoring limits. The data is presented in logarithmic 
+
+        This method plots cloud data, damage thresholds, a fitted regression line,
+        and upper and lower censoring limits. The data is presented in logarithmic
         scale for both axes.
-    
+
         Parameters:
         ----------
         cloud_dict : dict
-            A dictionary containing the data for the cloud analysis. The dictionary 
+            A dictionary containing the data for the cloud analysis. The dictionary
             should have the following keys (direct output from do_cloud_analysis method)
-    
+
         output_directory : str, optional
-            Directory where the plot will be saved. If None, the plot is saved 
+            Directory where the plot will be saved. If None, the plot is saved
             in the current working directory.
-    
+
         plot_label : str, optional
-            The label for the saved plot file (without file extension). Default is 
+            The label for the saved plot file (without file extension). Default is
             'cloud_analysis_plot'.
-    
+
         xlabel : str, optional
             The label for the x-axis. Default is 'Peak Ground Acceleration, PGA [g]'.
-    
+
         ylabel : str, optional
             The label for the y-axis. Default is 'Maximum Peak Storey Drift, $\theta_{max}$ [%]'.
-    
+
         Returns:
         --------
         None
             This function saves the plot to a file in the specified output directory.
 
-        """       
-        
+        """
+
         fig, ax = plt.subplots(figsize=(6, 6))
         self._set_plot_style(ax, xlabel=xlabel, ylabel=ylabel)
 
@@ -185,49 +185,49 @@ class plotter:
 
         self._save_plot(output_directory, plot_label)
 
-    def plot_fragility_analysis(self, 
-                                cloud_dict, 
-                                output_directory=None, 
+    def plot_fragility_analysis(self,
+                                cloud_dict,
+                                output_directory=None,
                                 plot_label='fragility_plot',
                                 xlabel='Peak Ground Acceleration, PGA [g]'):
-        
+
         """
         Generate a fragility analysis plot showing the probability of exceedance (PoE)
         for various damage states as a function of Peak Ground Acceleration (PGA).
-    
-        This method plots fragility curves for multiple damage states based on the 
-        fragility data in the input dictionary. Each curve represents the probability 
-        of exceedance for a specific damage state, and the plot is presented in a 
+
+        This method plots fragility curves for multiple damage states based on the
+        fragility data in the input dictionary. Each curve represents the probability
+        of exceedance for a specific damage state, and the plot is presented in a
         linear scale for both axes.
-    
+
         Parameters:
         ----------
         cloud_dict : dict
-            A dictionary containing the data for the fragility analysis. The dictionary 
+            A dictionary containing the data for the fragility analysis. The dictionary
             should have the following keys:
                 - 'fragility': A dictionary containing:
                     - 'intensities': List or array of intensity values (e.g., PGA levels).
                     - 'poes': 2D array of probabilities of exceedance for each damage state.
                 - 'medians': List of medians for each damage state.
-        
+
         output_directory : str, optional
-            Directory where the plot will be saved. If None, the plot is saved 
+            Directory where the plot will be saved. If None, the plot is saved
             in the current working directory.
-    
+
         plot_label : str, optional
-            The label for the saved plot file (without file extension). Default is 
+            The label for the saved plot file (without file extension). Default is
             'fragility_plot'.
-    
+
         xlabel : str, optional
             The label for the x-axis. Default is 'Peak Ground Acceleration, PGA [g]'.
-    
+
         Returns:
         --------
         None
             This function saves the plot to a file in the specified output directory.
-        
+
         """
-        
+
         fig, ax = plt.subplots(figsize=(6, 6))
         self._set_plot_style(ax, xlabel=xlabel, ylabel='Probability of Exceedance')
 
@@ -240,44 +240,44 @@ class plotter:
 
         self._save_plot(output_directory, plot_label)
 
-    def plot_demand_profiles(self, 
-                             peak_drift_list, 
-                             peak_accel_list, 
-                             control_nodes, 
-                             output_directory=None, 
+    def plot_demand_profiles(self,
+                             peak_drift_list,
+                             peak_accel_list,
+                             control_nodes,
+                             output_directory=None,
                              plot_label='demand_profiles'):
-        
+
         """
         Generate demand profile plots for peak storey drifts and peak floor accelerations.
-    
+
         This method creates two side-by-side plots:
         - A plot of peak storey drift (%), displaying how the drift varies with floor number.
         - A plot of peak floor acceleration (g), displaying how the acceleration varies with floor number.
-        
+
         The data is presented as lines representing each control node's response at different floors.
-    
+
         Parameters:
         ----------
         peak_drift_list : list of np.ndarray
             A list of arrays where each array contains peak drift values for each floor, with the first column being the drift values and the second column being the floor numbers.
-    
+
         peak_accel_list : list of np.ndarray
             A list of arrays where each array contains peak acceleration values for each floor, with the first column being the acceleration values and the second column being the floor numbers.
-    
+
         control_nodes : list
             A list of floor numbers or nodes that represent the control points in the structure.
-    
+
         output_directory : str, optional
             Directory where the plot will be saved. If None, the plot is saved in the current working directory.
-    
+
         plot_label : str, optional
             The label for the saved plot file (without file extension). Default is 'demand_profiles'.
-    
+
         Returns:
         --------
         None
             This function saves the plot to a file in the specified output directory.
-            
+
         """
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
         self._set_plot_style(ax1, xlabel=r'Peak Storey Drift, $\theta_{max}$ [%]', ylabel='Floor No.')
@@ -299,27 +299,27 @@ class plotter:
         self._save_plot(output_directory, plot_label)
 
 
-    def plot_ansys_results(self, 
-                           cloud_dict, 
-                           peak_drift_list, 
-                           peak_accel_list, 
-                           control_nodes, 
-                           output_directory=None, 
+    def plot_ansys_results(self,
+                           cloud_dict,
+                           peak_drift_list,
+                           peak_accel_list,
+                           control_nodes,
+                           output_directory=None,
                            plot_label='ansys_results',
-                           cloud_xlabel='PGA', 
+                           cloud_xlabel='PGA',
                            cloud_ylabel='MPSD'):
         """
         Generate a 2x2 grid of plots to visualize analysis results, including cloud analysis,
         fragility analysis, and demand profiles for both peak drifts and peak accelerations.
-    
+
         This function generates four plots in a 2x2 grid layout:
         1. **Cloud Analysis**: Scatter plot of cloud data, fitted regression line, and censoring limits.
         2. **Fragility Analysis**: Plot of probability of exceedance (PoE) for different damage states.
         3. **Demand Profiles for Drifts**: Plot of peak storey drift (%) versus floor number.
         4. **Demand Profiles for Accelerations**: Plot of peak floor acceleration (g) versus floor number.
-    
+
         Each plot is customized with appropriate labels, legends, and color schemes for clarity.
-    
+
         Parameters:
         ----------
         cloud_dict : dict
@@ -330,33 +330,33 @@ class plotter:
                 - 'fragility': Dictionary with fragility intensities and probabilities of exceedance.
                 - 'regression': Fitted x and y values for the cloud regression line.
                 - 'medians': List of median values for each damage state.
-        
+
         peak_drift_list : list of np.ndarray
             A list of arrays where each array contains peak drift values for each floor. The first column should be the drift values and the second column the floor numbers.
-    
+
         peak_accel_list : list of np.ndarray
             A list of arrays where each array contains peak acceleration values for each floor. The first column should be the acceleration values and the second column the floor numbers.
-    
+
         control_nodes : list
             A list of control node (floor) numbers for the structure.
-    
+
         output_directory : str, optional
             Directory where the plot will be saved. If None, the plot is saved in the current working directory.
-    
+
         plot_label : str, optional
             The label for the saved plot file (without file extension). Default is 'ansys_results'.
-    
+
         cloud_xlabel : str, optional
             The label for the x-axis of the cloud analysis plot. Default is 'PGA'.
-    
+
         cloud_ylabel : str, optional
             The label for the y-axis of the cloud analysis plot. Default is 'MPSD'.
-    
+
         Returns:
         --------
         None
             This function saves the 2x2 grid of plots to a file in the specified output directory.
-            
+
         """
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
         plt.rcParams['axes.axisbelow'] = True
@@ -402,103 +402,103 @@ class plotter:
         plt.tight_layout()
         self._save_plot(output_directory, plot_label)
 
-    def plot_vulnerability_analysis(self, 
-                                    intensities, 
-                                    loss, 
-                                    cov, 
-                                    xlabel, 
-                                    ylabel, 
-                                    output_directory=None, 
+    def plot_vulnerability_analysis(self,
+                                    intensities,
+                                    loss,
+                                    cov,
+                                    xlabel,
+                                    ylabel,
+                                    output_directory=None,
                                     plot_label='vulnerability_plot'):
         """
-        Generate a plot to visualize the vulnerability analysis results, including 
+        Generate a plot to visualize the vulnerability analysis results, including
         Beta distributions and a loss curve.
-    
-        This function simulates Beta distributions for each intensity measure using the 
-        mean loss and coefficient of variation (CoV) provided, then visualizes these 
-        distributions as violin plots with an overlaid strip plot. It also plots the 
-        loss curve on a secondary y-axis, showing the relationship between intensity 
+
+        This function simulates Beta distributions for each intensity measure using the
+        mean loss and coefficient of variation (CoV) provided, then visualizes these
+        distributions as violin plots with an overlaid strip plot. It also plots the
+        loss curve on a secondary y-axis, showing the relationship between intensity
         and the loss ratio.
-    
+
         The plot includes:
         1. A violin plot representing the Beta distributions for each intensity measure.
         2. A strip plot for better visualization of individual data points within the distributions.
         3. A loss curve plotted on a secondary y-axis to show the loss ratio as a function of intensity.
-    
+
         Parameters:
         ----------
         intensities : list of float
-            A list of intensity measures (e.g., Peak Ground Acceleration, PGA) for which 
+            A list of intensity measures (e.g., Peak Ground Acceleration, PGA) for which
             the vulnerability analysis is performed.
-    
+
         loss : list of float
             A list of mean loss ratios corresponding to each intensity measure.
-    
+
         cov : list of float
-            A list of coefficients of variation (CoV) corresponding to each intensity measure 
+            A list of coefficients of variation (CoV) corresponding to each intensity measure
             that will be used to simulate the Beta distributions.
-    
+
         xlabel : str
             The label for the x-axis, typically representing the intensity measure (e.g., 'PGA').
-    
+
         ylabel : str
             The label for the y-axis representing the loss curve, typically describing the loss ratio.
-    
+
         output_directory : str, optional
             Directory where the plot will be saved. If None, the plot is saved in the current working directory.
-    
+
         plot_label : str, optional
             The label for the saved plot file (without file extension). Default is 'vulnerability_plot'.
-    
+
         Returns:
         --------
         None
             This function saves the plot to a file in the specified output directory.
-        
+
         """
         # Simulating Beta distributions for each intensity measure
         simulated_data = []
-        intensity_labels = []        
+        intensity_labels = []
         for j, mean_loss in enumerate(loss):
-            
+
             # Calculate variance using CoV
-            variance = (cov[j] * mean_loss) ** 2  
+            variance = (cov[j] * mean_loss) ** 2
             alpha = mean_loss * (mean_loss * (1 - mean_loss) / variance - 1)
             beta_param = (1 - mean_loss) * (mean_loss * (1 - mean_loss) / variance - 1)
-            
+
             # Generate samples from the Beta distribution
             data = np.random.beta(alpha, beta_param, 10000)
             simulated_data.append(data)
             intensity_labels.extend([intensities[j]] * len(data))  # Repeat intensity measures for each sample
-        
+
         # Convert to DataFrame for seaborn visualization
         df_sns = pd.DataFrame({
             'Intensity Measure': intensity_labels,
             'Simulated Data': np.concatenate(simulated_data)
         })
-                    
+
         # Create a figure and a set of axes for the violin plot
         fig, ax1 = plt.subplots(figsize=(14, 8))
-        
+
         # --- Violin plot for Beta distributions ---
         violin=sns.violinplot(
                 x='Intensity Measure', y='Simulated Data', data=df_sns,
                 scale='width', bw=0.2, inner=None, ax=ax1, zorder=1
                 )
-        
+
         # Overlay a strip plot for better visualization of individual samples
         sns.stripplot(
             x='Intensity Measure', y='Simulated Data', data=df_sns,
             color='k', size=1, alpha=0.5, ax=ax1, zorder=3
         )
-        
+
         # Customize the first y-axis (for the violin plot)
         ax1.set_ylabel("Simulated Loss Ratio", color='blue')
         ax1.set_xlabel(f"{xlabel}")
         ax1.tick_params(axis='y', labelcolor='blue')
         ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
         ax1.set_ylim(-0.1, 1.2)  # Adjust y-axis range for the violin plot
-        
+
         # Add the legend for the violin plots (Beta distribution)
         # Create a dummy plot handle for the legend, since the violins are not directly plotted as lines
         beta_patch = mpatches.Patch(color=violin.collections[0].get_facecolor()[0], label="Beta Distribution")
@@ -506,81 +506,81 @@ class plotter:
 
         # --- Add a second set of x and y axes for the Loss Curve ---
         ax2 = ax1.twinx()  # Create a shared y-axis for the loss curve
-        
+
         # Plot the loss curve on ax2 (now in blue)
         ax2.plot(
             range(len(intensities)), loss, marker='o', linestyle='-', color='blue',
             label="Loss Curve", zorder=2
         )
-        
+
         # Customize the second y-axis (for the loss curve)
         ax2.set_ylabel(f"{ylabel}", color='blue', rotation = 270, labelpad=20)
         ax2.tick_params(axis='y', labelcolor='blue')
         ax2.set_ylim(-0.1, 1.2)  # Adjust y-axis range for the loss curve if needed
-        
+
         # Customize both x-axes to match
         ax1.set_xticks(range(len(intensities)))
         ax1.set_xticklabels([f"{x:.3f}" for x in intensities], rotation=45, ha='right')
-                    
+
         # Add a legend for the loss curve
         ax2.legend(loc='upper left', bbox_to_anchor=(0, 0.95), ncol=1)
-        
+
         # Tight layout and show the combined plot
         plt.tight_layout()
 
         self._save_plot(output_directory, plot_label)
 
 
-    def plot_slf_model(self, 
-                       out, 
-                       cache, 
-                       xlabel, 
-                       output_directory=None, 
+    def plot_slf_model(self,
+                       out,
+                       cache,
+                       xlabel,
+                       output_directory=None,
                        plot_label='slf'):
-        
+
         """
         Generate a plot to visualize the Storey Loss Function (SLF) model output.
-    
-        This function visualizes the storey loss for different realizations of a model 
+
+        This function visualizes the storey loss for different realizations of a model
         by plotting the following:
         1. Scatter plot of total storey loss for each realization.
         2. Shaded region representing the 16th to 84th percentiles of the empirical data.
         3. Plot of the median of the empirical data for simulations.
         4. Fitted Storey Loss Function (SLF) curve.
-    
+
         The plot includes:
         - A scatter plot of the total loss per storey for each realization.
         - A shaded area representing the empirical 16th to 84th percentiles.
         - The median storey loss curve based on simulations.
         - The fitted SLF curve.
-    
+
         Parameters:
         ----------
         out : dict
             A dictionary containing the results of the model. It should include keys for:
                 - 'edp_range': A range of Engineering Demand Parameters (EDP) used in the analysis.
                 - 'slf': The fitted Storey Loss Function curve.
-        
+
         cache : dict
             A dictionary containing cached data, including:
                 - 'total_loss_storey': A list of total storey losses for each realization.
                 - 'empirical_16th', 'empirical_84th': Empirical data representing the 16th and 84th percentiles.
                 - 'empirical_median': Empirical median values of the storey loss for the simulations.
-    
+
         xlabel : str
             The label for the x-axis, typically representing the Engineering Demand Parameter (EDP) range.
-    
+
         output_directory : str, optional
             Directory where the plot will be saved. If None, the plot is saved in the current working directory.
-    
+
         plot_label : str, optional
             The label for the saved plot file (without file extension). Default is 'slf'.
-    
+
         Returns:
         --------
         None
             This function saves the generated plot for each key in the `cache` dictionary to the specified directory.
-        """        
+        """
         keys_list = list(cache.keys())
         for i, current_key in enumerate(keys_list):
             rlz = len(cache[current_key]['total_loss_storey'])
@@ -598,64 +598,64 @@ class plotter:
 
             ax.legend(fontsize=self.font_sizes['legend'])
             self._save_plot(output_directory, f"{plot_label}_{current_key}")
-            
-    def animate_model_run(self, 
-                          control_nodes, 
-                          acc, 
-                          dts, 
-                          nrha_disps, 
-                          nrha_accels, 
-                          drift_thresholds, 
-                          output_directory=None, 
+
+    def animate_model_run(self,
+                          control_nodes,
+                          acc,
+                          dts,
+                          nrha_disps,
+                          nrha_accels,
+                          drift_thresholds,
+                          output_directory=None,
                           plot_label='animation'):
         """
         Animate the seismic demands for a single nonlinear time-history analysis (NRHA) run.
-    
+
         This function creates an animation that visualizes the time history of seismic responses, including:
         1. Floor displacement over time for each control node.
         2. Floor acceleration over time for each control node.
         3. Acceleration time-history for the entire model.
-    
+
         The animation updates the seismic demand for each time step, displaying:
         - A plot of floor displacements, where the color of the line changes based on the maximum drift threshold exceeded.
         - A plot of floor accelerations.
         - A plot of the acceleration time-history.
-    
+
         Parameters:
         ----------
         control_nodes : list
             A list of nodes (floors) in the model, representing the control points for displacement and acceleration.
-    
+
         acc : numpy.ndarray
             A 1D array of acceleration values corresponding to the time-history of seismic excitation.
-    
+
         dts : numpy.ndarray
             A 1D array of time steps (in seconds) for the NRHA analysis.
-    
+
         nrha_disps : numpy.ndarray
             A 2D array of node displacements (in meters) for each time step and control node.
-    
+
         nrha_accels : numpy.ndarray
             A 2D array of node accelerations (in g) for each time step and control node.
-    
+
         drift_thresholds : list
             A list of drift thresholds that define the damage states for the nodes in the model (e.g., no damage, slight damage, etc.).
-    
+
         output_directory : str, optional
             Directory where the animation will be saved. If None, the animation is displayed but not saved.
-    
+
         plot_label : str, optional
             The label for the saved animation file. Default is 'animation'.
-    
+
         Returns:
         --------
         None
             The function generates an animated plot showing seismic demands and optionally saves it as an MP4 file.
-    
+
         Notes:
         -----
         - Currently, obtaining `nrha_disps` (node displacements) and `nrha_accels` (node accelerations) is not straightforward, but this functionality will be available in the next release.
-        
+
         """
         fig = plt.figure(figsize=(8, 8))
         gs = gridspec.GridSpec(2, 2, height_ratios=[1, 0.5])
