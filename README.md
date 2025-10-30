@@ -107,7 +107,6 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    ```
    **For Linux Users:** Install the appropriate requirements file based on your Python version:
    ```bash
-   pip install -r requirements-py310-linux64.txt  # Python 3.11
    pip install -r requirements-py311-linux64.txt  # Python 3.11
    pip install -r requirements-py312-linux64.txt  # Python 3.12
    ```
