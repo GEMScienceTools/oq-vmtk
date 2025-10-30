@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the OpenQuake Vulnerability Modellers Toolkit's documentation!
+Welcome to the OpenQuake Vulnerability Modeller's Toolkit's documentation!
 #########################################################################
 
-The OpenQuake Vulnerability Modellers Toolkit (``oq-vmtk``) is an open source
+The OpenQuake Vulnerability Modeller's Toolkit (``oq-vmtk``) is an open source
 library that provides an OpenSeesPy-based environment for modelling idealised
 building class models such as single (SDOF) and multi-degree-of-freedom
 (MDOF) systems and to carry out analysis via linear, nonlinear static, and nonlinear
