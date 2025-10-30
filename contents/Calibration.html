@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Calibration Module &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Model Building Module" href="Modeller.html" />
+    <link rel="prev" title="IM Calculator Module" href="IMCalculator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IMCalculator.html">IM Calculator Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model Calibration Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#calibration.calibrate_model"><code class="docutils literal notranslate"><span class="pre">calibrate_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Modeller.html">Model Building Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Postprocessor.html">Postprocessing Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SLFGenerator.html">Storey-Loss Function Generation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Plotter.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Model Calibration Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/Calibration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-calibration">
+<span id="model-calibration-module"></span><h1>Model Calibration Module<a class="headerlink" href="#module-calibration" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">calibration</span></code> module provides a function <code class="docutils literal notranslate"><span class="pre">calibrate_model</span></code> that computes
+MDOF storey forces, displacements, and mode shapes by transforming SDOF-based
+capacity curves. The function accounts for factors such as the number of storeys,
+building class, and the presence of soft-storey or frame structures. It applies
+physical assumptions and simplifications, including uniform mass distribution and
+standardized stiffness matrices.</p>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="calibration.calibrate_model">
+<span class="sig-prename descclassname"><span class="pre">calibration.</span></span><span class="sig-name descname"><span class="pre">calibrate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdof_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isSOS</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#calibration.calibrate_model" title="Link to this definition"></a></dt>
+<dd><p>Calibrates Multi-Degree-of-Freedom (MDOF) storey force-deformation relationships based on Single-Degree-of-Freedom (SDOF) capacity functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nst</strong> (<em>int</em>) – The number of storeys in the building (must be a positive integer).</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – The SDOF-MDOF transformation factor. This factor adjusts the response of the MDOF system based on the SDOF capacity.</p></li>
+<li><p><strong>sdof_capacity</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n</em><em>, </em><em>2</em><em> or </em><em>3</em><em> or </em><em>4</em><em>)</em>) – The SDOF spectral capacity data, where:
+- Column 1 represents spectral displacements or accelerations.
+- Column 2 represents spectral forces or accelerations.
+- (For a trilinear/quadrilinear capacity curve) Additional columns may represent subsequent branches of the curve.</p></li>
+<li><p><strong>isFrame</strong> (<em>bool</em>) – Flag indicating whether the building is a framed structure (True) or braced structure (False).</p></li>
+<li><p><strong>isSOS</strong> (<em>bool</em>) – Flag indicating whether the building contains a soft-storey (True) or not (False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MDOF floor masses, storey displacements, storey forces, and mode shape.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(list of float, list of float, list of float, list of float)</p>
+</dd>
+</dl>
+<p><strong>Returns:</strong></p>
+<ul class="simple">
+<li><p><strong>flm_mdof</strong>: The MDOF floor masses, derived based on the mode shape and transformation factor.</p></li>
+<li><p><strong>stD_mdof</strong>: The MDOF storey displacements, adjusted for each floor and the applied SDOF capacity curve.</p></li>
+<li><p><strong>stF_mdof</strong>: The MDOF storey forces, computed based on the calibrated capacity functions.</p></li>
+<li><p><strong>phi_mdof</strong>: The expected mode shape for the MDOF system, normalized to have a unit norm.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>If the building has a soft-storey, a modified stiffness matrix is used with reduced stiffness for the last floor.</p></li>
+<li><p>The mode shape is derived using a generalized eigenvalue problem with mass and stiffness matrices.</p></li>
+<li><p>The function handles various types of SDOF capacity curves (bilinear, trilinear, quadrilinear) to calibrate the MDOF system.</p></li>
+<li><p>The effective mass for the SDOF system is computed assuming uniform mass distribution across floors.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Lu X, McKenna F, Cheng Q, Xu Z, Zeng X, Mahin SA. An open-source framework for regional earthquake loss
+estimation using the city-scale nonlinear time history analysis. Earthquake Spectra. 2020;36(2):806-831.
+doi:10.1177/8755293019891724</p></li>
+<li><p>Zhen Xu, Xinzheng Lu, Kincho H. Law, A computational framework for regional seismic simulation of buildings with
+multiple fidelity models, Advances in Engineering Software, Volume 99, 2016, Pages 100-110, ISSN 0965-9978,
+<a class="reference external" href="https://doi.org/10.1016/j.advengsoft.2016.05.014">https://doi.org/10.1016/j.advengsoft.2016.05.014</a>. (<a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0965997816301181">https://www.sciencedirect.com/science/article/pii/S0965997816301181</a>)</p></li>
+<li><p>EN 1998-1:2004 (Eurocode 8: Design of structures for earthquake resistance - Part 1: General rules, seismic actions,
+and rules for buildings)</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="IMCalculator.html" class="btn btn-neutral float-left" title="IM Calculator Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Modeller.html" class="btn btn-neutral float-right" title="Model Building Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Postprocessing Module &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Storey-Loss Function Generation Module" href="slf.html" />
+    <link rel="prev" title="Model Building Module" href="mod.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">IM Calculator Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">Model Calibration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">Model Building Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Postprocessing Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#postprocessor"><code class="docutils literal notranslate"><span class="pre">postprocessor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_lognormal_fragility"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_lognormal_fragility()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_rotated_fragility"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_rotated_fragility()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_glm_fragility"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_glm_fragility()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_ordinal_fragility"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_ordinal_fragility()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.do_cloud_analysis"><code class="docutils literal notranslate"><span class="pre">postprocessor.do_cloud_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.do_multiple_stripe_analysis"><code class="docutils literal notranslate"><span class="pre">postprocessor.do_multiple_stripe_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_sigma_loss"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_sigma_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.get_vulnerability_function"><code class="docutils literal notranslate"><span class="pre">postprocessor.get_vulnerability_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_average_annual_damage_probability"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_average_annual_damage_probability()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postprocessor.calculate_average_annual_loss"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_average_annual_loss()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">Storey-Loss Function Generation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Postprocessing Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/pos.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="postprocessing-module">
+<h1>Postprocessing Module<a class="headerlink" href="#postprocessing-module" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">postprocessor</span></code> module provides a class <code class="docutils literal notranslate"><span class="pre">postprocessor</span></code> that allows users
+to compute fragility functions, perform cloud and multiple stripe analyses, and
+calculate vulnerability functions and average annual losses. The module supports
+various fragility fitting methods, including lognormal, probit, logit, and ordinal
+models. It also includes functionality to handle uncertainty and variability in
+the analysis.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="postprocessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">postprocessor</span></span><a class="headerlink" href="#postprocessor" title="Link to this definition"></a></dt>
+<dd><p>A class for post-processing results of nonlinear time-history analysis, including fragility and vulnerability analysis.</p>
+<p><strong>Methods</strong>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_lognormal_fragility">
+<span class="sig-name descname"><span class="pre">calculate_lognormal_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_record2record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_lognormal_fragility" title="Link to this definition"></a></dt>
+<dd><p>Computes the probability of exceeding a damage state using a lognormal cumulative distribution function (CDF).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> (<em>float</em>) – The median seismic intensity corresponding to a damage threshold.</p></li>
+<li><p><strong>sigma_record2record</strong> (<em>float</em>) – The logarithmic standard deviation representing record-to-record variability.</p></li>
+<li><p><strong>sigma_build2build</strong> (<em>float</em><em>, </em><em>optional</em>) – The logarithmic standard deviation representing building-to-building variability. Default is 0.30.</p></li>
+<li><p><strong>intensities</strong> (<em>array-like</em><em>, </em><em>optional</em>) – The intensity measure levels (IMLs) at which the exceedance probabilities are computed. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array of exceedance probabilities corresponding to each intensity measure level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_rotated_fragility">
+<span class="sig-name descname"><span class="pre">calculate_rotated_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_record2record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_rotated_fragility" title="Link to this definition"></a></dt>
+<dd><p>Calculates a rotated fragility function based on a lognormal CDF, adjusting the median intensity to align with a specified target percentile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> (<em>float</em>) – The median seismic intensity corresponding to the damage threshold.</p></li>
+<li><p><strong>percentile</strong> (<em>float</em>) – The target percentile for fragility function rotation (e.g., 0.2 for the 20th percentile).</p></li>
+<li><p><strong>sigma_record2record</strong> (<em>float</em>) – The uncertainty associated with record-to-record variability.</p></li>
+<li><p><strong>sigma_build2build</strong> (<em>float</em><em>, </em><em>optional</em>) – The uncertainty associated with modeling variability. Default is 0.30.</p></li>
+<li><p><strong>intensities</strong> (<em>array-like</em><em>, </em><em>optional</em>) – The intensity measure levels (IMLs) at which the exceedance probabilities are computed. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The new median intensity, total standard deviation, and probabilities of exceedance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(float, float, array-like)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_glm_fragility">
+<span class="sig-name descname"><span class="pre">calculate_glm_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'logit'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_glm_fragility" title="Link to this definition"></a></dt>
+<dd><p>Computes non-parametric fragility functions using Generalized Linear Models (GLM) with either a Logit or Probit link function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imls</strong> (<em>array-like</em>) – Intensity Measure Levels (IMLs) corresponding to each observation.</p></li>
+<li><p><strong>edps</strong> (<em>array-like</em>) – Engineering Demand Parameters (EDPs) representing structural response values.</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>array-like</em>) – List of thresholds defining different damage states.</p></li>
+<li><p><strong>intensities</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Intensity measure values at which probabilities of exceedance (PoEs) are evaluated. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+<li><p><strong>fragility_method</strong> (<em>str</em><em>, </em><em>optional</em>) – Specifies the GLM model to be used for fragility function fitting. Options: ‘logit’ (default) or ‘probit’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D array where each column represents the probability of exceeding a specific damage state at each intensity level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_ordinal_fragility">
+<span class="sig-name descname"><span class="pre">calculate_ordinal_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_ordinal_fragility" title="Link to this definition"></a></dt>
+<dd><p>Fits an ordinal (cumulative) probit model to estimate fragility curves for different damage states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imls</strong> (<em>array-like</em>) – Intensity measure levels corresponding to the observed EDPs.</p></li>
+<li><p><strong>edps</strong> (<em>array-like</em>) – Engineering Demand Parameters (EDPs) representing structural responses.</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>array-like</em>) – Damage state thresholds for classifying exceedance levels.</p></li>
+<li><p><strong>intensities</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Intensity measure levels for which fragility curves are evaluated. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D array of exceedance probabilities (CDF values) for each intensity level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.do_cloud_analysis">
+<span class="sig-name descname"><span class="pre">do_cloud_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">censored_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lognormal'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.do_cloud_analysis" title="Link to this definition"></a></dt>
+<dd><p>Perform a censored cloud analysis to assess fragility functions for a set of engineering demand parameters (EDPs) and intensity measure levels (IMLs).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imls</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of intensity measure levels (IMLs).</p></li>
+<li><p><strong>edps</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of engineering demand parameters (EDPs).</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>list</em>) – A list of damage thresholds associated with different levels of damage.</p></li>
+<li><p><strong>lower_limit</strong> (<em>float</em>) – The minimum value of EDP below which cloud records are excluded.</p></li>
+<li><p><strong>censored_limit</strong> (<em>float</em>) – The maximum value of EDP above which cloud records are excluded.</p></li>
+<li><p><strong>sigma_build2build</strong> (<em>float</em><em>, </em><em>optional</em>) – The building-to-building variability or modeling uncertainty. Default is 0.3.</p></li>
+<li><p><strong>intensities</strong> (<em>array</em><em>, </em><em>optional</em>) – An array of intensity measure levels used to sample and evaluate the fragility functions. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean flag to indicate whether or not the fragility function should be rotated about a target percentile. Default is False.</p></li>
+<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – The target percentile (between 0 and 1) around which the fragility function will be rotated. Default is 0.1.</p></li>
+<li><p><strong>fragility_method</strong> (<em>str</em><em>, </em><em>optional</em>) – The method used to fit the fragility function. Options: ‘probit’, ‘logit’, ‘ordinal’, or ‘lognormal’ (default).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the outputs of the cloud analysis, including fragility functions and regression coefficients.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.do_multiple_stripe_analysis">
+<span class="sig-name descname"><span class="pre">do_multiple_stripe_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.do_multiple_stripe_analysis" title="Link to this definition"></a></dt>
+<dd><p>Perform maximum likelihood estimation (MLE) for fragility curve fitting following a multiple stripe analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imls</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of intensity measure levels (IMLs).</p></li>
+<li><p><strong>edps</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of engineering demand parameters (EDPs).</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>list</em>) – A list of EDP-based damage thresholds.</p></li>
+<li><p><strong>sigma_build2build</strong> (<em>float</em><em>, </em><em>optional</em>) – The building-to-building variability or modeling uncertainty. Default is 0.3.</p></li>
+<li><p><strong>intensities</strong> (<em>array</em><em>, </em><em>optional</em>) – An array of intensity measure levels over which the fragility function will be sampled. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean flag to indicate whether or not to rotate the fragility curve about a given percentile. Default is False.</p></li>
+<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – The target percentile (between 0 and 1) around which the fragility function will be rotated. Default is 0.10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the results of the multiple stripe analysis, including medians, dispersions, and probabilities of exceedance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_sigma_loss">
+<span class="sig-name descname"><span class="pre">calculate_sigma_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_sigma_loss" title="Link to this definition"></a></dt>
+<dd><p>Calculate the uncertainty in the loss estimates based on the method proposed in Silva (2019).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>loss</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of expected loss ratios.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The uncertainty (sigma) associated with the mean loss ratio, and the parameters of a beta distribution (a and b).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(list or array, list or array, list or array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.get_vulnerability_function">
+<span class="sig-name descname"><span class="pre">get_vulnerability_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consequence_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.get_vulnerability_function" title="Link to this definition"></a></dt>
+<dd><p>Calculate the vulnerability function given the probabilities of exceedance and a consequence model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>poes</strong> (<em>array</em>) – An array of probabilities of exceedance associated with the damage states considered.</p></li>
+<li><p><strong>consequence_model</strong> (<em>list</em>) – A list of damage-to-loss ratios corresponding to each damage state.</p></li>
+<li><p><strong>intensities</strong> (<em>array</em><em>, </em><em>optional</em>) – An array of intensity measure levels. Default is a geometric sequence from 0.05 to 10.0 with 50 points.</p></li>
+<li><p><strong>uncertainty</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag to indicate whether to calculate the coefficient of variation associated with Loss|IM. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the intensity measure levels (IML), expected loss ratios, and optionally, the coefficient of variation (COV) for each IML.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_average_annual_damage_probability">
+<span class="sig-name descname"><span class="pre">calculate_average_annual_damage_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fragility_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hazard_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_return_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_average_annual_damage_probability" title="Link to this definition"></a></dt>
+<dd><p>Calculate the Average Annual Damage State Probability (AADP) based on fragility and hazard curves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fragility_array</strong> (<em>2D array</em>) – A 2D array where the first column contains intensity measure levels, and the second column contains the corresponding probabilities of exceedance.</p></li>
+<li><p><strong>hazard_array</strong> (<em>2D array</em>) – A 2D array where the first column contains intensity measure levels, and the second column contains the annual rates of exceedance.</p></li>
+<li><p><strong>return_period</strong> (<em>float</em><em>, </em><em>optional</em>) – The return period used to scale the hazard rate. Default is 1.</p></li>
+<li><p><strong>max_return_period</strong> (<em>float</em><em>, </em><em>optional</em>) – The maximum return period threshold used to filter out very low hazard rates. Default is 5000.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The average annual damage state probability.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="postprocessor.calculate_average_annual_loss">
+<span class="sig-name descname"><span class="pre">calculate_average_annual_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vulnerability_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hazard_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_return_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#postprocessor.calculate_average_annual_loss" title="Link to this definition"></a></dt>
+<dd><p>Calculate the Average Annual Loss (AAL) based on vulnerability and hazard curves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vulnerability_array</strong> (<em>2D array</em>) – A 2D array where the first column contains intensity measure levels, and the second column contains the corresponding loss ratios.</p></li>
+<li><p><strong>hazard_array</strong> (<em>2D array</em>) – A 2D array where the first column contains intensity measure levels, and the second column contains the annual rates of exceedance.</p></li>
+<li><p><strong>return_period</strong> (<em>float</em><em>, </em><em>optional</em>) – The return period used to scale the hazard rate. Default is 1.</p></li>
+<li><p><strong>max_return_period</strong> (<em>float</em><em>, </em><em>optional</em>) – The maximum return period threshold used to filter out very low hazard rates. Default is 5000.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The average annual loss.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Porter, K. (2017). “When Addressing Epistemic Uncertainty in a Lognormal Fragility Function,
+How Should One Adjust the Median?”, <em>Proceedings of the 16th World Conference on Earthquake Engineering
+(16WCEE)</em>, Santiago, Chile.</p></li>
+<li><p>Charvet, I., Ioannou, I., Rossetto, T., Suppasri, A., and Imamura, F. (2014). “Empirical fragility
+assessment of buildings affected by the 2011 Great East Japan tsunami using improved statistical models”,
+<em>Natural Hazards</em>, 73, 951–973, 2014.</p></li>
+<li><p>Lahcene, E., Ioannou, I., Suppasri, A., Pakoksung, K., Paulik, R., Syamsidik, S., Bouchette, F.,
+and Imamura, F. (2021). “Characteristics of building fragility curves for seismic and non-seismic tsunamis:
+case studies of the 2018 Sunda Strait, 2018 Sulawesi–Palu, and 2004 Indian Ocean tsunamis”,
+<em>Natural Hazards Earth System Sciences</em>, 21, 2313–2344, <a class="reference external" href="https://doi.org/10.5194/nhess-21-2313-2021">https://doi.org/10.5194/nhess-21-2313-2021</a>.</p></li>
+<li><p>Lallemant, D., Kiremidjian, A., and Burton, H. (2015). “Statistical procedures for developing
+earthquake damage fragility curves”, <em>Earthquake Engineering and Structural Dynamics</em>, 44, 1373–1389. doi: 10.1002/eqe.2522.</p></li>
+<li><p>Jalayer, F., Ebrahamian, H., Trevlopoulos, K., and Bradley, B. (2023). “Empirical tsunami fragility modelling
+for hierarchical damage levels”, <em>Natural Hazards and Earth System Sciences</em>, 23(2), 909–931.
+<a class="reference external" href="https://doi.org/10.5194/nhess-23-909-2023">https://doi.org/10.5194/nhess-23-909-2023</a></p></li>
+<li><p>Baker, J.W. (2015). “Efficient Analytical Fragility Function Fitting Using Dynamic Structural Analysis”,
+<em>Earthquake Spectra</em>. 2015;31(1):579-599. doi:10.1193/021113EQS025M</p></li>
+<li><p>Singhal A., Kiremidjian AS. Method for probabilistic evaluation of seismic structural damage.
+Journal of Structural Engineering 1996; 122: 1459–1467. DOI:10.1061/(ASCE)0733-9445(1996)122:12(1459)</p></li>
+<li><p>Bird J.F., Bommer J.J., Bray J.D., Sancio R., Spence R.J.S., (2004). “Comparing loss estimation with observed damage in a zone
+of ground failure: a study of the 1999 Kocaeli Earthquake in Turkey”, <em>Bulletin of Earthquake Engineering</em> 2004; 2:
+329–360. DOI: 10.1007/s10518-004-3804-0</p></li>
+<li><p>Nguyen, M., and Lallemant, D. (2022). “Order Matters: The Benefits of Ordinal Fragility Curves for Damage and Loss Estimation”. <em>Risk Analysis</em>,
+42: 1136-1148. <a class="reference external" href="https://doi.org/10.1111/risa.13815">https://doi.org/10.1111/risa.13815</a></p></li>
+<li><p>Silva, V. (2019). “Uncertainty and correlation in seismic vulnerability functions of building classes.”
+<em>Earthquake Spectra</em>. DOI: 10.1193/013018eqs031m.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mod.html" class="btn btn-neutral float-left" title="Model Building Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="slf.html" class="btn btn-neutral float-right" title="Storey-Loss Function Generation Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

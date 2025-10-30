@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Building Module &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Postprocessing Module" href="pos.html" />
+    <link rel="prev" title="Model Calibration Module" href="cal.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">IM Calculator Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">Model Calibration Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model Building Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modeller.modeller"><code class="docutils literal notranslate"><span class="pre">modeller</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.create_Pinching4_material"><code class="docutils literal notranslate"><span class="pre">modeller.create_Pinching4_material()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.compile_model"><code class="docutils literal notranslate"><span class="pre">modeller.compile_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.plot_model"><code class="docutils literal notranslate"><span class="pre">modeller.plot_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.do_gravity_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_gravity_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.do_modal_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_modal_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.do_spo_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_spo_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.do_cpo_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_cpo_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#modeller.modeller.do_nrha_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_nrha_analysis()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">Postprocessing Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">Storey-Loss Function Generation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Model Building Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/mod.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-modeller">
+<span id="model-building-module"></span><h1>Model Building Module<a class="headerlink" href="#module-modeller" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">modeller</span></code> module provides a class <code class="docutils literal notranslate"><span class="pre">modeller</span></code> that allows users to create,
+analyze, and visualize structural models for dynamic and static analyses.
+The module supports various types of analyses, including gravity analysis, modal
+analysis, static pushover analysis, cyclic pushover analysis, and nonlinear
+time-history analysis. The module is built on top of the OpenSees framework,
+enabling advanced structural analysis capabilities.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="modeller.modeller">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modeller.</span></span><span class="sig-name descname"><span class="pre">modeller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_storeys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor_heights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor_masses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_disps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_forces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degradation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller" title="Link to this definition"></a></dt>
+<dd><p>A class to model and analyze multi-degree-of-freedom (MDOF) oscillators using OpenSees.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>number_storeys</strong> (<em>int</em>) – The number of storeys in the building model.</p></li>
+<li><p><strong>floor_heights</strong> (<em>list</em>) – List of floor heights in meters.</p></li>
+<li><p><strong>floor_masses</strong> (<em>list</em>) – List of floor masses in tonnes.</p></li>
+<li><p><strong>storey_disps</strong> (<em>np.array</em>) – Array of storey displacements (size = number of storeys, CapPoints).</p></li>
+<li><p><strong>storey_forces</strong> (<em>np.array</em>) – Array of storey forces (size = number of storeys, CapPoints).</p></li>
+<li><p><strong>degradation</strong> (<em>bool</em>) – Boolean to enable or disable hysteresis degradation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.create_Pinching4_material">
+<span class="sig-name descname"><span class="pre">create_Pinching4_material</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat1Tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mat2Tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_forces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_disps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degradation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.create_Pinching4_material" title="Link to this definition"></a></dt>
+<dd><p>Creates a Pinching4 material model for the MDOF oscillator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat1Tag</strong> (<em>int</em>) – Material tag for the first material in the Pinching4 model.</p></li>
+<li><p><strong>mat2Tag</strong> (<em>int</em>) – Material tag for the second material in the Pinching4 model.</p></li>
+<li><p><strong>storey_forces</strong> (<em>np.array</em>) – Array of storey forces at each storey in the model.</p></li>
+<li><p><strong>storey_disps</strong> (<em>np.array</em>) – Array of storey displacements corresponding to the forces.</p></li>
+<li><p><strong>degradation</strong> (<em>bool</em>) – Boolean flag to enable or disable hysteresis degradation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.compile_model">
+<span class="sig-name descname"><span class="pre">compile_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.compile_model" title="Link to this definition"></a></dt>
+<dd><p>Compiles and sets up the MDOF oscillator model in OpenSees.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.plot_model">
+<span class="sig-name descname"><span class="pre">plot_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">display_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.plot_model" title="Link to this definition"></a></dt>
+<dd><p>Plots the 3D visualization of the OpenSees model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>display_info</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, displays additional information (coordinates and node ID) next to each node in the plot.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.do_gravity_analysis">
+<span class="sig-name descname"><span class="pre">do_gravity_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ansys_soe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'UmfPack'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Transformation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numberer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RCM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NormDispIncr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0e-6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Newton'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LoadControl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Static'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.do_gravity_analysis" title="Link to this definition"></a></dt>
+<dd><p>Performs gravity analysis on the MDOF system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nG</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of gravity analysis steps to perform.</p></li>
+<li><p><strong>ansys_soe</strong> (<em>string</em><em>, </em><em>optional</em>) – The system of equations type to be used in the analysis.</p></li>
+<li><p><strong>constraints_handler</strong> (<em>string</em><em>, </em><em>optional</em>) – The constraints handler determines how the constraint equations are enforced.</p></li>
+<li><p><strong>numberer</strong> (<em>string</em><em>, </em><em>optional</em>) – The degree-of-freedom numberer defines how DOFs are numbered.</p></li>
+<li><p><strong>test_type</strong> (<em>string</em><em>, </em><em>optional</em>) – Defines the test type used to check the convergence of the solution.</p></li>
+<li><p><strong>init_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – The tolerance criterion for checking convergence.</p></li>
+<li><p><strong>init_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of iterations to check for convergence.</p></li>
+<li><p><strong>algorithm_type</strong> (<em>string</em><em>, </em><em>optional</em>) – Defines the solution algorithm used in the analysis.</p></li>
+<li><p><strong>integrator</strong> (<em>string</em><em>, </em><em>optional</em>) – Defines the integrator for the analysis.</p></li>
+<li><p><strong>analysis</strong> (<em>string</em><em>, </em><em>optional</em>) – Defines the type of analysis to be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.do_modal_analysis">
+<span class="sig-name descname"><span class="pre">do_modal_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-genBandArpack'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doRayleigh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pflag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.do_modal_analysis" title="Link to this definition"></a></dt>
+<dd><p>Performs modal analysis to determine natural frequencies and mode shapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_modes</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of modes to consider in the analysis.</p></li>
+<li><p><strong>solver</strong> (<em>string</em><em>, </em><em>optional</em>) – The type of solver to use for the eigenvalue problem.</p></li>
+<li><p><strong>doRayleigh</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to enable or disable Rayleigh damping in the modal analysis.</p></li>
+<li><p><strong>pflag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to control whether to print the modal analysis report.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Periods of vibration and mode shapes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(np.array, list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.do_spo_analysis">
+<span class="sig-name descname"><span class="pre">do_spo_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_disp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_scale_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pflag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ansys_soe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BandGeneral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Transformation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numberer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RCM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EnergyIncr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0e-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'KrylovNewton'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.do_spo_analysis" title="Link to this definition"></a></dt>
+<dd><p>Performs static pushover analysis (SPO) on the MDOF system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref_disp</strong> (<em>float</em>) – The reference displacement at which the analysis starts.</p></li>
+<li><p><strong>disp_scale_factor</strong> (<em>float</em>) – The scale factor applied to the reference displacement.</p></li>
+<li><p><strong>push_dir</strong> (<em>int</em>) – The direction in which the pushover load is applied.</p></li>
+<li><p><strong>phi</strong> (<em>list</em><em> of </em><em>floats</em>) – The lateral load pattern shape.</p></li>
+<li><p><strong>pflag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to print (or not) the pushover analysis steps.</p></li>
+<li><p><strong>num_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of steps to increment the pushover load.</p></li>
+<li><p><strong>ansys_soe</strong> (<em>string</em><em>, </em><em>optional</em>) – The type of system of equations solver to use.</p></li>
+<li><p><strong>constraints_handler</strong> (<em>string</em><em>, </em><em>optional</em>) – The constraints handler object to determine how constraint equations are enforced.</p></li>
+<li><p><strong>numberer</strong> (<em>string</em><em>, </em><em>optional</em>) – The degree-of-freedom (DOF) numberer object.</p></li>
+<li><p><strong>test_type</strong> (<em>string</em><em>, </em><em>optional</em>) – The type of test to use for the linear system of equations.</p></li>
+<li><p><strong>init_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – The tolerance criterion to check for convergence.</p></li>
+<li><p><strong>init_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of iterations to perform when checking for convergence.</p></li>
+<li><p><strong>algorithm_type</strong> (<em>string</em><em>, </em><em>optional</em>) – The type of algorithm used to solve the system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Displacements, base shear, and spring forces.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(np.array, np.array, np.array, np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.do_cpo_analysis">
+<span class="sig-name descname"><span class="pre">do_cpo_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_disp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numCycles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispIncr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pflag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ansys_soe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BandGeneral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Transformation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numberer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RCM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NormDispIncr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0e-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'KrylovNewton'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.do_cpo_analysis" title="Link to this definition"></a></dt>
+<dd><p>Performs cyclic pushover analysis (CPO) on the MDOF system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref_disp</strong> (<em>float</em>) – Reference displacement for the pushover analysis.</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – Target ductility factor.</p></li>
+<li><p><strong>numCycles</strong> (<em>int</em>) – The number of displacement cycles to be performed.</p></li>
+<li><p><strong>push_dir</strong> (<em>int</em>) – Direction of the pushover analysis.</p></li>
+<li><p><strong>dispIncr</strong> (<em>float</em>) – The number of displacement increments for each loading cycle.</p></li>
+<li><p><strong>pflag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to print feedback during the analysis steps.</p></li>
+<li><p><strong>num_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of steps for the cyclic pushover analysis.</p></li>
+<li><p><strong>ansys_soe</strong> (<em>string</em><em>, </em><em>optional</em>) – System of equations solver to be used for the analysis.</p></li>
+<li><p><strong>constraints_handler</strong> (<em>string</em><em>, </em><em>optional</em>) – The method used for handling constraint equations.</p></li>
+<li><p><strong>numberer</strong> (<em>string</em><em>, </em><em>optional</em>) – The numberer method used to assign equation numbers to degrees of freedom.</p></li>
+<li><p><strong>test_type</strong> (<em>string</em><em>, </em><em>optional</em>) – The type of test to be used for convergence in the solution of the linear system of equations.</p></li>
+<li><p><strong>init_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – The initial tolerance for convergence.</p></li>
+<li><p><strong>init_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of iterations for the solver to check convergence.</p></li>
+<li><p><strong>algorithm_type</strong> (<em>string</em><em>, </em><em>optional</em>) – The type of algorithm used to solve the system of equations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Displacements and base shear.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(np.array, np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modeller.modeller.do_nrha_analysis">
+<span class="sig-name descname"><span class="pre">do_nrha_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fnames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_gm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_ansys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrha_outdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pflag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ansys_soe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BandGeneral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Plain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numberer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RCM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NormDispIncr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0e-6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Newton'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modeller.modeller.do_nrha_analysis" title="Link to this definition"></a></dt>
+<dd><p>Performs nonlinear time-history analysis (NRHA) on the MDOF system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fnames</strong> (<em>list</em>) – List of file paths to the ground motion records for each direction (X, Y, Z).</p></li>
+<li><p><strong>dt_gm</strong> (<em>float</em>) – Time-step of the ground motion records.</p></li>
+<li><p><strong>sf</strong> (<em>float</em>) – Scale factor to apply to the ground motion records.</p></li>
+<li><p><strong>t_max</strong> (<em>float</em>) – The maximum time duration for the analysis.</p></li>
+<li><p><strong>dt_ansys</strong> (<em>float</em>) – The time-step at which the analysis will be conducted.</p></li>
+<li><p><strong>nrha_outdir</strong> (<em>string</em>) – Directory where temporary output files are saved during the analysis.</p></li>
+<li><p><strong>pflag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to print progress updates during the analysis.</p></li>
+<li><p><strong>xi</strong> (<em>float</em><em>, </em><em>optional</em>) – The inherent damping ratio used in the analysis.</p></li>
+<li><p><strong>ansys_soe</strong> (<em>string</em><em>, </em><em>optional</em>) – Type of the system of equations solver to be used in the analysis.</p></li>
+<li><p><strong>constraints_handler</strong> (<em>string</em><em>, </em><em>optional</em>) – The method used to handle constraints in the analysis.</p></li>
+<li><p><strong>numberer</strong> (<em>string</em><em>, </em><em>optional</em>) – The numberer object determines the equation numbering used in the analysis.</p></li>
+<li><p><strong>test_type</strong> (<em>string</em><em>, </em><em>optional</em>) – Type of convergence test used during the analysis.</p></li>
+<li><p><strong>init_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Initial tolerance for the convergence test.</p></li>
+<li><p><strong>init_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of iterations allowed during each time step for the analysis to converge.</p></li>
+<li><p><strong>algorithm_type</strong> (<em>string</em><em>, </em><em>optional</em>) – Type of algorithm used to solve the system of equations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Control nodes, convergence status, peak drifts, peak accelerations, and peak displacements.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(list, int, np.array, np.array, float, string, int, float, string, int, np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Minjie, Zhu. McKenna, F. and Scott, M.H. (2018). “OpenSeesPy: Python library for the OpenSees finite element framework”, <em>SoftwareX</em>, Volume 7, 2018, Pages 6-11, ISSN 2352-7110, <a class="reference external" href="https://doi.org/10.1016/j.softx.2017.10.009">https://doi.org/10.1016/j.softx.2017.10.009</a>.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cal.html" class="btn btn-neutral float-left" title="Model Calibration Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pos.html" class="btn btn-neutral float-right" title="Postprocessing Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
