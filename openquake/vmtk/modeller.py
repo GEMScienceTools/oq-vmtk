@@ -3,6 +3,9 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import openseespy.opensees as ops
+from scipy.interpolate import interp1d
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.gridspec import GridSpec
 
 class modeller():
     """
@@ -199,6 +202,223 @@ class modeller():
         ops.uniaxialMaterial('Pinching4', mat1Tag,*matargs)
         ops.uniaxialMaterial('MinMax', mat2Tag, mat1Tag, '-min', -1*disp[-1,0], '-max', disp[-1,0])
 
+    def _plot_modes(self, node_list, mode_shape_vectors, T, export_path=None):
+        """
+        Plots the undeformed structure (3D, left) and 2D mode shape profiles (right).
+
+        - 3D plot X and Y limits are set to encompass the structure coordinates and a minimum range of [-2, 2].
+        - 3D plot Z-limit is fixed to start at 0.0.
+        - Mode shape vectors are normalized by the X-displacement of the top node (max(Z)).
+
+        Parameters:
+            node_list (list): List of node tags.
+            mode_shape_vectors (list of numpy.ndarray): Mode shape vectors (one per mode).
+            T (list): List of natural periods corresponding to the modes.
+            export_path (str, optional): If provided, saves the figure to this path
+                                         (e.g., 'modes.png') instead of displaying it.
+        """
+
+        num_modes = len(T)
+
+        # --- 1. Data Retrieval and Structuring ---
+        node_coords_list = [ops.nodeCoord(tag) for tag in node_list]
+        node_coords_undeformed = np.array(node_coords_list)
+        element_list = ops.getEleTags()
+
+        # Identify Base Nodes (first node) and Top Nodes (max Z coordinate)
+        base_node_tag = node_list[0] if node_list else -1
+
+        X, Y, Z = node_coords_undeformed.T
+        z_max = np.max(Z)
+        top_node_indices = np.where(Z == z_max)[0]
+
+        # Z-levels for 2D plots (must be unique and ordered for interpolation)
+        unique_z_levels = np.unique(Z)
+        z_min = np.min(unique_z_levels)
+        z_max = np.max(unique_z_levels)
+
+        # --- CALCULATE 3D AXES LIMITS (Enforcing X/Y range [-2, 2] and Z min 0.0) ---
+        x_min_data, x_max_data = np.min(X), np.max(X)
+        y_min_data, y_max_data = np.min(Y), np.max(Y)
+        z_min_data = np.min(Z)
+
+        epsilon = 1e-6 # Small buffer for axes with zero extent
+
+        # X Limits: Must span at least [-2, 2] and cover the data range plus a buffer
+        x_min_3d = min(x_min_data, -2.0)
+        x_max_3d = max(x_max_data, 2.0)
+        x_range = x_max_3d - x_min_3d
+        x_lim_3d = (x_min_3d - 0.05 * x_range, x_max_3d + 0.05 * x_range)
+        if np.isclose(x_range, 0.0): # Handle case where all X coords are the same
+            x_lim_3d = (x_min_3d - epsilon, x_max_3d + epsilon)
+
+        # Y Limits: Must span at least [-2, 2] and cover the data range plus a buffer
+        y_min_3d = min(y_min_data, -2.0)
+        y_max_3d = max(y_max_data, 2.0)
+        y_range = y_max_3d - y_min_3d
+        y_lim_3d = (y_min_3d - 0.05 * y_range, y_max_3d + 0.05 * y_range)
+        if np.isclose(y_range, 0.0): # Handle case where all Y coords are the same
+            y_lim_3d = (y_min_3d - epsilon, y_max_3d + epsilon)
+
+        # Z Limits: Force minimum to 0.0
+        z_lim_3d = (max(0.0, z_min_data), z_max * 1.1)
+
+        # --- 2. Create Figure and GridSpec Layout ---
+        fig = plt.figure(figsize=(18, 10), facecolor='white')
+        gs = GridSpec(num_modes, 3, figure=fig, width_ratios=[2, 0.1, 1], wspace=0.1)
+
+        # --- TITLE ALIGNMENT: Set figure-wide title for 2D plots ---
+        title_x_pos = 0.835 # Position centered over the right column
+        fig.suptitle('2D Mode Shapes: Deformed Profile (X-Z View)',
+                     fontsize=16,
+                     weight='bold',
+                     color='black',
+                     y=0.95,
+                     x=title_x_pos)
+
+        # --- 3. Plot the 3D Axes (Left Side - UNDEFORMED ONLY) ---
+        ax3d = fig.add_subplot(gs[:, 0], projection='3d')
+        ax3d.set_facecolor('white')
+        fig.patch.set_facecolor('white')
+
+        # 3D Aesthetics
+        ax3d.set_xlabel('X-Direction [m]', fontsize=14, color='black', labelpad=10)
+        ax3d.set_ylabel('Y-Direction [m]', fontsize=14, color='black', labelpad=10)
+        ax3d.set_zlabel('Z-Direction [m]', fontsize=14, color='black', labelpad=10)
+        ax3d.grid(True, linestyle=':', alpha=0.6, color='gray')
+        ax3d.view_init(elev=20, azim=-60)
+
+        # Set the corrected limits
+        ax3d.set_xlim(x_lim_3d); ax3d.set_ylim(y_lim_3d); ax3d.set_zlim(z_lim_3d)
+        ax3d.set_title('3D Undeformed Structure', fontsize=16, weight='bold', color='black', pad=15)
+
+        # Plot Undeformed Nodes (Black markers)
+        for i, node_tag in enumerate(node_list):
+            x, y, z = node_coords_undeformed[i]
+            marker_style = 's' if node_tag == base_node_tag else 'o'
+            marker_size = 200 if node_tag == base_node_tag else 150
+            ax3d.scatter(x, y, z, marker=marker_style, s=marker_size, color='black', zorder=2)
+
+        # Plot Undeformed Elements (Solid Blue Line)
+        for ele_tag in element_list:
+            ele_nodes_tags = ops.eleNodes(ele_tag)
+            if len(ele_nodes_tags) == 2:
+                idx_i = node_list.index(ele_nodes_tags[0])
+                idx_j = node_list.index(ele_nodes_tags[1])
+
+                x_u = [node_coords_undeformed[idx_i, 0], node_coords_undeformed[idx_j, 0]]
+                y_u = [node_coords_undeformed[idx_i, 1], node_coords_undeformed[idx_j, 1]]
+                z_u = [node_coords_undeformed[idx_i, 2], node_coords_undeformed[idx_j, 2]]
+
+                ax3d.plot(x_u, y_u, z_u, color='blue', linewidth=1.5, linestyle='-', alpha=0.7, zorder=1)
+
+        # --- 4. Normalization and 2D Plot Setup ---
+        normalized_mode_vectors = []
+        for mode_vec in mode_shape_vectors:
+            top_node_disp_x = mode_vec[top_node_indices, 0]
+            max_top_disp = np.max(np.abs(top_node_disp_x))
+
+            if max_top_disp != 0:
+                normalized_vec = mode_vec / max_top_disp
+            else:
+                normalized_vec = mode_vec
+            normalized_mode_vectors.append(normalized_vec)
+
+        deformed_color = 'blue'
+        max_disp_for_plotting = 1.0
+        x_lim_2d = (-max_disp_for_plotting * 1.5, max_disp_for_plotting * 1.5)
+        z_lim_2d = (z_min - 0.5, z_max + 0.5)
+
+        # --- 5. Iterate through Modes for 2D Profile Plot (Right Side) ---
+
+        for mode_idx, mode_vector in enumerate(normalized_mode_vectors):
+            mode_num = mode_idx + 1
+            period = T[mode_idx]
+
+            ax2d = fig.add_subplot(gs[mode_idx, 2])
+
+            # Extract 2D Plot Data (X-displacement vs Z-height)
+            node_displacements_x = []
+            for z_level in unique_z_levels:
+                z_indices = np.where(Z == z_level)[0]
+                node_displacements_x.append(np.mean(mode_vector[z_indices, 0]))
+
+            # --- Interpolation Kind Selection ---
+            N_z = len(unique_z_levels)
+            if N_z < 3:
+                interpolation_kind = 'linear'
+            elif N_z == 3:
+                interpolation_kind = 'quadratic'
+            else:
+                interpolation_kind = 'cubic'
+
+            # 1. Undeformed Reference Line (Solid Gray Line)
+            ax2d.plot([0] * N_z, unique_z_levels, color='gray', linewidth=3.0, linestyle='-', alpha=0.7, zorder=1)
+
+            # 2. Plot Undeformed Nodes (Black Square/Circle at X=0)
+            for i, node_tag in enumerate(node_list):
+                z_u = node_coords_undeformed[i, 2]
+                if z_u not in unique_z_levels: continue
+
+                marker_style = 's' if node_tag == base_node_tag else 'o'
+                marker_size = 80 if node_tag == base_node_tag else 50
+
+                ax2d.scatter(0, z_u, marker=marker_style, s=marker_size, color='black', edgecolor='black', linewidth=0.5, zorder=2)
+
+            # 3. Smooth Deformed Profile (Fixed Blue Line)
+            f_interp = interp1d(unique_z_levels, node_displacements_x, kind=interpolation_kind)
+            Z_smooth = np.linspace(z_min, z_max, 100)
+            X_smooth = f_interp(Z_smooth)
+
+            ax2d.plot(X_smooth, Z_smooth, color=deformed_color, linewidth=3.0, linestyle='-', zorder=4)
+
+            # 4. Plot Deformed Nodes (Black Square/Circle at DISPLACED position)
+            for i, node_tag in enumerate(node_list):
+                z_u = node_coords_undeformed[i, 2]
+                if z_u not in unique_z_levels: continue
+
+                z_idx = np.where(unique_z_levels == z_u)[0][0]
+                x_disp_at_z = node_displacements_x[z_idx]
+
+                marker_style = 's' if node_tag == base_node_tag else 'o'
+                marker_size = 80 if node_tag == base_node_tag else 50
+
+                ax2d.scatter(x_disp_at_z, z_u, marker=marker_style, s=marker_size, color='black', edgecolor='black', linewidth=0.5, zorder=5)
+
+
+            # 2D Plot Aesthetics and Labels
+            title_text = f'Mode {mode_num}, $T_{{{mode_num}}} = {period:.3f}$ s'
+            ax2d.set_title(title_text, fontsize=12, color='black', pad=5)
+
+            ax2d.set_ylim(z_lim_2d)
+            ax2d.grid(True, linestyle=':', alpha=0.5)
+            ax2d.set_xlim(x_lim_2d)
+            ax2d.set_ylabel('Z-Height [m]', fontsize=10)
+
+            # X-Label placement
+            if mode_idx < num_modes - 1:
+                ax2d.tick_params(labelbottom=False)
+                ax2d.set_xlabel(' ', fontsize=10)
+            else:
+                ax2d.set_xlabel('X-Displacement (Normalized)', fontsize=10)
+
+            # Consistent Y-axis tick and label placement
+            if mode_idx > 0:
+                 ax2d.sharey(fig.axes[2])
+                 ax2d.tick_params(labelleft=False)
+
+        # Align labels again after tight_layout to finalize position
+        fig.align_labels()
+        plt.subplots_adjust(top=0.9)
+
+        # --- FIGURE EXPORT/SHOW LOGIC ---
+        if export_path:
+            print(f"Saving figure to {export_path}")
+            plt.savefig(export_path, bbox_inches='tight')
+            plt.show()
+        else:
+            plt.show()
+
     def compile_model(self):
         """
         Compiles and sets up the multi-degree-of-freedom (MDOF) oscillator model in OpenSees.
@@ -290,85 +510,95 @@ class modeller():
             ### Create the element
             ops.element('zeroLength', eleTag, eleNodes[0], eleNodes[1], '-mat', mat2Tag, mat2Tag, rigM, rigM, rigM, rigM, '-dir', 1, 2, 3, 4, 5, 6, '-doRayleigh', 1)
 
+    def plot_model(self, display_info=True, export_path=None):
+            """
+            Plots the 3D visualization of the OpenSees model, including nodes and elements.
 
-    def plot_model(self, display_info=True):
-        """
-        Plots the 3D visualization of the OpenSees model, including nodes and elements.
+            This method generates a 3D plot of the multi-degree-of-freedom oscillator model defined in OpenSees.
+            It visualizes the nodes and the connections between them (representing structural elements). Nodes
+            are plotted as either square (base) or circular markers, while the elements are visualized as lines
+            connecting the nodes. If `display_info` is set to True, the node coordinates and IDs will be displayed
+            on the plot.
 
-        This method generates a 3D plot of the multi-degree-of-freedom oscillator model defined in OpenSees.
-        It visualizes the nodes and the connections between them (representing structural elements). Nodes
-        are plotted as either square (base) or circular markers, while the elements are visualized as lines
-        connecting the nodes. If `display_info` is set to True, the node coordinates and IDs will be displayed
-        on the plot.
+            Parameters
+            ----------
+            display_info : bool, optional
+                If True, displays additional information (coordinates and node ID) next to each node in the plot.
+                The default is True.
+            export_path : str, optional
+                If a string path (including filename and extension, e.g., 'model_plot.png') is provided,
+                the plot is saved to this location instead of being displayed interactively.
+                The default is None.
 
-        Parameters
-        ----------
-        display_info : bool, optional
-            If True, displays additional information (coordinates and node ID) next to each node in the plot.
-            The default is True.
+            Returns
+            -------
+            None
 
-        Returns
-        -------
-        None
+            Notes
+            -----
+            - Nodes are represented as either squares (base node) or circles (upper storey nodes).
+            - Elements (connections between nodes) are represented by blue lines connecting the corresponding nodes.
+            - Node coordinates are retrieved from OpenSees using `ops.nodeCoord` and node masses are retrieved with
+              `ops.nodeMass`.
+            - Element connectivity (pairs of nodes connected by an element) is retrieved using `ops.eleNodes`.
+            - The plot is created using Matplotlib's 3D plotting functionality.
+            """
 
-        Notes
-        -----
-        - Nodes are represented as either squares (base node) or circles (upper storey nodes).
-        - Elements (connections between nodes) are represented by blue lines connecting the corresponding nodes.
-        - Node coordinates are retrieved from OpenSees using `ops.nodeCoord` and node masses are retrieved with
-          `ops.nodeMass`.
-        - Element connectivity (pairs of nodes connected by an element) is retrieved using `ops.eleNodes`.
-        - The plot is created using Matplotlib's 3D plotting functionality.
-        """
+            # get list of model nodes
+            NodeCoordListX = []; NodeCoordListY = []; NodeCoordListZ = [];
+            NodeMassList = []
 
-        # get list of model nodes
-        NodeCoordListX = []; NodeCoordListY = []; NodeCoordListZ = [];
-        NodeMassList = []
+            nodeList = ops.getNodeTags()
+            for thisNodeTag in nodeList:
+                NodeCoordListX.append(ops.nodeCoord(thisNodeTag,1))
+                NodeCoordListY.append(ops.nodeCoord(thisNodeTag,2))
+                NodeCoordListZ.append(ops.nodeCoord(thisNodeTag,3))
+                NodeMassList.append(ops.nodeMass(thisNodeTag,1))
 
-        nodeList = ops.getNodeTags()
-        for thisNodeTag in nodeList:
-            NodeCoordListX.append(ops.nodeCoord(thisNodeTag,1))
-            NodeCoordListY.append(ops.nodeCoord(thisNodeTag,2))
-            NodeCoordListZ.append(ops.nodeCoord(thisNodeTag,3))
-            NodeMassList.append(ops.nodeMass(thisNodeTag,1))
+            # get list of model elements
+            elementList = ops.getEleTags()
+            for thisEleTag in elementList:
+                eleNodesList = ops.eleNodes(thisEleTag)
+                if len(eleNodesList)==2:
+                    [NodeItag,NodeJtag] = eleNodesList
+                    NodeCoordListI=ops.nodeCoord(NodeItag)
+                    NodeCoordListJ=ops.nodeCoord(NodeJtag)
+                    [NodeIxcoord,NodeIycoord,NodeIzcoord]=NodeCoordListI
+                    [NodeJxcoord,NodeJycoord,NodeJzcoord]=NodeCoordListJ
 
-        # get list of model elements
-        elementList = ops.getEleTags()
-        for thisEleTag in elementList:
-            eleNodesList = ops.eleNodes(thisEleTag)
-            if len(eleNodesList)==2:
-                [NodeItag,NodeJtag] = eleNodesList
-                NodeCoordListI=ops.nodeCoord(NodeItag)
-                NodeCoordListJ=ops.nodeCoord(NodeJtag)
-                [NodeIxcoord,NodeIycoord,NodeIzcoord]=NodeCoordListI
-                [NodeJxcoord,NodeJycoord,NodeJzcoord]=NodeCoordListJ
+            fig = plt.figure(figsize=(12,12))
+            ax = fig.add_subplot(projection='3d')
 
-        fig = plt.figure(figsize=(12,12))
-        ax = fig.add_subplot(projection='3d')
+            for i in range(len(nodeList)):
+                if i==0:
+                    ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i], marker='s', s=200,color='black')
+                else:
+                    ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i], marker='o', s=150,color='black')
+                if display_info == True:
+                    ax.text(NodeCoordListX[i]+0.01,NodeCoordListY[i],NodeCoordListZ[i],  'Node %s (%s,%s,%s)' % (str(i),str(NodeCoordListX[i]),str(NodeCoordListY[i]),str(NodeCoordListZ[i])), size=20, zorder=1, color="#0A4F5E")
 
-        for i in range(len(nodeList)):
-            if i==0:
-                ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i], marker='s', s=200,color='black')
+            i = 0
+            while i < len(elementList):
+
+                x = [NodeCoordListX[i], NodeCoordListX[i+1]]
+                y = [NodeCoordListY[i], NodeCoordListY[i+1]]
+                z = [NodeCoordListZ[i], NodeCoordListZ[i+1]]
+
+                plt.plot(x,y,z,color='blue')
+                i = i+1
+
+            ax.set_xlabel('X-Direction [m]', fontsize=14)
+            ax.set_ylabel('Y-Direction [m]', fontsize=14)
+            ax.set_zlabel('Z-Direction [m]', fontsize=14)
+
+            # ----------------------------------------------------------------------
+            # ADDED LOGIC FOR EXPORT_PATH
+            # ----------------------------------------------------------------------
+            if export_path:
+                plt.savefig(export_path)
+                plt.show()
             else:
-                ax.scatter(NodeCoordListX[i],NodeCoordListY[i],NodeCoordListZ[i], marker='o', s=150,color='black')
-            if display_info == True:
-                ax.text(NodeCoordListX[i]+0.01,NodeCoordListY[i],NodeCoordListZ[i],  'Node %s (%s,%s,%s)' % (str(i),str(NodeCoordListX[i]),str(NodeCoordListY[i]),str(NodeCoordListZ[i])), size=20, zorder=1, color="#0A4F5E")
-
-        i = 0
-        while i < len(elementList):
-
-            x = [NodeCoordListX[i], NodeCoordListX[i+1]]
-            y = [NodeCoordListY[i], NodeCoordListY[i+1]]
-            z = [NodeCoordListZ[i], NodeCoordListZ[i+1]]
-
-            plt.plot(x,y,z,color='blue')
-            i = i+1
-
-        ax.set_xlabel('X-Direction [m]', fontsize=14)
-        ax.set_ylabel('Y-Direction [m]', fontsize=14)
-        ax.set_zlabel('Z-Direction [m]', fontsize=14)
-
-        plt.show()
+                plt.show()
 
 ##########################################################################
 #                             ANALYSIS MODULES                           #
@@ -462,72 +692,82 @@ class modeller():
 
     def do_modal_analysis(self,
                           num_modes=3,
-                          solver = '-genBandArpack',
+                          solver='-genBandArpack',
                           doRayleigh=False,
-                          pflag=False):
+                          pflag=False,
+                          plot_modes=True,
+                          export_path=None): # NEW PARAMETER for export
         """
-        Perform modal analysis on a multi-degree-of-freedom (MDOF) system to determine its natural frequencies
-        and mode shapes.
-
-        This method calculates the natural frequencies and corresponding mode shapes of the system. The natural
-        frequencies are determined by solving the eigenvalue problem, and the mode shapes are normalized
-        for the system's degrees of freedom. The results can be used to assess the dynamic characteristics
-        of the system.
+        Perform modal analysis on a multi-degree-of-freedom (MDOF) system and optionally plot/export the mode shapes.
 
         Parameters
         ----------
         num_modes: int, optional
-            The number of modes to consider in the analysis. Default is 3. This parameter determines how many
-            modes will be computed in the modal analysis.
-
+            The number of modes to consider in the analysis. Default is 3.
         solver: string, optional
-            The type of solver to use for the eigenvalue problem. Default is '-genBandArpack', which uses a
-            generalized banded Arnoldi method for large sparse eigenvalue problems.
-
+            The type of solver to use for the eigenvalue problem. Default is '-genBandArpack'.
         doRayleigh: bool, optional
-            Flag to enable or disable Rayleigh damping in the modal analysis. This parameter is not used directly
-            in this method but can be set in the OpenSees model. Default is False.
-
+            Flag to enable or disable Rayleigh damping. Default is False. (Not used directly here).
         pflag: bool, optional
-            Flag to control whether to print the modal analysis report. If True, the fundamental period and
-            mode shape will be printed to the console. Default is False.
+            Flag to control whether to print the modal analysis report. Default is False.
+        plot_modes: bool, optional
+            If True, initiates plotting of the mode shapes. Default is True.
+        export_path: str or None, optional
+            If a string path is provided (e.g., 'modal_results.png'), the plot will be saved to this location.
+            If None, the plot will be displayed. Default is None.
 
         Returns
         -------
         T: array
-            The periods of vibration for the system, calculated as 2π/ω, where ω are the natural frequencies
-            obtained from the eigenvalue problem.
-
-        mode_shape: list
-            A list of the normalized mode shapes for the system, with each element representing the displacement
-            in the x-direction for the corresponding mode. The mode shapes are normalized by the last node's
-            displacement.
+            The periods of vibration for the system.
+        mode_shape_vectors: list
+            A list of numpy arrays, where each array is the full mode shape vector (UX, UY, UZ) for all nodes.
         """
 
-        ### Get frequency and period
+        # --- 1. Perform Modal Analysis (Eigenvalue Problem) ---
         self.omega = np.power(ops.eigen(solver, num_modes), 0.5)
-        T = 2.0*np.pi/self.omega
+        T = 2.0 * np.pi / self.omega
 
-        mode_shape = []
-        # Extract mode shapes for all nodes (displacements in x)
-        for k in range(1, self.number_storeys+1):
-            ux = ops.nodeEigenvector(k, 1, 1)  # Displacement in x-direction
-            mode_shape.append(ux)
+        # --- 2. Extract Mode Shape Vectors ---
+        node_list = ops.getNodeTags()
 
-        # Normalize the mode shape
-        mode_shape = np.array(mode_shape)/mode_shape[-1]
+        # Fallback/Adaptive: Determine the largest node tag index for eigenvector extraction
+        if not hasattr(self, 'number_storeys'):
+            self.number_storeys = len(node_list)
 
-        ### Print optional report
+        mode_shape_vectors = []
+
+        for mode_num in range(1, num_modes + 1):
+            # Extract X, Y, Z displacements for ALL nodes in the current mode
+            ux_all = np.array([ops.nodeEigenvector(tag, mode_num, 1) for tag in node_list])
+            uy_all = np.array([ops.nodeEigenvector(tag, mode_num, 2) for tag in node_list])
+            uz_all = np.array([ops.nodeEigenvector(tag, mode_num, 3) for tag in node_list])
+
+            # Combine into a single (N_nodes x 3) vector for plotting
+            mode_vector = np.column_stack((ux_all, uy_all, uz_all))
+
+            # Normalization (This normalization is overridden inside _plot_modes
+            # to ensure it's normalized by top node X-disp, but kept here for return consistency)
+            max_disp = np.max(np.abs(mode_vector))
+            if max_disp != 0:
+                mode_vector /= max_disp
+
+            mode_shape_vectors.append(mode_vector)
+
+        # --- 3. Optional Printing ---
         if pflag:
             ops.modalProperties('-print')
-            ### Print output
-            print(r'Fundamental Period:  T = {:.3f} s'.format(T[0]))
-            print('Mode Shape:', mode_shape)
+            print(r'Fundamental Period: T = {:.3f} s'.format(T[0]))
 
-        ### Wipe the analysis objects
+        # --- 4. Optional Plotting/Exporting ---
+        if plot_modes:
+            # Pass the export_path to the plotting function
+            self._plot_modes(node_list, mode_shape_vectors, T, export_path=export_path)
+
+        # --- 5. Cleanup ---
         ops.wipeAnalysis()
 
-        return T, mode_shape
+        return T, mode_shape_vectors
 
     def do_spo_analysis(self,
                         ref_disp,
@@ -998,7 +1238,7 @@ class modeller():
         pseudo_steps = np.arange(len(energy_steps))  # or use actual step counter if you prefer
         cpo_energy = np.column_stack((pseudo_steps, energy_steps))
         assert np.all(np.diff(cpo_energy[:,1]) >= 0), "Energy should be cumulative and increasing"
-        
+
         ### Wipe the analysis objects
         ops.wipeAnalysis()
 
