@@ -6,6 +6,7 @@ import openseespy.opensees as ops
 from scipy.interpolate import interp1d
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.gridspec import GridSpec
+import matplotlib.animation as animation
 
 class modeller():
     """
@@ -419,6 +420,176 @@ class modeller():
         else:
             plt.show()
 
+    # Helper function to create and save the animation (must be defined or be a class method)
+    def _animate_spo(self, spo_top_disp, spo_rxn, spo_disps, spo_midr, nodeList, elementList, push_dir, save_path):
+        """Generates and saves the SPO animation using FuncAnimation."""
+        deform_factor = 1 # Scaling factor for visualization
+        # spo_midr is now passed in as an argument, so its length determines the number of frames.
+        num_frames = len(spo_top_disp)
+
+        # ------------------ Data Processing ------------------
+        # Get undeformed coordinates once
+        NodeCoordListX_und = [ops.nodeCoord(tag, 1) for tag in nodeList]
+        NodeCoordListY_und = [ops.nodeCoord(tag, 2) for tag in nodeList]
+        NodeCoordListZ_und = [ops.nodeCoord(tag, 3) for tag in nodeList]
+
+        # Determine the plotting coordinates based on push_dir for the 2D view
+        if push_dir == 1:
+            plot_coords_und = (NodeCoordListX_und, NodeCoordListZ_und)
+            x_label_model = 'X-Direction [m]'
+            y_label_model = 'Z-Direction [m]'
+        elif push_dir == 2:
+            plot_coords_und = (NodeCoordListY_und, NodeCoordListZ_und)
+            x_label_model = 'Y-Direction [m]'
+            y_label_model = 'Z-Direction [m]'
+        elif push_dir == 3:
+            plot_coords_und = (NodeCoordListZ_und, NodeCoordListX_und)
+            x_label_model = 'Z-Direction [m]'
+            y_label_model = 'X-Direction [m]'
+        else:
+            plot_coords_und = (NodeCoordListX_und, NodeCoordListZ_und)
+            x_label_model = 'X-Direction [m]'
+            y_label_model = 'Z-Direction [m]'
+
+        # Max coordinate for consistent plot limits
+        max_abs_coord_x = np.max(np.abs(plot_coords_und[0]))
+        max_abs_coord_y = np.max(np.abs(plot_coords_und[1]))
+        model_x_lim = (-max_abs_coord_x * 3.0, max_abs_coord_x * 3.0)
+        model_y_lim = (0, max_abs_coord_y * 1.5)
+
+        # Max Interstorey Drift History (passed as spo_midr)
+        max_drift_history = np.maximum.accumulate(spo_midr)
+
+        # ------------------ Initialize the Figure and Subplots ------------------
+        fig = plt.figure(figsize=(16, 8))
+
+        # Layout: (1, 2, 1) is big left plot; (2, 2, 2) is top right; (2, 2, 4) is bottom right
+        ax_model = fig.add_subplot(1, 2, 1)
+        ax_curve = fig.add_subplot(2, 2, 2)
+        ax_drift = fig.add_subplot(2, 2, 4)
+
+        plt.subplots_adjust(wspace=0.4, hspace=0.4)
+
+        # Store the number of static (undeformed) artists for easy cleanup in update()
+        num_static_lines = len(elementList)
+        num_static_collections = 1 # For the single undeformed nodes scatter plot
+
+        # ------------------ Set up static plot elements ------------------
+        # 2D Model Plot (Undeformed - static gray background)
+        ax_model.scatter(plot_coords_und[0], plot_coords_und[1],
+                          marker='o', s=50, color='gray', alpha=0.5, label='Undeformed Nodes')
+        for eleTag in elementList:
+            [NodeItag, NodeJtag] = ops.eleNodes(eleTag)
+            i = nodeList.index(NodeItag)
+            j = nodeList.index(NodeJtag)
+            x_und = [plot_coords_und[0][i], plot_coords_und[0][j]]
+            y_und = [plot_coords_und[1][i], plot_coords_und[1][j]]
+            ax_model.plot(x_und, y_und, color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+
+        ax_model.set_xlabel(x_label_model)
+        ax_model.set_ylabel(y_label_model)
+        ax_model.set_title('Deformed Model Shape')
+        ax_model.set_xlim(model_x_lim)
+        ax_model.set_ylim(model_y_lim)
+        ax_model.grid(True)
+
+        # Pushover Curve (Base Shear vs Top Disp)
+        ax_curve.set_xlabel('Top Displacement [m]')
+        ax_curve.set_ylabel('Base Shear [kN]')
+        ax_curve.set_title('Pushover Curve (Base Shear vs Top Disp)')
+        ax_curve.plot(spo_top_disp, spo_rxn, 'gray', linewidth=2, alpha=0.5, label='Static Curve')
+        curve_anim, = ax_curve.plot([], [], 'blue', linewidth=2, label='Current Step')
+        ax_curve.legend()
+        ax_curve.set_xlim(np.min(spo_top_disp)*1.1 if np.min(spo_top_disp) < 0 else 0, np.max(spo_top_disp)*1.1)
+        ax_curve.set_ylim(np.min(spo_rxn)*1.1, np.max(spo_rxn)*1.1)
+        ax_curve.grid(True)
+
+        # Max Drift vs Base Shear
+        ax_drift.set_xlabel('Max Interstorey Drift Ratio [%]')
+        ax_drift.set_ylabel('Base Shear [kN]')
+        ax_drift.set_title('Base Shear vs Max Interstorey Drift Ratio')
+        drift_anim, = ax_drift.plot([], [], 'green', linewidth=2, label='Current Max Drift')
+        ax_drift.legend()
+        # Use spo_midr limits
+        ax_drift.set_xlim(0, np.max(max_drift_history) * 1.2)
+        ax_drift.set_ylim(np.min(spo_rxn)*1.1, np.max(spo_rxn)*1.1)
+        ax_drift.grid(True)
+
+
+        # ------------------ The update function for FuncAnimation ------------------
+        def update(frame):
+            nonlocal num_static_lines, num_static_collections
+
+            # --- 2D Model Plot Cleanup ---
+            # Remove dynamically drawn lines (deformed elements) from the LAST frame
+            while len(ax_model.lines) > num_static_lines:
+                ax_model.lines[-1].remove()
+
+            # Remove dynamically drawn collections (deformed nodes) from the LAST frame
+            while len(ax_model.collections) > num_static_collections:
+                ax_model.collections[-1].remove()
+
+            # --- 2D Model Plot Redraw (Deformed Shape) ---
+
+            # Get displacement data for the current frame
+            current_disps_floor = spo_disps[frame]
+            # Include ground floor (index 0) displacement = 0
+            full_node_disps = np.insert(current_disps_floor, 0, 0, axis=0)
+
+            # Calculate deformed coordinates based on push_dir
+            if push_dir == 1: # X-Z plane
+                X_def = [plot_coords_und[0][i] + full_node_disps[i] * deform_factor for i in range(len(nodeList))]
+                Z_def = [plot_coords_und[1][i] for i in range(len(nodeList))]
+                plot_coords_def = (X_def, Z_def)
+            elif push_dir == 2: # Y-Z plane
+                Y_def = [plot_coords_und[0][i] + full_node_disps[i] * deform_factor for i in range(len(nodeList))]
+                Z_def = [plot_coords_und[1][i] for i in range(len(nodeList))]
+                plot_coords_def = (Y_def, Z_def)
+            elif push_dir == 3: # Z-X plane
+                Z_def = [plot_coords_und[0][i] + full_node_disps[i] * deform_factor for i in range(len(nodeList))]
+                X_def = [plot_coords_und[1][i] for i in range(len(nodeList))]
+                plot_coords_def = (Z_def, X_def)
+            else:
+                 plot_coords_def = plot_coords_und
+
+            # Plot Deformed Shape (Blue)
+            ax_model.scatter(plot_coords_def[0], plot_coords_def[1],
+                              marker='o', s=50, color='blue', label='Deformed Nodes')
+            for eleTag in elementList:
+                [NodeItag, NodeJtag] = ops.eleNodes(eleTag)
+                i = nodeList.index(NodeItag)
+                j = nodeList.index(NodeJtag)
+                x_def = [plot_coords_def[0][i], plot_coords_def[0][j]]
+                y_def = [plot_coords_def[1][i], plot_coords_def[1][j]]
+                ax_model.plot(x_def, y_def, color='blue', linewidth=1.5)
+
+            ax_model.set_title(f'Frame: {frame}/{num_frames-1} (Scale: {deform_factor}x)')
+
+            # --- Pushover Curve Update ---
+            curve_anim.set_data(spo_top_disp[:frame+1], spo_rxn[:frame+1])
+
+            # --- Max Drift vs Base Shear Update (Using spo_midr) ---
+            drift_anim.set_data(spo_midr[:frame+1], spo_rxn[:frame+1])
+
+            # Return the artists that were modified
+            return curve_anim, drift_anim
+
+        # Create the animation object
+        ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=50, blit=False)
+
+        # Save the animation
+        print(f"\nSaving animation to: {save_path}")
+
+        if save_path.lower().endswith('.gif'):
+            ani.save(save_path, writer='pillow', dpi=150)
+        elif save_path.lower().endswith('.mp4'):
+            ani.save(save_path, writer='ffmpeg', dpi=200)
+        else:
+            print("WARNING: Animation path extension not recognized (.gif or .mp4 recommended). Saving as default.")
+            ani.save(save_path, dpi=150)
+
+        plt.close(fig)
+
     def compile_model(self):
         """
         Compiles and sets up the multi-degree-of-freedom (MDOF) oscillator model in OpenSees.
@@ -782,7 +953,8 @@ class modeller():
                         test_type='EnergyIncr',
                         init_tol=1.0e-5,
                         init_iter=1000,
-                        algorithm_type='KrylovNewton'):
+                        algorithm_type='KrylovNewton',
+                        save_animation_path=None):
         """
         Perform static pushover analysis (SPO) on a multi-degree-of-freedom (MDOF) system.
 
@@ -840,151 +1012,122 @@ class modeller():
 
         Returns
         -------
-        spo_disps: array
-            Displacements at each floor level during the pushover analysis.
-
-        spo_rxn: array
-            Base shear recorded as the sum of reactions at the base during the pushover analysis.
-
-        spo_disps_spring: array
-            Displacements in the storey zero-length elements (non-linear springs).
-
-        spo_forces_spring: array
-            Shear forces in the storey zero-length elements (non-linear springs).
-
+        spo_dict: dict
+            A dictionary containing the SPO results with the following keys:
+            'spo_disps': array - Displacements at each floor level (TimeSteps x Floors).
+            'spo_rxn': array - Base shear recorded at the base (TimeSteps).
+            'spo_disps_spring': array - Displacements in the storey zero-length elements (TimeSteps x Springs).
+            'spo_forces_spring': array - Shear forces in the storey zero-length elements (TimeSteps x Springs).
+            'spo_idr': array - Interstorey drift ratio history for each storey (TimeSteps x Storeys).
+            'spo_midr': array - Maximum interstorey drift ratio history (max IDR across all stories at each step, TimeSteps).
         """
 
-        # apply the load pattern
-        ops.timeSeries("Linear", 1) # create timeSeries
-        ops.pattern("Plain", 1, 1) # create a plain load pattern
+        # --- Setup OpenSees Model for Analysis ---
+        ops.timeSeries("Linear", 1)
+        ops.pattern("Plain", 1, 1)
 
-        # define control nodes
         nodeList = ops.getNodeTags()
         control_node = nodeList[-1]
         pattern_nodes = nodeList[1:]
-        rxn_nodes = [nodeList[0]]
+        rxn_nodes = [nodeList[0]] # Base node for reaction calculation
 
-
-        # we can integrate modal patterns, inverse triangular, etc.
+        # Apply the lateral load pattern
         for i in np.arange(len(pattern_nodes)):
+            load_val = 1.0 if len(pattern_nodes)==1 else phi[i]*self.floor_masses[i]
             if push_dir == 1:
-                if len(pattern_nodes)==1:
-                    ops.load(pattern_nodes[i], 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-                else:
-                    ops.load(pattern_nodes[i], phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0, 0.0) ######### IT STARTS FROM ZERO
-
+                ops.load(pattern_nodes[i], load_val, 0.0, 0.0, 0.0, 0.0, 0.0)
             elif push_dir == 2:
-                if len(pattern_nodes)==1:
-                    ops.load(pattern_nodes[i], 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
-                else:
-                    ops.load(pattern_nodes[i], 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0)
-
+                ops.load(pattern_nodes[i], 0.0, load_val, 0.0, 0.0, 0.0, 0.0)
             elif push_dir == 3:
-                if len(pattern_nodes)==1:
-                    ops.load(pattern_nodes[i], 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
-                else:
-                    ops.load(pattern_nodes[i], 0.0, 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0)
+                ops.load(pattern_nodes[i], 0.0, 0.0, load_val, 0.0, 0.0, 0.0)
 
-        # Set up the initial objects
+        # Set analysis objects
         ops.system(ansys_soe)
         ops.constraints(constraints_handler)
         ops.numberer(numberer)
         ops.test(test_type, init_tol, init_iter)
         ops.algorithm(algorithm_type)
 
-        # Set the integrator
+        # Set integrator
         target_disp = float(ref_disp)*float(disp_scale_factor)
         delta_disp = target_disp/(1.0*num_steps)
         ops.integrator('DisplacementControl', control_node, push_dir, delta_disp)
         ops.analysis('Static')
 
-        # Get a list of all the element tags (zero-length springs)
         elementList = ops.getEleTags()
 
-        # Give some feedback if requested
         if pflag is True:
             print(f"\n------ Static Pushover Analysis of Node # {control_node} to {target_disp} ---------")
-        # Set up the analysis
+
         ok = 0
         step = 1
         loadf = 1.0
 
-        # Recording base shear
+        # Initialize result arrays with current state (usually 0.0)
         spo_rxn = np.array([0.])
-        # Recording top displacement
-        spo_top_disp = np.array([ops.nodeResponse(control_node, push_dir,1)])
-        # Recording all displacements to estimate drifts
+        spo_top_disp = np.array([ops.nodeResponse(control_node, push_dir,1)]) # Used for animation and Pushover Curve
         spo_disps = np.array([[ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes]])
-
-        # Recording displacements and forces in non-linear zero-length springs [the zero is needed to get the exact required value]
         spo_disps_spring = np.array([[ops.eleResponse(ele, 'deformation')[0] for ele in elementList]])
         spo_forces_spring = np.array([[ops.eleResponse(ele, 'force')[0] for ele in elementList]])
 
-
-        # Start the adaptive convergence scheme
+        # --- Main Analysis Loop ---
         while step <= num_steps and ok == 0 and loadf > 0:
 
-            # Push it by one step
             ok = ops.analyze(1)
 
-            # If the analysis fails, try the following changes to achieve convergence
+            # --- Adaptive Convergence Scheme ---
             if ok != 0:
-                print('FAILED: Trying relaxing convergence...')
+                if pflag: print('FAILED: Trying relaxing convergence...')
                 ops.test(test_type, init_tol*0.01, init_iter)
                 ok = ops.analyze(1)
                 ops.test(test_type, init_tol, init_iter)
             if ok != 0:
-                print('FAILED: Trying relaxing convergence with more iterations...')
+                if pflag: print('FAILED: Trying relaxing convergence with more iterations...')
                 ops.test(test_type, init_tol*0.01, init_iter*10)
                 ok = ops.analyze(1)
                 ops.test(test_type, init_tol, init_iter)
             if ok != 0:
-                print('FAILED: Trying relaxing convergence with more iteration and Newton with initial then current...')
+                if pflag: print('FAILED: Trying relaxing convergence with more iteration and Newton with initial then current...')
                 ops.test(test_type, init_tol*0.01, init_iter*10)
                 ops.algorithm('Newton', 'initialThenCurrent')
                 ok = ops.analyze(1)
                 ops.test(test_type, init_tol, init_iter)
                 ops.algorithm(algorithm_type)
             if ok != 0:
-                print('FAILED: Trying relaxing convergence with more iteration and Newton with initial...')
+                if pflag: print('FAILED: Trying relaxing convergence with more iteration and Newton with initial...')
                 ops.test(test_type, init_tol*0.01, init_iter*10)
                 ops.algorithm('Newton', 'initial')
                 ok = ops.analyze(1)
                 ops.test(test_type, init_tol, init_iter)
                 ops.algorithm(algorithm_type)
             if ok != 0:
-                print('FAILED: Attempting a Hail Mary...')
+                if pflag: print('FAILED: Attempting a Hail Mary...')
                 ops.test('FixedNumIter', init_iter*10)
                 ok = ops.analyze(1)
                 ops.test(test_type, init_tol, init_iter)
+                if ok != 0: # Final check before breaking
+                    break
 
-            # This feature of disabling the possibility of having a negative loading has been included.
             loadf = ops.getTime()
 
-            # Give some feedback if requested
             if pflag is True:
                 curr_disp = ops.nodeDisp(control_node, push_dir)
-                print('Currently pushed node ' + str(control_node) + ' to ' + str(curr_disp) + ' with ' + str(loadf))
+                print(f'Currently pushed node {control_node} to {curr_disp:.4f} with load factor {loadf:.4f}')
 
-            # Increment to the next step
             step += 1
 
-            # Get the results
-            spo_top_disp = np.append(spo_top_disp, ops.nodeResponse(
-            control_node, push_dir, 1))
+            # --- Record Results ---
+            spo_top_disp = np.append(spo_top_disp, ops.nodeResponse(control_node, push_dir, 1))
 
-            spo_disps = np.append(spo_disps, np.array([
-            [ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes]
-            ]), axis=0)
-
+            current_disps = np.array([ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes])
+            spo_disps = np.append(spo_disps, np.array([current_disps]), axis=0)
 
             spo_disps_spring = np.append(spo_disps_spring, np.array([
-            [ops.eleResponse(ele, 'deformation')[0] for ele in elementList]
+                [ops.eleResponse(ele, 'deformation')[0] for ele in elementList]
             ]), axis=0)
 
-
             spo_forces_spring = np.append(spo_forces_spring, np.array([
-            [ops.eleResponse(ele, 'force')[0] for ele in elementList]
+                [ops.eleResponse(ele, 'force')[0] for ele in elementList]
             ]), axis=0)
 
             ops.reactions()
@@ -994,7 +1137,7 @@ class modeller():
             spo_rxn = np.append(spo_rxn, -temp)
 
 
-        # Give some feedback on what happened
+        # --- Final Cleanup and Output ---
         if ok != 0:
             print('------ ANALYSIS FAILED --------')
         elif ok == 0:
@@ -1002,10 +1145,47 @@ class modeller():
         if loadf < 0:
             print('Stopped because of load factor below zero')
 
-        ### Wipe the analysis objects
         ops.wipeAnalysis()
 
-        return spo_disps, spo_rxn, spo_disps_spring, spo_forces_spring
+        # -----------------------------------------------------------------
+        # 3. Calculate Interstorey Drift Ratio (IDR) and Max IDR (MIDR)
+        # -----------------------------------------------------------------
+
+        # Use a COPY of the original displacement history for IDR calculation
+        idr_disps = spo_disps.copy()
+
+        if not hasattr(self, 'floor_heights'):
+            raise AttributeError("Cannot calculate IDR: 'floor_heights' property is required but not defined in the class.")
+
+        # Step 1: Prepend ground floor (zero displacement)
+        ground_disps = np.zeros((idr_disps.shape[0], 1))
+        full_idr_disps = np.hstack([ground_disps, idr_disps])
+
+        # Step 2: Compute interstorey displacements (ISD)
+        spo_isd = np.diff(full_idr_disps, axis=1)
+
+        # Convert floor_heights to a numpy array for division
+        floor_heights = np.array(self.floor_heights)
+
+        # Step 3: Normalize by corresponding floor heights to get IDR (x100 requested)
+        spo_idr = (spo_isd / floor_heights) * 100
+
+        # Step 4: Take the maximum interstorey drift ratio per step
+        spo_midr = np.max(np.abs(spo_idr), axis=1)
+
+        # 4. Handle Animation (Call updated function with spo_midr)
+        if save_animation_path:
+            self._animate_spo(spo_top_disp, spo_rxn, spo_disps, spo_midr, nodeList, elementList, push_dir, save_animation_path)
+
+        # 5. Pack and Return results into a dictionary
+        spo_dict = {'spo_disps': spo_disps,
+                    'spo_rxn': spo_rxn,
+                    'spo_disps_spring': spo_disps_spring,
+                    'spo_forces_spring': spo_forces_spring,
+                    'spo_idr': spo_idr,
+                    'spo_midr': spo_midr}
+
+        return spo_dict
 
     def do_cpo_analysis(self,
                         ref_disp,
