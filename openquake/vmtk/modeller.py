@@ -420,7 +420,7 @@ class modeller():
         else:
             plt.show()
 
-    # Helper function to create and save the animation (must be defined or be a class method)
+    # Helper function to create and save the animation for static pushover analysis
     def _animate_spo(self, spo_top_disp, spo_rxn, spo_disps, spo_midr, nodeList, elementList, push_dir, save_path):
         """Generates and saves the SPO animation using FuncAnimation."""
         deform_factor = 1 # Scaling factor for visualization
@@ -589,6 +589,216 @@ class modeller():
             ani.save(save_path, dpi=150)
 
         plt.close(fig)
+
+    # Helper function to create and save the animation for cyclic pushover analysis
+    def _animate_cpo(self, cpo_dict, nodeList, elementList, push_dir, save_path):
+        """
+        Generates and saves the CPO animation using FuncAnimation, showing:
+        1. Deformed model shape.
+        2. Base shear vs. top displacement (hysteretic curve, spanning negative/positive).
+        3. Base shear vs. maximum interstorey drift (newly updated to show hysteresis).
+
+        Parameters
+        ----------
+        cpo_dict: dict
+            The analysis results dictionary returned by do_cpo_analysis.
+        nodeList: list
+            List of node tags in the model.
+        elementList: list
+            List of element tags in the model.
+        push_dir: int
+            Direction of the pushover analysis (1=X, 2=Y, 3=Z).
+        save_path: str
+            File path to save the animation (e.g., 'cpo_animation.gif' or 'cpo_animation.mp4').
+        """
+
+        # ------------------ Data Extraction and Processing ------------------
+        cpo_top_disp = cpo_dict['cpo_top_disp']
+        cpo_rxn = cpo_dict['cpo_rxn']
+        cpo_disps = cpo_dict['cpo_disps']
+        cpo_drifts = cpo_dict['cpo_idr']
+
+        deform_factor = 1.0 # Scaling factor for visualization
+        num_frames = len(cpo_top_disp)
+
+        # Calculate the maximum interstorey drift at each step:
+        # Find the drift (with sign) of the floor that experiences the maximum absolute drift at this step.
+        max_drift_indices = np.argmax(np.abs(cpo_drifts), axis=1)
+        governing_drift_history = cpo_drifts[np.arange(num_frames), max_drift_indices]
+
+        # Max absolute drift for setting limits
+        max_drift_limit = np.max(np.abs(governing_drift_history))
+
+        # Get undeformed coordinates once
+        NodeCoordListX_und = [ops.nodeCoord(tag, 1) for tag in nodeList]
+        NodeCoordListY_und = [ops.nodeCoord(tag, 2) for tag in nodeList]
+        NodeCoordListZ_und = [ops.nodeCoord(tag, 3) for tag in nodeList]
+
+        # Determine the plotting coordinates based on push_dir for the 2D view
+        if push_dir == 1:
+            plot_coords_und = (NodeCoordListX_und, NodeCoordListZ_und)
+            x_label_model = 'X-Direction [m]'
+            y_label_model = 'Z-Direction [m]'
+        elif push_dir == 2:
+            plot_coords_und = (NodeCoordListY_und, NodeCoordListZ_und)
+            x_label_model = 'Y-Direction [m]'
+            y_label_model = 'Z-Direction [m]'
+        elif push_dir == 3:
+            plot_coords_und = (NodeCoordListZ_und, NodeCoordListX_und)
+            x_label_model = 'Z-Direction [m]'
+            y_label_model = 'X-Direction [m]'
+        else:
+            plot_coords_und = (NodeCoordListX_und, NodeCoordListZ_und)
+            x_label_model = 'X-Direction [m]'
+            y_label_model = 'Z-Direction [m]'
+
+        # Max coordinate for consistent plot limits
+        max_abs_coord_x = np.max(np.abs(plot_coords_und[0]))
+        max_abs_coord_y = np.max(np.abs(plot_coords_und[1]))
+        model_x_lim = (-max_abs_coord_x * 3.0, max_abs_coord_x * 3.0)
+        model_y_lim = (0, max_abs_coord_y * 1.5)
+
+        # ------------------ Initialize the Figure and Subplots ------------------
+        fig = plt.figure(figsize=(16, 8))
+
+        # Layout: (1, 2, 1) is big left plot; (2, 2, 2) is top right; (2, 2, 4) is bottom right
+        ax_model = fig.add_subplot(1, 2, 1)
+        ax_curve = fig.add_subplot(2, 2, 2)
+        ax_drift = fig.add_subplot(2, 2, 4)
+
+        plt.subplots_adjust(wspace=0.4, hspace=0.4)
+
+        # Store the number of static (undeformed) artists for easy cleanup in update()
+        num_static_lines = len(elementList)
+        num_static_collections = 1 # For the single undeformed nodes scatter plot
+
+        # ------------------ Set up static plot elements (Undeformed Shape) ------------------
+        ax_model.scatter(plot_coords_und[0], plot_coords_und[1],
+                         marker='o', s=50, color='gray', alpha=0.5, label='Undeformed Nodes')
+        for eleTag in elementList:
+            try:
+                [NodeItag, NodeJtag] = ops.eleNodes(eleTag)
+                i = nodeList.index(NodeItag)
+                j = nodeList.index(NodeJtag)
+            except:
+                continue
+
+            x_und = [plot_coords_und[0][i], plot_coords_und[0][j]]
+            y_und = [plot_coords_und[1][i], plot_coords_und[1][j]]
+            ax_model.plot(x_und, y_und, color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+
+        ax_model.set_xlabel(x_label_model)
+        ax_model.set_ylabel(y_label_model)
+        ax_model.set_title('Deformed Model Shape (Cyclic Pushover)')
+        ax_model.set_xlim(model_x_lim)
+        ax_model.set_ylim(model_y_lim)
+        ax_model.grid(True)
+
+        # Hysteretic Curve (Base Shear vs Top Disp)
+        ax_curve.set_xlabel('Top Displacement [m]')
+        ax_curve.set_ylabel('Base Shear [kN]')
+        ax_curve.set_title('Hysteretic Curve (Base Shear vs Top Disp)')
+        ax_curve.plot(cpo_top_disp, cpo_rxn, 'gray', linewidth=1, alpha=0.5, label='History')
+        curve_anim, = ax_curve.plot([], [], 'blue', linewidth=2, label='Current Step')
+        ax_curve.legend(loc='lower right')
+
+        # Set limits for cyclic analysis (must cover negative space)
+        max_x_curve = np.max(np.abs(cpo_top_disp)) * 1.1
+        max_y_curve = np.max(np.abs(cpo_rxn)) * 1.1
+        ax_curve.set_xlim(-max_x_curve, max_x_curve)
+        ax_curve.set_ylim(-max_y_curve, max_y_curve)
+        ax_curve.grid(True)
+
+        # Governing Drift Hysteresis (Base Shear vs MIDR) - UPDATED
+        ax_drift.set_xlabel('Maximum Interstorey Drift [-]')
+        ax_drift.set_ylabel('Base Shear [kN]')
+        ax_drift.set_title('Hysteretic Curve (Base Shear vs MIDR)')
+        # Plot full history in gray
+        ax_drift.plot(governing_drift_history, cpo_rxn, 'gray', linewidth=1, alpha=0.5, label='History')
+        # Plot current step in green
+        drift_anim, = ax_drift.plot([], [], 'green', linewidth=2, label='Current Step')
+        ax_drift.legend(loc='lower right')
+
+        # Set limits for cyclic analysis (must cover negative space for drift) - UPDATED
+        ax_drift.set_xlim(-max_drift_limit * 1.1, max_drift_limit * 1.1)
+        ax_drift.set_ylim(-max_y_curve, max_y_curve)
+        ax_drift.grid(True)
+
+
+        # ------------------ The update function for FuncAnimation ------------------
+        def update(frame):
+            nonlocal num_static_lines, num_static_collections
+
+            # --- 2D Model Plot Cleanup ---
+            while len(ax_model.lines) > num_static_lines:
+                ax_model.lines[-1].remove()
+
+            while len(ax_model.collections) > num_static_collections:
+                ax_model.collections[-1].remove()
+
+            # --- 2D Model Plot Redraw (Deformed Shape) ---
+            current_disps_floor = cpo_disps[frame]
+            # Include ground floor (index 0) displacement = 0
+            full_node_disps = np.insert(current_disps_floor, 0, 0, axis=0)
+
+            # Calculate deformed coordinates based on push_dir
+            if push_dir == 1: # X-Z plane
+                X_def = [plot_coords_und[0][i] + full_node_disps[i] * deform_factor for i in range(len(nodeList))]
+                Z_def = [plot_coords_und[1][i] for i in range(len(nodeList))]
+                plot_coords_def = (X_def, Z_def)
+            elif push_dir == 2: # Y-Z plane
+                Y_def = [plot_coords_und[0][i] + full_node_disps[i] * deform_factor for i in range(len(nodeList))]
+                Z_def = [plot_coords_und[1][i] for i in range(len(nodeList))]
+                plot_coords_def = (Y_def, Z_def)
+            elif push_dir == 3: # Z-X plane
+                Z_def = [plot_coords_und[0][i] + full_node_disps[i] * deform_factor for i in range(len(nodeList))]
+                X_def = [plot_coords_und[1][i] for i in range(len(nodeList))]
+                plot_coords_def = (Z_def, X_def)
+            else:
+                plot_coords_def = plot_coords_und
+
+            # Plot Deformed Shape (Blue)
+            ax_model.scatter(plot_coords_def[0], plot_coords_def[1],
+                             marker='o', s=50, color='blue', label='Deformed Nodes')
+            for eleTag in elementList:
+                try:
+                    [NodeItag, NodeJtag] = ops.eleNodes(eleTag)
+                    i = nodeList.index(NodeItag)
+                    j = nodeList.index(NodeJtag)
+                except:
+                    continue
+
+                x_def = [plot_coords_def[0][i], plot_coords_def[0][j]]
+                y_def = [plot_coords_def[1][i], plot_coords_def[1][j]]
+                ax_model.plot(x_def, y_def, color='blue', linewidth=1.5)
+
+            ax_model.set_title(f'Frame: {frame}/{num_frames-1} (Scale: {deform_factor}x)')
+
+            # --- Hysteretic Curve Update (Top Disp) ---
+            curve_anim.set_data(cpo_top_disp[:frame+1], cpo_rxn[:frame+1])
+
+            # --- Governing Drift Hysteresis Update ---
+            drift_anim.set_data(governing_drift_history[:frame+1], cpo_rxn[:frame+1])
+
+            # Return the artists that were modified
+            return curve_anim, drift_anim
+
+        # Create the animation object
+        ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=50, blit=False)
+
+        # Save the animation
+        print(f"\nSaving animation to: {save_path}")
+
+        if save_path.lower().endswith('.gif'):
+            ani.save(save_path, writer='pillow', dpi=300)
+        elif save_path.lower().endswith('.mp4'):
+            ani.save(save_path, writer='ffmpeg', dpi=300)
+        else:
+            print("WARNING: Animation path extension not recognized (.gif or .mp4 recommended). Saving as default.")
+            ani.save(save_path, dpi=300)
+
+        plt.close(fig)
+
 
     def compile_model(self):
         """
@@ -1194,235 +1404,227 @@ class modeller():
                         dispIncr,
                         phi,
                         pflag=True,
-                        num_steps=200,
                         ansys_soe='BandGeneral',
                         constraints_handler='Transformation',
                         numberer='RCM',
                         test_type='NormDispIncr',
                         init_tol=1.0e-5,
                         init_iter=1000,
-                        algorithm_type='KrylovNewton'):
+                        algorithm_type='KrylovNewton',
+                        save_animation_path=None):
         """
         Perform cyclic pushover (CPO) analysis on a Multi-Degree-of-Freedom (MDOF) system.
-
-        This method performs a cyclic pushover analysis where the structure is subjected
-        to a series of incremental displacements in the specified direction, both positive
-        and negative, to simulate cyclic loading (e.g., earthquake-like loading conditions).
-        The pushover analysis is carried out over a specified number of cycles, with each cycle
-        involving displacement increments to achieve the desired ductility.
 
         Parameters
         ----------
         ref_disp: float
-            Reference displacement for the pushover analysis (e.g., yield displacement, or a baseline displacement).
-
+            Reference displacement (e.g., yield displacement) for scaling the cycles.
         mu_levels: list
-            Target ductility factors, which is used to scale the displacement at each cycle.
-
-        dispIncr: int
-            The number of displacement increments for each loading cycle.
-
+            Target ductility factors (mu) for each cycle level.
         push_dir: int
-            Direction of the pushover analysis.
-            - 1 = X direction
-            - 2 = Y direction
-            - 3 = Z direction
-
+            Direction of the pushover analysis (1=X, 2=Y, 3=Z).
+        dispIncr: int
+            The number of displacement increments for each loading cycle target.
         phi: list of floats
-            The lateral load pattern shape. This is typically a mode shape or a predefined load distribution.
-            For example, it can be the first-mode shape from the calibrateModel function.
-
+            The lateral load pattern shape vector (scaled by mass).
         pflag: bool, optional, default=True
             If True, prints feedback during the analysis steps.
-
-        num_steps: int, optional, default=200
-            The number of steps for the cyclic pushover analysis.
-
+        save_animation_path: str, optional, default=None
+            If provided, the path to save the animation (e.g., 'cpo.gif' or 'cpo.mp4').
         ansys_soe: string, optional, default='BandGeneral'
-            System of equations solver to be used for the analysis.
-
+            System of equations solver.
         constraints_handler: string, optional, default='Transformation'
-            The method used for handling constraint equations, such as enforcing displacement boundary conditions.
-
+            Constraint handler method.
         numberer: string, optional, default='RCM'
-            The numberer method used to assign equation numbers to degrees of freedom.
-
+            The numberer method.
         test_type: string, optional, default='NormDispIncr'
-            The type of test to be used for convergence in the solution of the linear system of equations.
-
+            Convergence test type.
         init_tol: float, optional, default=1e-5
             The initial tolerance for convergence.
-
         init_iter: int, optional, default=1000
-            The maximum number of iterations for the solver to check convergence.
-
+            The maximum number of iterations for the solver.
         algorithm_type: string, optional, default='KrylovNewton'
-            The type of algorithm used to solve the system of equations (e.g., Krylov-Newtown method).
+            The type of algorithm used to solve the system of equations.
 
         Returns
         -------
-        cpo_disps: numpy.ndarray
-            An array containing the displacements at each floor at each step of the analysis.
-
-        cpo_rxn: numpy.ndarray
-            An array containing the base shear values, calculated as the sum of the reactions at the base.
-
+        cpo_dict: dict
+            A dictionary containing all the analysis results (displacements, base_shear, etc.).
         """
 
-        # check ductility targets
         if mu_levels is None:
             mu_levels = [1, 2, 4, 6, 8, 10]
 
-        # apply the load pattern
-        ops.timeSeries("Linear", 1) # create timeSeries
-        ops.pattern("Plain",1,1) # create a plain load pattern
+        # Apply the load pattern
+        ops.timeSeries("Linear", 1)
+        ops.pattern("Plain",1,1)
 
-        # define control nodes
+        # Get all tags needed for analysis and animation
         nodeList = ops.getNodeTags()
-        control_node = nodeList[-1]
-        pattern_nodes = nodeList[1:]
-        rxn_nodes = [nodeList[0]]
+        elementList = ops.getEleTags()
 
-        # quality control
+        # Ensure model has nodes
+        if not nodeList:
+            print("ERROR: No nodes found in the OpenSees model.")
+            return None
+
+        control_node = nodeList[-1]
+        pattern_nodes = nodeList[1:] # All nodes above ground
+        rxn_nodes = [nodeList[0]] # Ground node
+
+        # Quality control
         assert len(phi) == len(pattern_nodes), "phi length must match pattern_nodes"
         assert len(self.floor_masses) == len(pattern_nodes), "floor_masses length mismatch"
 
-        # we can integrate modal patterns, inverse triangular, etc.
+        # Apply lateral load pattern scaled by mass
         for i in np.arange(len(pattern_nodes)):
             if push_dir == 1:
-                if len(pattern_nodes)==1:
-                    ops.load(pattern_nodes[i], 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-                else:
-                    ops.load(pattern_nodes[i], phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0, 0.0) ######### IT STARTS FROM ZERO
-
+                ops.load(pattern_nodes[i], phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0, 0.0)
             elif push_dir == 2:
-                if len(pattern_nodes)==1:
-                    ops.load(pattern_nodes[i], 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
-                else:
-                    ops.load(pattern_nodes[i], 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0)
-
+                ops.load(pattern_nodes[i], 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0, 0.0)
             elif push_dir == 3:
-                if len(pattern_nodes)==1:
-                    ops.load(pattern_nodes[i], 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
-                else:
-                    ops.load(pattern_nodes[i], 0.0, 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0)
+                ops.load(pattern_nodes[i], 0.0, 0.0, phi[i]*self.floor_masses[i], 0.0, 0.0, 0.0)
 
-        # Set up the initial objects
+        # Set up the analysis objects
         ops.system(ansys_soe)
         ops.constraints(constraints_handler)
         ops.numberer(numberer)
         ops.test(test_type, init_tol, init_iter)
         ops.algorithm(algorithm_type)
 
-        # Internally create push-pull cycle list with positive and negative displacements
+        # Create the list of target displacements (e.g., +1mu, -1mu, +2mu, -2mu, ...)
         cycleDispList = []
         for mu in mu_levels:
             cycleDispList.append(ref_disp * mu)   # push positive
-            cycleDispList.append(-ref_disp * mu)  # push negative
+            cycleDispList.append(-ref_disp * mu)  # pull negative
         dispNoMax = len(cycleDispList)
 
-
-        # Give some feedback if requested
         if pflag:
             print(f"\n------ Cyclic Pushover with ductility levels: {mu_levels} ------")
 
-        # Recording base shear
+        # Recording data arrays
         cpo_rxn = [0.0]
-        cpo_rxn = np.array(cpo_rxn)
-
-        # Recording top displacement
         cpo_top_disp = [ops.nodeDisp(control_node, push_dir)]
-        cpo_top_disp = np.array(cpo_top_disp)
-
-        # Recording all displacements to estimate drifts
         cpo_disps = [[ops.nodeDisp(node, push_dir) for node in pattern_nodes]]
-        cpo_disps = np.array(cpo_disps)
-
-        # Initialize dissipated energy tracker
-        energy_steps = [0.0]  # Initial energy is zero
+        energy_steps = [0.0]
 
         for d in range(dispNoMax):
             numIncr = dispIncr
             current_disp = ops.nodeDisp(control_node, push_dir)
             target_disp = cycleDispList[d]
             dU = (target_disp - current_disp) / numIncr
+
+            # Use DisplacementControl integrator
             ops.integrator('DisplacementControl', control_node, push_dir, dU)
             ops.analysis('Static')
 
+            # Loop over displacement increments
             for l in range(numIncr):
                 ok = ops.analyze(1)
 
-                # If the analysis fails, try the following changes to achieve convergence
+                # --- Convergence Failure Handling (Extended Recovery) ---
+                if ok != 0:
+                    print(f'FAILED at cycle {d+1}/{dispNoMax}, increment {l}/{numIncr}: Starting complex recovery attempts...')
+
+                # 1. Try relaxing convergence tolerance
                 if ok != 0:
                     print('FAILED: Trying relaxing convergence...')
                     ops.test(test_type, init_tol*0.01, init_iter)
                     ok = ops.analyze(1)
                     ops.test(test_type, init_tol, init_iter)
+
+                # 2. Try relaxing convergence tolerance with more iterations
                 if ok != 0:
                     print('FAILED: Trying relaxing convergence with more iterations...')
                     ops.test(test_type, init_tol*0.01, init_iter*10)
                     ok = ops.analyze(1)
                     ops.test(test_type, init_tol, init_iter)
+
+                # 3. Try relaxing tolerance, more iterations, and Newton with 'initialThenCurrent'
                 if ok != 0:
                     print('FAILED: Trying relaxing convergence with more iteration and Newton with initial then current...')
                     ops.test(test_type, init_tol*0.01, init_iter*10)
                     ops.algorithm('Newton', 'initialThenCurrent')
                     ok = ops.analyze(1)
                     ops.test(test_type, init_tol, init_iter)
-                    ops.algorithm(algorithm_type)
+                    ops.algorithm(algorithm_type) # Restore original algorithm
+
+                # 4. Try relaxing tolerance, more iterations, and Newton with 'initial'
                 if ok != 0:
                     print('FAILED: Trying relaxing convergence with more iteration and Newton with initial...')
                     ops.test(test_type, init_tol*0.01, init_iter*10)
                     ops.algorithm('Newton', 'initial')
                     ok = ops.analyze(1)
                     ops.test(test_type, init_tol, init_iter)
-                    ops.algorithm(algorithm_type)
+                    ops.algorithm(algorithm_type) # Restore original algorithm
+
+                # 5. Attempt a Hail Mary (FixedNumIter)
                 if ok != 0:
                     print('FAILED: Attempting a Hail Mary...')
                     ops.test('FixedNumIter', init_iter*10)
                     ok = ops.analyze(1)
-                    ops.test(test_type, init_tol, init_iter)
+                    ops.test(test_type, init_tol, init_iter) # Restore original test type
+
+                # Final failure check
                 if ok != 0:
                     print('Analysis Failed')
                     break
 
-            # Give some feedback if requested
+                # --- Data Recording (only if successful) ---
+                if ok == 0:
+                    curr_disp = ops.nodeDisp(control_node, push_dir)
+                    cpo_top_disp.append(curr_disp)
+
+                    current_floor_disps = [ops.nodeDisp(node, push_dir) for node in pattern_nodes]
+                    cpo_disps.append(current_floor_disps)
+
+                    ops.reactions()
+                    temp = sum(ops.nodeReaction(n, push_dir) for n in rxn_nodes)
+                    curr_rxn = -temp
+                    cpo_rxn.append(curr_rxn)
+
+                    if len(cpo_top_disp) >= 2:
+                        dU_step = cpo_top_disp[-1] - cpo_top_disp[-2]
+                        avg_F = 0.5 * (cpo_rxn[-1] + cpo_rxn[-2])
+                        dE = abs(avg_F * dU_step)
+                        energy_steps.append(energy_steps[-1] + dE)
+                    else:
+                        energy_steps.append(energy_steps[-1])
+
             if pflag is True:
                 curr_disp = ops.nodeDisp(control_node, push_dir)
-                print('Currently pushed node ' + str(control_node) + ' to ' + str(curr_disp))
+                print(f"Cycle target {d+1}/{dispNoMax}: Pushed node {control_node} to {curr_disp:.4f}")
 
-            # Get current displacement and base shear
-            curr_disp = ops.nodeResponse(control_node, push_dir, 1)
-            cpo_top_disp = np.append(cpo_top_disp, curr_disp)
-
-            # Append displacement vector for all floors
-            cpo_disps = np.append(cpo_disps, np.array([
-                [ops.nodeResponse(node, push_dir, 1) for node in pattern_nodes]
-            ]), axis=0)
-
-            # Calculate current base shear
-            ops.reactions()
-            temp = 0
-            for n in rxn_nodes:
-                temp += ops.nodeReaction(n, push_dir)
-            curr_rxn = -temp
-            cpo_rxn = np.append(cpo_rxn, curr_rxn)
-
-            # Calculate incremental energy (trapezoid rule)
-            if len(cpo_top_disp) >= 2:
-                dU = cpo_top_disp[-1] - cpo_top_disp[-2]
-                avg_F = 0.5 * (cpo_rxn[-1] + cpo_rxn[-2])
-                dE = abs(avg_F * dU)  # Energy in kN·m (assuming displacements in meters and force in kN)
-                energy_steps.append(energy_steps[-1] + dE)
-
-        pseudo_steps = np.arange(len(energy_steps))  # or use actual step counter if you prefer
+        # Convert lists to numpy arrays
+        cpo_rxn = np.array(cpo_rxn)
+        cpo_top_disp = np.array(cpo_top_disp)
+        cpo_disps = np.array(cpo_disps)
+        pseudo_steps = np.arange(len(energy_steps))
         cpo_energy = np.column_stack((pseudo_steps, energy_steps))
-        assert np.all(np.diff(cpo_energy[:,1]) >= 0), "Energy should be cumulative and increasing"
 
-        ### Wipe the analysis objects
+        # --- Calculate Interstorey Drifts ---
+        base_disps = np.zeros((cpo_disps.shape[0], 1))
+        padded_disps = np.hstack((base_disps, cpo_disps))
+        cpo_drifts = np.diff(padded_disps, axis=1)
+        max_interstorey_drift = np.max(np.abs(cpo_drifts))
+        # ------------------------------------
+
         ops.wipeAnalysis()
 
-        return cpo_disps, cpo_rxn, cpo_energy
+        # Final output dictionary (cpo_dict)
+        cpo_dict = {'cpo_disps': cpo_disps,
+                    'cpo_rxn': cpo_rxn,
+                    'cpo_top_disp': cpo_top_disp,
+                    'cpo_energy': cpo_energy,
+                    'cpo_idr': cpo_drifts,
+                    'cpo_midr': max_interstorey_drift}
+
+        # ------------------ ANIMATION CALL ------------------
+        if save_animation_path:
+            self._animate_cpo(cpo_dict, nodeList, elementList, push_dir, save_animation_path)
+        # ----------------------------------------------------
+
+        return cpo_dict
 
     def do_nrha_analysis(self, fnames, dt_gm, sf, t_max, dt_ansys, nrha_outdir,
                          pflag=True, xi = 0.05, ansys_soe='BandGeneral',
