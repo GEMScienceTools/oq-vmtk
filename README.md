@@ -16,7 +16,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/GEMScienceTools/vulnerability-toolkit">
-    <img src="imgs/gem-vulnerability-toolkit.png" alt="Logo" >
+    <img src="imgs/oq_vmtk_logo.png" alt="Logo" >
   </a>
 
   <h3 align="center">Vulnerability Modeller's ToolKit (OQ-VMTK)</h3>
