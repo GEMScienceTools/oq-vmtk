@@ -168,7 +168,7 @@ For detailed documentation and user guidance on using the toolkit for vulnerabil
 
 # 📑 References
 
-[WIP]
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524872.svg)](https://doi.org/10.5281/zenodo.17524872)
 
 # 🤝 Contributions
 
