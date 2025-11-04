@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524872.svg)](https://doi.org/10.5281/zenodo.17524872)
 [![Windows Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yaml)
 [![Linux Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yaml)
 
@@ -168,7 +169,7 @@ For detailed documentation and user guidance on using the toolkit for vulnerabil
 
 # 📑 References
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524872.svg)](https://doi.org/10.5281/zenodo.17524872)
+[TBD]
 
 # 🤝 Contributions
 
