@@ -16,8 +16,8 @@ from time import gmtime, sleep
 import matplotlib.pyplot as plt
 from scipy import interpolate, integrate
 from matplotlib.ticker import ScalarFormatter, NullFormatter
-from .webdriverdownloader import ChromeDriverDownloader, GeckoDriverDownloader
-from .recordselector_utils import get_esm_token, content_from_zip, read_nga, read_esm, random_multivariate_normal
+from utils.webdriverdownloader import ChromeDriverDownloader, GeckoDriverDownloader
+from utils.recordselector_utils import get_esm_token, content_from_zip, read_nga, read_esm, random_multivariate_normal
 
 ## Define plot style
 HFONT = {'fontname':'Helvetica'}
