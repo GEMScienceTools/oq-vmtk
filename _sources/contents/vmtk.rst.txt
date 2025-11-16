@@ -1,0 +1,85 @@
+vmtk package
+============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   vmtk.tests
+
+Submodules
+----------
+
+vmtk.calibration module
+-----------------------
+
+.. automodule:: vmtk.calibration
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.im\_calculator module
+--------------------------
+
+.. automodule:: vmtk.im_calculator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.modeller module
+--------------------
+
+.. automodule:: vmtk.modeller
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.plotter module
+-------------------
+
+.. automodule:: vmtk.plotter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.postprocessor module
+-------------------------
+
+.. automodule:: vmtk.postprocessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.slf\_generator module
+--------------------------
+
+.. automodule:: vmtk.slf_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.units module
+-----------------
+
+.. automodule:: vmtk.units
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vmtk.utilities module
+---------------------
+
+.. automodule:: vmtk.utilities
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: vmtk
+   :members:
+   :undoc-members:
+   :show-inheritance:

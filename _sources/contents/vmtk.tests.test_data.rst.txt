@@ -1,0 +1,10 @@
+vmtk.tests.test\_data package
+=============================
+
+Module contents
+---------------
+
+.. automodule:: vmtk.tests.test_data
+   :members:
+   :undoc-members:
+   :show-inheritance:

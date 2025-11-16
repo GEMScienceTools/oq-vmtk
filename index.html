@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation! &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="contents/installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">IM Calculator Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">Model Calibration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">Model Building Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">Postprocessing Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">Storey-Loss Function Generation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">Plotter Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-the-openquake-vulnerability-modeller-s-toolkit-s-documentation">
+<h1>Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation!<a class="headerlink" href="#welcome-to-the-openquake-vulnerability-modeller-s-toolkit-s-documentation" title="Link to this heading"></a></h1>
+<p>The OpenQuake Vulnerability Modeller’s Toolkit (<code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code>) is an open source
+library that provides an OpenSeesPy-based environment for modelling idealised
+building class models such as single (SDOF) and multi-degree-of-freedom
+(MDOF) systems and to carry out analysis via linear, nonlinear static, and nonlinear
+dynamic approaches for regional vulnerability and risk assessment applications.
+The vulnerability toolkit is developed by the Risk Team at the Global Earthquake
+Model (GEM) Foundation. Contributions from external users are very welcome!</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> code is hosted on GitHub at the following link:
+<a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk">https://github.com/GEMScienceTools/oq-vmtk</a>.</p>
+<p>Currently, the <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> includes eight sub-modules:</p>
+<ul class="simple">
+<li><p><strong>Intensity Measure Calculator (im_calculator)</strong>: Contains code used for
+processing spectra and intensity measure types from ground-motion records.</p></li>
+<li><p><strong>Model Calibration (calibration)</strong>: Contains code used for calibrating MDOF models
+based on SDOF low-level parameters.</p></li>
+<li><p><strong>Model Building (modeller)</strong>: Contains code used to compile SDOF and MDOF models
+in OpenSeesPy and run distinct analyses such as linear (i.e., modal analysis),
+nonlinear static (e.g., static and cyclic pushovers), and nonlinear time-history
+analyses.</p></li>
+<li><p><strong>Fragility and Vulnerability Analysis (postprocessor)</strong>: Contains code for
+postprocessing cloud and multiple stripe analyses to derive fragility and
+vulnerability models.</p></li>
+<li><p><strong>Storey Loss Function Generator (slf_generator)</strong>: Contains code for generating
+storey loss functions for a more refined loss assessment of building components.</p></li>
+<li><p><strong>Model Plotting (plotter)</strong>: Contains code for visualizing and graphically
+interpreting <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> outputs.</p></li>
+<li><p><strong>Units and Utilities</strong>: Contains miscellaneous code used for assigning units of
+measurements to OpenSeesPy models and to carry out other file management and
+variable handling tasks, respectively.</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">IM Calculator Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc.html#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">Model Calibration Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/cal.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/cal.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">Model Building Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod.html#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">Postprocessing Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos.html#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">Storey-Loss Function Generation Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#example-usage">Example Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">Plotter Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo.html#plotter"><code class="docutils literal notranslate"><span class="pre">plotter</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="contents/installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
