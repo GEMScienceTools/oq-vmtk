@@ -197,7 +197,7 @@ class modeller():
                                  10,'energy']
 
         ops.uniaxialMaterial('Pinching4', mat1Tag,*matargs)
-        ops.uniaxialMaterial('MinMax', mat2Tag, mat1Tag, '-min', -1*disp[-1,0], '-max', disp[-1,0])
+        ops.uniaxialMaterial('MinMax', mat2Tag, mat1Tag, '-min', -1.5*disp[-1,0], '-max', 1.5*disp[-1,0])
 
     def compile_model(self):
         """
@@ -998,7 +998,7 @@ class modeller():
         pseudo_steps = np.arange(len(energy_steps))  # or use actual step counter if you prefer
         cpo_energy = np.column_stack((pseudo_steps, energy_steps))
         assert np.all(np.diff(cpo_energy[:,1]) >= 0), "Energy should be cumulative and increasing"
-        
+
         ### Wipe the analysis objects
         ops.wipeAnalysis()
 
@@ -1300,3 +1300,435 @@ class modeller():
 
         # Give the outputs
         return control_nodes, conv_index, peak_drift, peak_accel, max_peak_drift, max_peak_drift_dir, max_peak_drift_loc, max_peak_accel, max_peak_accel_dir, max_peak_accel_loc, peak_disp
+
+    def do_nrha_analysis_eq_seq(self, fnames, time_vector, sf, nrha_outdir,
+                                pflag=True, xi = 0.05, ansys_soe='BandGeneral',
+                                constraints_handler='Plain', numberer='RCM',
+                                test_type='NormDispIncr', init_tol=1.0e-6, init_iter=50,
+                                algorithm_type='Newton', first_gm_duration=None):
+        """
+        Perform nonlinear time-history analysis on MDOF
+
+        Parameters
+        ----------
+        fnames:                        list                List of the filepaths to the ground motions to be applied in the X Y and Z. At least the X direction is required.
+        time_vector:                  array                Time-step array of the ground motions.
+        sf:                           float                Scale factor to be applied to the records (Typically equal to 9.81).
+        t_max:                        float                Duration of the record.
+        dt_ansys:                     float                Time-step at which to conduct the analysis (Typically smaller than the record dt).
+        nrha_outdir:                 string                Filepath where "TEMPORARY" files are saved and then deleted
+        pflag:                         bool                Flag to print (or not) the nonlinear time-history analysis steps (Default is 'True').
+        xi:                           float                The value of inherent damping (Default is 5% '0.05').
+        ansys_soe:                   string                System of equations type. (Default is 'BandGeneral')
+        constraints_handler:         string                The constraints handler object determines how the constraint equations are enforced in the analysis. Constraint equations enforce a specified value for a DOF, or a relationship between DOFs (Default is 'Plain').
+        numberer:                    string                The DOF numberer object determines the mapping between equation numbers and degrees-of-freedom – how degrees-of-freedom are numbered (Default is 'RCM').
+        test_type:                   string                This command is used to construct the LinearSOE and LinearSolver objects to store and solve the test of equations in the analysis (Default is 'NormDispIncr').
+        init_tol:                     float                Tolerance criteria used to check for convergence (Default is 1e-6).
+        init_iter:                    float                Max number of iterations to check (Default is 50).
+        algorithm_type:              string                The integrator object determines the meaning of the terms in the system of equation object Ax=B (Default is 'Newton').
+        first_gm_duration:            float                Duration of first acceleration time-history from GM1-FreeVibration-GM2
+        Returns
+        -------
+        control_nodes:                 list                List of MDOF system floor nodes
+        conv_index:                    list                List containing whether or not analysis has converged (collapse index)
+        node_disps:                   array                Nodal displacements
+        node_accels:                  array                Nodal accelerations
+        peak_drift:                   array                Peak storey drift values (i.e., all storeys per record)
+        peak_accel:                   array                Peak floor acceleration values (i.e., all floors per record)
+        max_peak_drift:               array                Maximum peak storey drift values (i.e., maximum of all storeys per record)
+        max_peak_drift_dir:           array                Direction of maximum peak storey drift value (i.e., X or Y)
+        max_peak_drift_loc:           array                Location of maximum peak storey drift values (i.e., storey ID)
+        max_peak_accel:               array                Maximum peak floor acceleration values (i.e., maximum of all floors per record)
+        max_peak_accel_dir:           array                Direction of maximum peak floor acceleration value (i.e., X or Y)
+        max_peak_accel_loc:           array                Location of maximum peak floor acceleration values (i.e., floor ID)
+        peak_disp:                    array                Peak displacement values (i.e., all floors per record)
+        hysteretic_energy_per_story   array                Total dissipated energy at the story i
+        total_hysteretic_energy       array                Total dissipated energy of the whole excitation including GM1-40sec free vibration-GM2
+        hysteretic_energy_g1_per_story      array          Per story, dissipated energy accumulated from ground motion 1 (GM1)
+        hysteretic_energy_g2_per_story      array          Per story, dissipated energy accumulated from ground motion 1 (GM2)
+        total_hysteretic_energy_g1          array          Total dissipated energy from ground motion 1 (GM1)
+        total_hysteretic_energy_g2          array          Total dissipated energy from ground motion 1 (GM2)
+
+        """
+
+        # define control nodes
+        control_nodes = ops.getNodeTags()
+        dt_gm = time_vector[1] - time_vector[0]  # İlk zaman adımını hesapla
+        t_max = time_vector[-1]                   # Toplam süreyi hesapla
+
+        time_steps = np.diff(time_vector)
+        print(f"=== DEBUG: TIME STEPS ANALYSIS ===")
+        print(f"Time steps count: {len(time_steps)}")
+        print(f"Time vector length: {len(time_vector)}")
+        print(f"First 5 time values: {time_vector[:5]}")
+        print(f"First 5 time steps: {time_steps[:5]}")
+        print(f"Min dt: {np.min(time_steps):.6f}, Max dt: {np.max(time_steps):.6f}")
+        print(f"Unique dts: {np.unique(time_steps)}")
+
+
+        # Define the timeseries and patterns first
+        if len(fnames) > 0:
+            nrha_tsTagX = 1
+            nrha_pTagX = 1
+            # Read X-direction acceleration data from file
+            accel_data_x = np.loadtxt(fnames[0])
+            print(f"X ivme verisi uzunluğu: {len(accel_data_x)}")
+            print(f"Zaman vektörü uzunluğu: {len(time_vector)}")
+
+            ops.timeSeries('Path', nrha_tsTagX, '-time', *time_vector, '-values', *accel_data_x, '-factor', sf)
+            ops.pattern('UniformExcitation', nrha_pTagX, 1, '-accel', nrha_tsTagX)
+            ops.recorder('Node', '-file', f"{nrha_outdir}/floor_accel_X.txt", '-timeSeries', nrha_tsTagX, '-node', *control_nodes, '-dof', 1, 'accel')
+
+        if len(fnames) > 1:
+            nrha_tsTagY = 2
+            nrha_pTagY = 2
+            # Read Y-direction acceleration data from file
+            accel_data_y = np.loadtxt(fnames[1])
+            ops.timeSeries('Path', nrha_tsTagY, '-time', *time_vector, '-values', *accel_data_y, '-factor', sf)
+            ops.pattern('UniformExcitation', nrha_pTagY, 2, '-accel', nrha_tsTagY)
+            ops.recorder('Node', '-file', f"{nrha_outdir}/floor_accel_Y.txt", '-timeSeries', nrha_tsTagY, '-node', *control_nodes, '-dof', 2, 'accel')
+
+        if len(fnames) > 2:
+            nrha_tsTagZ = 3
+            nrha_pTagZ = 3
+            # Read Z-direction acceleration data from file
+            accel_data_z = np.loadtxt(fnames[2])
+            ops.timeSeries('Path', nrha_tsTagZ, '-time', *time_vector, '-values', *accel_data_z, '-factor', sf)
+            ops.pattern('UniformExcitation', nrha_pTagZ, 3, '-accel', nrha_tsTagZ)
+
+        # Debug BEFORE recorders
+        print("=== DEBUG: RECORDER SETUP ===")
+        print(f"Element tags: {ops.getEleTags()}")
+        print(f"Number of elements: {len(ops.getEleTags())}")
+        print(f"Control nodes: {control_nodes}")
+        print(f"Number of control nodes: {len(control_nodes)}")
+        print(f"Output directory: {nrha_outdir}")
+        print(f"Does output directory exist: {os.path.exists(nrha_outdir)}")
+
+        #Story shear forces recorder
+        ops.recorder('Element', '-file', f"{nrha_outdir}/story_shear_forces.txt",
+                     '-time', '-ele', *ops.getEleTags(), 'force')
+
+        #Inter-story relative velocities recorder
+        ops.recorder('Node', '-file', f"{nrha_outdir}/relative_velocities.txt",
+                     '-time', '-node', *control_nodes, '-dof', 1, 'vel')
+
+        #Time recorder (for energy calculation)
+        ops.recorder('Node', '-file', f"{nrha_outdir}/time_data.txt",
+                     '-time', '-node', 1, '-dof', 1, 'disp')
+        print("Recorders established")
+
+        # Set up the initial objects
+        ops.system(ansys_soe)
+        ops.constraints(constraints_handler)
+        ops.numberer(numberer)
+        ops.test(test_type, init_tol, init_iter)
+        ops.algorithm(algorithm_type)
+        ops.integrator('Newmark', 0.5, 0.25)
+        ops.analysis('Transient')
+
+        # Set up analysis parameters
+        conv_index = 0   # Initially define the collapse index (-1 for non-converged, 0 for stable)
+        control_time = 0.0
+        ok = 0 # Set the convergence to 0 (initially converged)
+
+        # Parse the data about the building
+        top_nodes = control_nodes[1:]
+        bottom_nodes = control_nodes[0:-1]
+        h = []
+        for i in np.arange(len(top_nodes)):
+            topZ = ops.nodeCoord(top_nodes[i], 3)
+            bottomZ = ops.nodeCoord(bottom_nodes[i], 3)
+            dist = topZ - bottomZ
+            if dist == 0:
+                print("WARNING: Zero length found in drift check, using very large distance 1e9 instead")
+                h.append(1e9)
+            else:
+                h.append(dist)
+
+        # Create some arrays to record to
+        peak_disp = np.zeros((len(control_nodes), 2))
+        peak_drift = np.zeros((len(top_nodes), 2))
+        peak_accel = np.zeros((len(top_nodes)+1, 2))
+
+        # Set damping
+        if self.number_storeys == 1:
+
+            #Set damping
+            alphaM = 2*self.omega[0]*xi
+            ops.rayleigh(alphaM,0,0,0)
+
+        else:
+
+            alphaM = 2*self.omega[0]*self.omega[2]*xi/(self.omega[0] + self.omega[2])
+            alphaK = 2*xi/(self.omega[0] + self.omega[2])
+            ops.rayleigh(alphaM,0,alphaK,0)
+
+        # ========== DEBUG: TIME STEP KONTROLÜ ==========
+        print(f"=== DEBUG: TIME STEP KONTROLÜ ===")
+        print(f"dt_gm: {dt_gm}")
+        #print(f"dt_ansys: {dt_ansys}")
+        print(f"t_max: {t_max}")
+
+        step = 0 # initialise the step counter
+
+        max_steps = len(time_steps)
+
+        while conv_index == 0 and step < max_steps and ok == 0:
+            dt_current = time_steps[step]
+            ok = ops.analyze(1, dt_current)
+            control_time = ops.getTime()
+            step += 1
+            #if pflag is True:
+                #print('Completed {:.3f}'.format(control_time) + ' of {:.3f} seconds'.format(t_max) )
+            if pflag is True and step % 1 == 0:
+                print('Step {:d}/{:d}: Completed {:.3f}'.format(step, max_steps, control_time) + ' of {:.3f} seconds, dt = {:.6f}'.format(t_max, dt_current) )
+
+            # If the analysis fails, try the following changes to achieve convergence
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Trying reducing time-step in half...')
+                ok = ops.analyze(1, 0.5*dt_current)
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Trying reducing time-step in quarter...')
+                ok = ops.analyze(1, 0.25*dt_current)
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Trying relaxing convergence with more iterations...')
+                ops.test(test_type, init_tol*0.01, init_iter*10)
+                ok = ops.analyze(1, 0.5*dt_current)
+                ops.test(test_type, init_tol, init_iter)
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Trying relaxing convergence with more iteration and Newton with initial then current...')
+                ops.test(test_type, init_tol*0.01, init_iter*10)
+                ops.algorithm('Newton', 'initialThenCurrent')
+                ok = ops.analyze(1, 0.5*dt_current)
+                ops.test(test_type, init_tol, init_iter)
+                ops.algorithm(algorithm_type)
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Trying relaxing convergence with more iteration and Newton with initial...')
+                ops.test(test_type, init_tol*0.01, init_iter*10)
+                ops.algorithm('Newton', 'initial')
+                ok = ops.analyze(1, 0.5*dt_current)
+                ops.test(test_type, init_tol, init_iter)
+                ops.algorithm(algorithm_type)
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Attempting a Hail Mary...')
+                ops.test('FixedNumIter', init_iter*10)
+                ok = ops.analyze(1, 0.5*dt_current)
+                ops.test(test_type, init_tol, init_iter)
+
+            # Game over......
+            if ok != 0:
+                print('FAILED at {:.3f}'.format(control_time) + ': Exiting analysis...')
+                conv_index = -1
+
+            # For each of the nodes to monitor, get the current drift
+            for i in np.arange(len(top_nodes)):
+
+                # Get the current storey drifts - absolute difference in displacement over the height between them
+                curr_drift_X = np.abs(ops.nodeDisp(top_nodes[i], 1) - ops.nodeDisp(bottom_nodes[i], 1))/h[i]
+                curr_drift_Y = np.abs(ops.nodeDisp(top_nodes[i], 2) - ops.nodeDisp(bottom_nodes[i], 2))/h[i]
+
+                # Check if the current drift is greater than the previous peaks at the same storey
+                if curr_drift_X > peak_drift[i, 0]:
+                    peak_drift[i, 0] = curr_drift_X
+
+                if curr_drift_Y > peak_drift[i, 1]:
+                    peak_drift[i, 1] = curr_drift_Y
+
+            # For each node to monitor, get is absolute displacement
+            for i in np.arange(len(control_nodes)):
+
+                curr_disp_X = np.abs(ops.nodeDisp(control_nodes[i], 1))
+                curr_disp_Y = np.abs(ops.nodeDisp(control_nodes[i], 2))
+
+                # # Append the node displacements and accelerations (NOTE: Might change when bidirectional records are applied)
+                # node_disps[step,i]  = ops.nodeDisp(control_nodes[i],1)
+                # node_accels[step,i] = ops.nodeResponse(control_nodes[i],1, 3)
+
+                # Check if the current drift is greater than the previous peaks at the same storey
+                if curr_disp_X > peak_disp[i, 0]:
+                    peak_disp[i, 0] = curr_disp_X
+
+                if curr_disp_Y > peak_disp[i, 1]:
+                    peak_disp[i, 1] = curr_disp_Y
+
+        # Now that the analysis is finished, get the maximum in either direction and report the location also
+        max_peak_drift = np.max(peak_drift)
+        ind = np.where(peak_drift == max_peak_drift)
+        if ind[1][0] == 0:
+            max_peak_drift_dir = 'X'
+        elif ind[1][0] == 1:
+            max_peak_drift_dir = 'Y'
+        max_peak_drift_loc = ind[0][0]+1
+
+
+        element_tags = ops.getEleTags()
+        print(f"Element tags wipe öncesi: {element_tags}")
+
+        # Get the floor accelerations. Need to use a recorder file because a direct query would return relative values
+        ops.wipe() # First wipe to finish writing to the file
+
+
+        #  ENERGY CALCULATION - WITHIN TRY-EXCEPT
+        hysteretic_energy_per_story = {}
+        hysteretic_energy_g1_per_story = {}
+        hysteretic_energy_g2_per_story = {}
+        total_hysteretic_energy = 0
+        total_hysteretic_energy_g1 = 0
+        total_hysteretic_energy_g2 = 0
+
+        try:
+            # First, check the acceleration files
+            if len(fnames) > 0 and os.path.exists(f"{nrha_outdir}/floor_accel_X.txt"):
+                temp1 = np.transpose(np.max(np.abs(np.loadtxt(f"{nrha_outdir}/floor_accel_X.txt")), 0))
+                peak_accel[:,0] = temp1
+                os.remove(f"{nrha_outdir}/floor_accel_X.txt")
+
+            if len(fnames) > 1 and os.path.exists(f"{nrha_outdir}/floor_accel_Y.txt"):
+                temp2 = np.transpose(np.max(np.abs(np.loadtxt(f"{nrha_outdir}/floor_accel_Y.txt")), 0))
+                peak_accel[:,1] = temp2
+                os.remove(f"{nrha_outdir}/floor_accel_Y.txt")
+
+            #  DEBUG: Check the energy files
+            print("=== DEBUG: Energy Calculation ===")
+            force_file_exists = os.path.exists(f"{nrha_outdir}/story_shear_forces.txt")
+            velocity_file_exists = os.path.exists(f"{nrha_outdir}/relative_velocities.txt")
+            time_file_exists = os.path.exists(f"{nrha_outdir}/time_data.txt")
+            print(f"story_shear_forces.txt exists: {force_file_exists}")
+            print(f"relative_velocities.txt exists: {velocity_file_exists}")
+            print(f"time_data.txt exists: {time_file_exists}")
+
+            if force_file_exists and velocity_file_exists and time_file_exists:
+                story_forces_data = np.loadtxt(f"{nrha_outdir}/story_shear_forces.txt")
+                relative_velocities_data = np.loadtxt(f"{nrha_outdir}/relative_velocities.txt")
+                time_data = np.loadtxt(f"{nrha_outdir}/time_data.txt")
+
+                time = time_data[:, 0]
+
+                print(f"story_forces_data shape: {story_forces_data.shape}")
+                print(f"relative_velocities_data shape: {relative_velocities_data.shape}")
+                print(f"time vector length: {len(time)}")
+                print(f"Time Steps: {len(time)}, dt: {time[1]-time[0] if len(time)>1 else 0}")
+
+                #For G1: First record + 40 sec rest (0 -> first_gm_duration + 40)
+                g1_end_time = first_gm_duration + 40.0
+                time_index_g1_end = np.abs(time - g1_end_time).argmin()
+                print(f"G1 end time (first record + 40 sec): {g1_end_time} s")
+                print(f"G1 end index: {time_index_g1_end}, time at this index: {time[time_index_g1_end]} s")
+
+                # For G2: Second record (g1_end_time -> end)
+                time_index_g2_start = time_index_g1_end + 1
+                print(f"G2 start time: {g1_end_time} s")
+                print(f"G2 start index: {time_index_g2_start}")
+
+                for i, ele_tag in enumerate(element_tags):
+                    print(f"\n--- Floor {i+1} Calculation ---")
+
+                    # Shear force of the i-th floor (X direction - 1st dof)
+                    force_story_i = story_forces_data[:, 1 + i*6]
+                    print(f"Floor {i+1} force: shape={force_story_i.shape}, min={np.min(force_story_i):.3f}, max={np.max(force_story_i):.3f}")
+
+                    # Relative velocity of the i-th floor
+                    if i == 0:  # Ground floor
+                        vel_story_i = relative_velocities_data[:, 1 + 1]  # Node1 velocity used
+                        print(f"Floor {i+1} (Ground) - Node1 velocity is used")
+                    else:
+                        vel_story_i = relative_velocities_data[:, 1 + i+1] - relative_velocities_data[:, 1 + i]
+                        print(f"Floor {i+1} - Velocity difference between Node{i+1} and Node{i}")
+
+                    print(f"Floor {i+1} velocity: min={np.min(vel_story_i):.6f}, max={np.max(vel_story_i):.6f}")
+
+                    # Power = Force × Velocity
+                    power = np.abs(force_story_i * vel_story_i)
+                    print(f"Floor {i+1} power: min={np.min(power):.6f}, max={np.max(power):.6f}")
+
+                    # Total Energy = ∫ Power dt (over the entire analysis)
+                    energy_story_i = integrate.trapezoid(power, time)
+                    print(f"Floor {i+1} total energy: {energy_story_i:.6f} J")
+
+                    # ========== SEPARATING ENERGY INTO G1 and G2 ==========
+                    # G1 ENERGY: First record + 40 sec rest (0 -> first_gm_duration + 40)
+                    power_g1 = np.abs(power[:time_index_g1_end+1])
+                    time_g1 = time[:time_index_g1_end+1]
+                    if len(time_g1) > 1:
+                        energy_g1_story_i = integrate.trapezoid(power_g1, time_g1)
+                    else:
+                        energy_g1_story_i = 0.0
+                    print(f"Floor {i+1} G1 energy (0-{g1_end_time}s): {energy_g1_story_i:.6f} J")
+
+                    # G2 ENERGY: Second record (g1_end_time -> end)
+                    power_g2 = np.abs(power[time_index_g2_start:])
+                    time_g2 = time[time_index_g2_start:]
+                    if len(time_g2) > 1:
+                        energy_g2_story_i = integrate.trapezoid(power_g2, time_g2)
+                    else:
+                        energy_g2_story_i = 0.0
+                    print(f"Floor {i+1} G2 energy ({g1_end_time}s-end): {energy_g2_story_i:.6f} J")
+                    # ================================================
+
+                    hysteretic_energy_per_story[i] = energy_story_i
+                    hysteretic_energy_g1_per_story[i] = energy_g1_story_i
+                    hysteretic_energy_g2_per_story[i] = energy_g2_story_i
+                    total_hysteretic_energy += energy_story_i
+                    total_hysteretic_energy_g1 += energy_g1_story_i
+                    total_hysteretic_energy_g2 += energy_g2_story_i
+
+                print(f"\n=== Total Energy: {total_hysteretic_energy:.6f} J ===")
+                print(f"=== Total G1 Energy (First Record + 40sn): {total_hysteretic_energy_g1:.6f} J ===")
+                print(f"=== Total G2 Energy (Second Record): {total_hysteretic_energy_g2:.6f} J ===")
+
+                # Remove temporary files
+                os.remove(f"{nrha_outdir}/story_shear_forces.txt")
+                os.remove(f"{nrha_outdir}/relative_velocities.txt")
+                os.remove(f"{nrha_outdir}/time_data.txt")
+            else:
+                print("WARNING: Energy files were not created - analysis may have crashed")
+                for i in range(len(ops.getEleTags())):
+                    hysteretic_energy_per_story[i] = 0
+                    hysteretic_energy_g1_per_story[i] = 0
+                    hysteretic_energy_g2_per_story[i] = 0
+
+        except Exception as e:
+            print(f"Data reading/calculation error: {e}")
+            import traceback
+            traceback.print_exc()
+            # Default values ​​in case of error
+            hysteretic_energy_per_story = {i: 0 for i in range(self.number_storeys)}
+            hysteretic_energy_g1_per_story = {i: 0 for i in range(self.number_storeys)}
+            hysteretic_energy_g2_per_story = {i: 0 for i in range(self.number_storeys)}
+            total_hysteretic_energy = 0
+            total_hysteretic_energy_g1 = 0
+            total_hysteretic_energy_g2 = 0
+            total_hysteretic_energy_g2 = 0
+
+        # Get the maximum in either direction and report the location also
+        max_peak_accel = np.max(peak_accel)
+        ind = np.where(peak_accel == max_peak_accel)
+        if ind[1][0] == 0:
+            max_peak_accel_dir = 'X'
+        elif ind[1][0] == 1:
+            max_peak_accel_dir = 'Y'
+        max_peak_accel_loc = ind[0][0]
+
+
+        # Give some feedback on what happened
+        if conv_index == -1:
+            print('------ ANALYSIS FAILED --------')
+        elif conv_index == 0:
+            print('~~~~~~~ ANALYSIS SUCCESSFUL ~~~~~~~~~')
+
+        if pflag is True:
+            print('Final state = {:d} (-1 for non-converged, 0 for stable)'.format(conv_index))
+            print('Maximum peak storey drift {:.3f} radians at storey {:d} in the {:s} direction (Storeys = 1, 2, 3,...)'.format(max_peak_drift, max_peak_drift_loc, max_peak_drift_dir))
+            print('Maximum peak floor acceleration {:.3f} g at floor {:d} in the {:s} direction (Floors = 0(G), 1, 2, 3,...)'.format(max_peak_accel, max_peak_accel_loc, max_peak_accel_dir))
+            print('Total Hysteretic Energy: {:.6f} J'.format(total_hysteretic_energy))
+            print('Total G1 Hysteretic Energy: {:.6f} J'.format(total_hysteretic_energy_g1))
+            print('Total G2 Hysteretic Energy: {:.6f} J'.format(total_hysteretic_energy_g2))
+
+        # Give the outputs
+        return (control_nodes, conv_index, peak_drift, peak_accel, max_peak_drift,
+                max_peak_drift_dir, max_peak_drift_loc, max_peak_accel,
+                max_peak_accel_dir, max_peak_accel_loc, peak_disp,
+                hysteretic_energy_per_story, total_hysteretic_energy,
+                hysteretic_energy_g1_per_story, hysteretic_energy_g2_per_story,
+                total_hysteretic_energy_g1, total_hysteretic_energy_g2)
