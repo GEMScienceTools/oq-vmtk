@@ -1,0 +1,43 @@
+name: MacOS ARM64 Tests
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      git-ref:
+        description: Git Ref
+        default: master
+        required: true
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  vulnerability_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python  ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies of OpenQuake engine
+        run: |
+          curl -L -O https://github.com/gem/oq-engine/raw/master/install.py
+          python install.py user --version=master
+      - name: Install vmtk Package
+        run: |
+          source ~/openquake/bin/activate
+          PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
+          echo $PY_VER
+          export PIP_DEFAULT_TIMEOUT=100
+          pip install -r requirements-$PY_VER-linux.txt
+          pip install -e .
+      - name: Run tests
+        run: |
+          source ~/openquake/bin/activate
+          cd openquake/vmtk
+          pytest -v --doctest-modules -x --color=yes --durations=10 tests/
