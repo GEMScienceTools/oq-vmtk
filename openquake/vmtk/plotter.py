@@ -141,10 +141,10 @@ class plotter:
 
         # Define default styles
         self.font_sizes = {
-            'title': 18,
-            'labels': 16,
-            'ticks': 13,
-            'legend': 12
+            'title': 20,
+            'labels': 18,
+            'ticks': 16,
+            'legend': 16
         }
         self.line_widths = {
             'thick': 3,
@@ -161,7 +161,7 @@ class plotter:
                 'green', 'yellow', 'orange', 'red'], 'damage_states': [
                 'blue', 'green', 'yellow', 'orange', 'red'], 'gem': [
                 "#0A4F4E", "#0A4F5E", "#54D7EB", "#54D6EB", "#399283", "#399264", "#399296"]}
-        self.resolution = 400
+        self.resolution = 500
         self.font_name = 'Arial'
         self.figsize = (10, 7)
         self.figsize_anim = (10, 7)
@@ -370,12 +370,19 @@ class plotter:
         ncols = math.ceil(math.sqrt(num_modes))
         nrows = math.ceil(num_modes / ncols)
 
+        ann_fs   = max(5, 9  - max(0, n_nodes - 6) - max(0, nrows - 4) // 3)
+        label_fs = max(8, 12 - max(0, nrows - 2))
+        tick_fs  = max(7, 11 - max(0, nrows - 2))
+        title_fs = max(8, 12 - max(0, nrows - 2))
+        hspace   = min(0.90, 0.50 + max(0, nrows - 2) * 0.12)
+        top      = max(0.82, 0.91 - max(0, nrows - 2) * 0.02)
+
         fig = plt.figure(figsize=(ncols * 5.0, nrows * 4.5), facecolor=BG)
         fig.patch.set_facecolor(BG)
         gs = gridspec.GridSpec(nrows, ncols * 2, figure=fig,
-                               hspace=0.50, wspace=0.35,
+                               hspace=hspace, wspace=0.35,
                                left=0.07, right=0.97,
-                               top=0.88, bottom=0.08)
+                               top=top, bottom=0.08)
 
         interp_kind = ('cubic' if len(unique_z) >= 4 else
                        'quadratic' if len(unique_z) == 3 else 'linear')
@@ -423,31 +430,40 @@ class plotter:
                                color=nc, edgecolors='white',
                                linewidths=0.8, zorder=5)
                     ax.text(d_i + ann_off, z_i, f'{d_i:+.3f}',
-                            fontsize=6.5, color=COL_ANN,
+                            fontsize=ann_fs, color=COL_ANN,
                             va='center', ha='left', zorder=6)
                 ax.set_xlim(-xlim, xlim)
                 ax.set_ylim(z_min - 0.4, z_max + 0.4)
-                ax.set_xlabel(xlabel, fontsize=8, color=COL_ANN, labelpad=3)
-                ax.tick_params(labelsize=7, colors=COL_ANN)
+                ax.set_xlabel(xlabel, fontsize=label_fs, color=COL_ANN, labelpad=3)
+                ax.tick_params(labelsize=tick_fs, colors=COL_ANN)
                 for sp in ('top', 'right'):
                     ax.spines[sp].set_visible(False)
                 ax.spines['left'].set_color(COL_ANN)
                 ax.spines['bottom'].set_color(COL_ANN)
-                ax.set_title(title, fontsize=8, fontweight='bold',
-                             color='#1A237E', pad=7)
+                if title:
+                    ax.set_title(title, fontsize=title_fs, fontweight='bold',
+                                 color='#1A237E', pad=7)
 
             ax_x = fig.add_subplot(gs[row, gc_x])
-            ax_x.set_ylabel('Z [m]', fontsize=8, color=COL_ANN, labelpad=3)
+            ax_x.set_ylabel('Z [m]', fontsize=label_fs, color=COL_ANN, labelpad=3)
             _draw(ax_x, ux, ux_sm, COL_X, COL_NODE,
-                  r'$u_x$ (norm.)', xlim_x, t_base)
+                  r'$u_x$ (norm.)', xlim_x, '')
 
             ax_y = fig.add_subplot(gs[row, gc_y], sharey=ax_x)
             ax_y.tick_params(labelleft=False)
             _draw(ax_y, uy, uy_sm, COL_Y, '#2E7D32',
-                  r'$u_y$ (norm.)', xlim_y, t_base)
+                  r'$u_y$ (norm.)', xlim_y, '')
+
+            pos_x = gs[row, gc_x].get_position(fig)
+            pos_y = gs[row, gc_y].get_position(fig)
+            cx = (pos_x.x0 + pos_y.x1) / 2
+            fig.text(cx, pos_x.y1 + 0.005, t_base,
+                     ha='center', va='bottom',
+                     fontsize=title_fs, fontweight='bold', color='#1A237E',
+                     transform=fig.transFigure)
 
         fig.suptitle('OpenSees  —  Modal Analysis  |  Mode Shapes',
-                     fontsize=13, fontweight='bold', color='#1A237E')
+                     fontsize=16, fontweight='bold', color='#1A237E')
 
         if export_path:
             plt.savefig(export_path, dpi=self.resolution,
@@ -538,7 +554,7 @@ class plotter:
             except Exception:
                 continue
 
-        _FS = 11  # uniform fontsize for all SPO animation text
+        _FS = 15  # uniform fontsize for all SPO animation text
 
         fig = plt.figure(figsize=self.figsize_anim)
         gs = gridspec.GridSpec(2, 2, figure=fig,
@@ -793,7 +809,7 @@ class plotter:
                 linewidth=0.5,
                 alpha=0.5)
 
-        _FS = 11  # uniform fontsize for all CPO animation text
+        _FS = 15  # uniform fontsize for all CPO animation text
 
         ax_model.set_xlabel(x_label_model, fontsize=_FS)
         ax_model.set_ylabel(y_label_model, fontsize=_FS)
@@ -968,9 +984,13 @@ class plotter:
         Four-panel layout (self.figsize_anim)
         -------------------------------------
         Panel 1 - Floor displacement profile [m] vs. elevation.
-        Panel 2 - Storey drift profile [%] vs. elevation (staircase style, matching plot_demand_profiles).
+        Panel 2 - Storey drift profile [%] vs. elevation (staircase style,
+                  matching plot_demand_profiles).
         Panel 3 - Floor acceleration profile [g] vs. elevation.
-        Panel 4 - Input ground motion time-history with elapsed portion highlighted. If collapse_time is provided, an 'X' marker is drawn at that instant to indicate when the MinMax material limit was exceeded.
+        Panel 4 - Input ground motion time-history with elapsed portion
+                  highlighted. If collapse_time is provided, an 'X' marker is
+                  drawn at that instant to indicate when the MinMax material
+                  limit was exceeded.
 
         Line colours update cumulatively based on worst damage state reached so
         far (blue -> green -> yellow -> orange -> red) when drift_thresholds given.
@@ -1088,7 +1108,7 @@ class plotter:
                        label=f'MinMax exceeded ({collapse_time:.2f}s)')
             ax_gm.axvline(collapse_time, color='#E53935', lw=0.8,
                           ls='--', alpha=0.7)
-            ax_gm.legend(fontsize=7, loc='upper right')
+            ax_gm.legend(fontsize=11, loc='upper right')
 
         # ── Damage state colours ─────────────────────────────────────────────
         # Index 0 = no damage (blue) … index 4 = collapse (red).
@@ -1131,45 +1151,45 @@ class plotter:
         line_gm_trace, = ax_gm.plot([], [], color=damage_colors[0], lw=1.6)
 
         # ── Axis formatting ──────────────────────────────────────────────────
-        ax_disp.set_title('Floor Displacements', fontsize=9, fontweight='bold')
-        ax_disp.set_xlabel('Displacement [m]', fontsize=8)
-        ax_disp.set_ylabel('Elevation [m]', fontsize=8)
+        ax_disp.set_title('Floor Displacements', fontsize=13, fontweight='bold')
+        ax_disp.set_xlabel('Displacement [m]', fontsize=13)
+        ax_disp.set_ylabel('Elevation [m]', fontsize=13)
         ax_disp.set_xlim(-max(max_abs_disp * 1.2, 0.01),
                          max(max_abs_disp * 1.2, 0.01))
         ax_disp.set_ylim(ylim_elev)
         ax_disp.grid(True, ls=':', alpha=0.4)
-        ax_disp.tick_params(labelsize=8)
+        ax_disp.tick_params(labelsize=12)
 
         ax_drift.set_title(
             'Storey Drift Profile',
-            fontsize=9,
+            fontsize=13,
             fontweight='bold')
-        ax_drift.set_xlabel(r'Storey Drift [%]', fontsize=8)
-        ax_drift.set_ylabel('Elevation [m]', fontsize=8)
+        ax_drift.set_xlabel(r'Storey Drift [%]', fontsize=13)
+        ax_drift.set_ylabel('Elevation [m]', fontsize=13)
         ax_drift.set_xlim(0, xlim_drift)
         ax_drift.set_ylim(ylim_elev)
         ax_drift.grid(True, ls=':', alpha=0.4)
-        ax_drift.tick_params(labelsize=8)
+        ax_drift.tick_params(labelsize=12)
 
         ax_accel.set_title(
             'Floor Accelerations',
-            fontsize=9,
+            fontsize=13,
             fontweight='bold')
-        ax_accel.set_xlabel('Acceleration [g]', fontsize=8)
-        ax_accel.set_ylabel('Elevation [m]', fontsize=8)
+        ax_accel.set_xlabel('Acceleration [g]', fontsize=13)
+        ax_accel.set_ylabel('Elevation [m]', fontsize=13)
         ax_accel.set_xlim(-max(max_abs_accel * 1.2, 0.5),
                           max(max_abs_accel * 1.2, 0.5))
         ax_accel.set_ylim(ylim_elev)
         ax_accel.grid(True, ls=':', alpha=0.4)
-        ax_accel.tick_params(labelsize=8)
+        ax_accel.tick_params(labelsize=12)
 
-        ax_gm.set_title('Input Ground Motion', fontsize=9, fontweight='bold')
-        ax_gm.set_xlabel('Time [s]', fontsize=8)
-        ax_gm.set_ylabel('Accel [g]', fontsize=8)
+        ax_gm.set_title('Input Ground Motion', fontsize=13, fontweight='bold')
+        ax_gm.set_xlabel('Time [s]', fontsize=13)
+        ax_gm.set_ylabel('Accel [g]', fontsize=13)
         ax_gm.set_xlim(0, dts[-1])
         ax_gm.set_ylim(np.floor(acc.min()), np.ceil(acc.max()))
         ax_gm.grid(True, ls=':', alpha=0.4)
-        ax_gm.tick_params(labelsize=8)
+        ax_gm.tick_params(labelsize=12)
 
         # Annotations — anchored inside axes with clip_on so they never
         # overflow
@@ -1178,7 +1198,7 @@ class plotter:
             0.97,
             '',
             transform=ax_drift.transAxes,
-            fontsize=7,
+            fontsize=11,
             ha='right',
             va='top',
             clip_on=True,
@@ -1192,7 +1212,7 @@ class plotter:
             0.97,
             '',
             transform=ax_accel.transAxes,
-            fontsize=7,
+            fontsize=11,
             ha='right',
             va='top',
             clip_on=True,
@@ -1618,7 +1638,7 @@ class plotter:
             0.95,
             stats_text,
             transform=ax.transAxes,
-            fontsize=9,
+            fontsize=11,
             verticalalignment='top',
             bbox=dict(
                 facecolor='white',
@@ -1823,7 +1843,8 @@ class plotter:
         For each intensity stripe the method plots:
         - Individual ground-motion response points coloured and sized by IM level.
         - A filled lognormal PDF silhouette scaled to the inter-stripe spacing.
-        - A vertical line at the lognormal median and dashed lines at the 16th/84th percentiles, both labelled on the first stripe only.
+        - A vertical line at the lognormal median and dashed lines at the
+          16th/84th percentiles, both labelled on the first stripe only.
         - A horizontal bracket connecting the 16th and 84th percentile ticks per stripe.
 
         Parameters
@@ -1931,7 +1952,7 @@ class plotter:
         # ── Styling ──────────────────────────────────────────────────────────
         self._set_plot_style(ax,
                              title=title,
-                             xlabel=f"{edp_label} [%]",
+                             xlabel=f"{edp_label}",
                              ylabel=imt_label)
         ax.set_xlim(xlims)
         ax.set_ylim(ylims)
@@ -2158,14 +2179,15 @@ class plotter:
         # -----------------------------------------------------------------
         # Final formatting
         # -----------------------------------------------------------------
+        ax.set_title(
+            title if title else default_title,
+            fontsize=self.font_sizes['title'],
+            fontname=self.font_name)
         ax.set_xlim([xlims[0], xlims[1]])
         ax.set_ylim([ylims[0], ylims[1]])
         ax.xaxis.set_minor_locator(AutoMinorLocator())
         ax.yaxis.set_minor_locator(AutoMinorLocator())
 
-        ax.set_title(
-            title if title else default_title,
-            fontsize=self.font_sizes['title'])
         ax.legend(
             loc='lower right',
             fontsize=self.font_sizes['legend'],
@@ -2253,10 +2275,8 @@ class plotter:
         # Initialize Plot
         fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
 
-        default_title = f"Fragility Functions for {imt_label}"
         self._set_plot_style(
             ax,
-            title=title if title else default_title,
             xlabel=imt_label,
             ylabel=r'Probability of Exceedance $P(DS \geq ds | IM)$')
 
@@ -2397,10 +2417,6 @@ class plotter:
         ax.xaxis.set_minor_locator(AutoMinorLocator())
         ax.yaxis.set_minor_locator(AutoMinorLocator())
 
-        default_title = "Fragility Functions from Multiple Stripe Analysis (MLE)"
-        ax.set_title(
-            title if title else default_title,
-            fontsize=self.font_sizes['title'])
         ax.legend(loc='lower right', fontsize=self.font_sizes['legend'],
                   frameon=True, framealpha=0.9, edgecolor='black')
 
@@ -2560,6 +2576,7 @@ class plotter:
                                     imt_label,
                                     loss_label,
                                     title=None,
+                                    xlims=None,
                                     pFlag=True,
                                     export_path=None):
         """
@@ -2594,6 +2611,10 @@ class plotter:
         title : str, optional
             Custom plot title.
 
+        xlims : list or tuple of float, optional
+            ``[min, max]`` limits for the x-axis. When ``None`` (default)
+            the axis spans all intensity levels.
+
         pFlag : bool, optional, default=True
             If True, the plot is processed (saved/shown).
 
@@ -2604,6 +2625,18 @@ class plotter:
         -------
         None
         """
+        # Restrict to the requested IM range before building any plot data.
+        # xlims operates in IM-value space; the violin x-axis is categorical
+        # (integer positions), so filtering here is the only correct approach.
+        intensities = np.asarray(intensities)
+        loss = np.asarray(loss)
+        cov = np.asarray(cov)
+        if xlims is not None:
+            mask = (intensities >= xlims[0]) & (intensities <= xlims[1])
+            intensities = intensities[mask]
+            loss = loss[mask]
+            cov = cov[mask]
+
         # Simulating Beta distributions for each intensity measure
         simulated_data = []
         intensity_labels = []
@@ -2613,16 +2646,19 @@ class plotter:
             mu = np.clip(mean_loss, 0.0001, 0.9999)
             variance = (cov[j] * mu) ** 2
 
-            # Constraint: Variance must be < mu * (1 - mu)
-            limit = mu * (1 - mu)
-            if variance >= limit:
-                variance = limit * 0.99  # Cap variance to allow distribution fitting
+            if variance == 0:
+                # Degenerate case (CoV = 0): point mass at mu — no uncertainty
+                data = np.full(2000, mu)
+            else:
+                # Constraint: Variance must be < mu * (1 - mu)
+                limit = mu * (1 - mu)
+                if variance >= limit:
+                    variance = limit * 0.99
 
-            alpha = mu * (mu * (1 - mu) / variance - 1)
-            beta_param = (1 - mu) * (mu * (1 - mu) / variance - 1)
+                alpha = mu * (mu * (1 - mu) / variance - 1)
+                beta_param = (1 - mu) * (mu * (1 - mu) / variance - 1)
+                data = np.random.beta(alpha, beta_param, 2000)
 
-            # Generate samples and clip to ensure physical bounds
-            data = np.random.beta(alpha, beta_param, 10000)
             simulated_data.append(data)
             intensity_labels.extend([intensities[j]] * len(data))
 
@@ -2634,9 +2670,7 @@ class plotter:
         fig, ax1 = plt.subplots(figsize=self.figsize, constrained_layout=True)
 
         # Set plot style
-        default_title = f"Vulnerability Function: {imt_label}"
         self._set_plot_style(ax1,
-                             title=title if title else default_title,
                              xlabel=imt_label,
                              ylabel=loss_label)
 
@@ -2650,64 +2684,42 @@ class plotter:
                        zorder=1,
                        color='skyblue')
 
-        # Overlay a strip plot for sample density
-        sns.stripplot(
-            x='Intensity Measure',
-            y='Loss_Val',
-            data=df_sns,
-            color='black',
-            size=1,
-            alpha=0.2,
-            ax=ax1,
-            zorder=2)
-
-        # Style the primary axis (Distributions)
+        # Style the primary axis (distributions)
         ax1.set_ylim(0, 1.0)
-        ax1.yaxis.label.set_color('blue')
-        ax1.tick_params(axis='y', labelcolor='blue')
+        ax1.yaxis.label.set_color('steelblue')
+        ax1.tick_params(axis='y', labelcolor='steelblue')
 
-        # Secondary Axis for the Mean Loss Curve
+        # Secondary axis for the mean loss curve (twinx keeps integer x
+        # positions aligned with the seaborn categorical violin positions)
         ax2 = ax1.twinx()
         ax2.plot(
-            range(
-                len(intensities)),
+            range(len(intensities)),
             loss,
             marker='s',
             ls='-',
             color='red',
             lw=self.line_widths['medium'],
-            label="Mean Loss Ratio",
+            label='Mean Loss Ratio',
             zorder=5)
-
-        # Style the secondary axis (Loss Curve)
-        ax2.set_ylabel(
-            loss_label,
-            color='red',
-            rotation=270,
-            labelpad=20,
-            fontsize=self.font_sizes['labels'],
-            fontname=self.font_name)
-        ax2.tick_params(
-            axis='y',
-            labelcolor='red',
-            labelsize=self.font_sizes['ticks'])
         ax2.set_ylim(0, 1.0)
+        # Hide right y-axis — same [0, 1] scale as the left axis
+        ax2.tick_params(axis='y', left=False, right=False,
+                        labelleft=False, labelright=False)
+        ax2.yaxis.set_visible(False)
 
-        # Sync X-axis ticks with intensity values
+        # Sync x-axis ticks with intensity values
         ax1.set_xticks(range(len(intensities)))
-        ax1.set_xticklabels([f"{x:.3f}" for x in intensities],
-                            rotation=45, ha='right', fontsize=8)
-
-        # Combined Legend
-        beta_patch = mpatches.Patch(
-            color='skyblue',
-            label="Beta Distribution (Uncertainty)")
-        ax1.legend(
-            handles=[beta_patch],
-            loc='upper left',
-            fontsize=self.font_sizes['legend'])
-        ax2.legend(loc='upper left', bbox_to_anchor=(
-            0, 0.93), fontsize=self.font_sizes['legend'])
+        ax1.set_xticklabels([f'{x:.3f}' for x in intensities],
+                            rotation=45, ha='right',
+                            fontsize=self.font_sizes['ticks'] - 6)
+        # Single combined legend on ax1
+        beta_patch = mpatches.Patch(color='skyblue',
+                                    label='Beta Distribution (Uncertainty)')
+        mean_handle = ax2.get_legend_handles_labels()[0]
+        ax1.legend(handles=[beta_patch] + mean_handle,
+                   loc='upper left',
+                   fontsize=self.font_sizes['legend'],
+                   frameon=True, framealpha=0.9, edgecolor='black')
 
         # Save or show
         if pFlag:
@@ -2717,7 +2729,8 @@ class plotter:
                     os.makedirs(directory, exist_ok=True)
                 plt.savefig(export_path, dpi=self.resolution)
                 self._show()
+                plt.close(fig)
             else:
                 self._show()
         else:
-            plt.close()
+            plt.close(fig)
