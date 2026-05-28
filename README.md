@@ -35,10 +35,9 @@
 
 ## Overview
 
-OQ-VMTK is a Python library for regional seismic vulnerability and risk modelling. It provides a self-contained workflow — from ground motion processing and structural model compilation through nonlinear analysis to fragility and vulnerability function derivation — built on top of [OpenSeesPy](https://openseespydoc.readthedocs.io) and the [OpenQuake Engine](https://github.com/gem/oq-engine).
+OQ-VMTK is a Python library for regional seismic vulnerability and risk modelling. It provides a self-contained workflow — from ground motion processing and structural model compilation through nonlinear analysis to fragility and vulnerability function derivation, powered by [OpenSeesPy](https://openseespydoc.readthedocs.io).
 
-The toolkit is designed for earthquake engineers, vulnerability modellers, and catastrophe risk analysts who need a reproducible, code-based alternative to manual structural assessment workflows. It supports both individual building analyses and batch processing for regional building portfolios.
-
+The toolkit is designed for earthquake engineers and model developers, who need a reproducible and standardised library of functions to integrate to their structural assessment workflows. 
 ---
 
 ## Modules
@@ -46,11 +45,11 @@ The toolkit is designed for earthquake engineers, vulnerability modellers, and c
 | Module | Description |
 |--------|-------------|
 | `calibration` | Calibrates storey-based force–deformation relationships for MDOF stick-and-mass models from SDOF capacity curves. |
-| `modeller` | Compiles and runs SDOF and MDOF structural models in OpenSeesPy: modal analysis, gravity, static/cyclic pushover, and nonlinear time-history analysis. |
+| `modeller` | Compiles and runs SDOF and MDOF structural models in OpenSeesPy: modal analysis, gravity, static/cyclic pushover, and nonlinear time-history analysis (including incremental dynamic analyses). |
 | `imcalculator` | Reads ground motion record files and computes a wide range of intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias Intensity, CAV, D5–95, FIV3). |
 | `imselection` | Evaluates and ranks intensity measure candidates for seismic demand modelling using Efficiency, Proficiency, Practicality, and the Relative Sufficiency Measure (RSM). |
-| `postprocessor` | Derives fragility and vulnerability functions from nonlinear analysis results (Modified Cloud Analysis, Multiple Stripe Analysis, Incremental Dynamic Analysis). Supports lognormal CDFs, GLMs, ordinal CLMs, and MCMC methods. |
-| `slfgenerator` | Generates storey loss functions (SLFs) from component inventory data (structural, nonstructural, and contents). |
+| `postprocessor` | Derives probabilistic seismic demand models, fragility and vulnerability functions from nonlinear analysis results (Modified Cloud Analysis, Multiple Stripe Analysis, Incremental Dynamic Analysis). Supports lognormal CDFs, GLMs, ordinal CLMs, and MCMC methods. |
+| `slfgenerator` | Generates storey loss functions (SLFs) from damageable component inventory data (structural, nonstructural, and contents). |
 | `plotter` | Produces publication-quality figures for all stages of the workflow: model geometry, seismic demand profiles, fragility functions, vulnerability curves, SLFs, and more. |
 | `utilities` | Helper functions for I/O, data format conversion, and interoperability with OpenQuake Engine outputs. |
 
