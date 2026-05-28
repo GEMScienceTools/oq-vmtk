@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524871.svg)](https://doi.org/10.5281/zenodo.17524871)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17524871-1082c3)](https://doi.org/10.5281/zenodo.17524871)
 [![Windows Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yaml)
 [![Linux Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yaml)
 
@@ -214,7 +214,7 @@ If you use OQ-VMTK in academic or professional work, please cite both the softwa
 
 The v1.1.0 release is archived on Zenodo:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524871.svg)](https://doi.org/10.5281/zenodo.17524871)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17524871-1082c3)](https://doi.org/10.5281/zenodo.17524871)
 
 ```bibtex
 @software{oq_vmtk_2025,
@@ -267,13 +267,13 @@ Contributions are welcome. Please read the [contributing guidelines](./contribut
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/GEMScienceTools/oq-vmtk.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/GEMScienceTools/oq-vmtk?style=for-the-badge
 [contributors-url]: https://github.com/GEMScienceTools/oq-vmtk/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/GEMScienceTools/oq-vmtk.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/GEMScienceTools/oq-vmtk?style=for-the-badge
 [forks-url]: https://github.com/GEMScienceTools/oq-vmtk/network/members
-[stars-shield]: https://img.shields.io/github/stars/GEMScienceTools/oq-vmtk.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/GEMScienceTools/oq-vmtk?style=for-the-badge
 [stars-url]: https://github.com/GEMScienceTools/oq-vmtk/stargazers
-[issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/oq-vmtk.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/oq-vmtk?style=for-the-badge
 [issues-url]: https://github.com/GEMScienceTools/oq-vmtk/issues
-[license-shield]: https://img.shields.io/github/license/GEMScienceTools/oq-vmtk.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/GEMScienceTools/oq-vmtk?style=for-the-badge
 [license-url]: https://github.com/GEMScienceTools/oq-vmtk/blob/master/LICENSE.txt
