@@ -234,7 +234,7 @@ A `CITATION.cff` file is provided at the repository root; GitHub displays a **Ci
 
 ```bibtex
 @article{nafeh2026vmtk,
-  author  = {Nafeh, Ahmed Mebarki Billel and Aljawhari, Karim and Ettorre, Andrea and Silva, Vitor and Crowley, Helen},
+  author  = {Nafeh, Al Mouayed Bellah and Aljawhari, Karim and Ettorre, Antonio and Silva, Vitor and Crowley, Helen},
   title   = {The {OpenQuake} {Vulnerability} {Modellers}' {Toolkit}: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications},
   journal = {(In Press)},
   year    = {2026}
