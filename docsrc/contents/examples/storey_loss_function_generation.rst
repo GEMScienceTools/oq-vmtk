@@ -12,12 +12,8 @@ The required inventory CSVs are bundled at
 `demos/StoreyLossFunctionGeneration/in/
 <https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos/StoreyLossFunctionGeneration/in>`_.
 
-Self-contained code
--------------------
-
-Run the snippet below from the repository root after ``pip install .``.
-It is the same workflow as the notebook, condensed into a single
-copy-pasteable script.
+The snippet below reproduces the same workflow and can be run from the
+repository root after ``pip install .``.
 
 .. code-block:: python
 

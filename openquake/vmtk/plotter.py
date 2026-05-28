@@ -311,7 +311,7 @@ class plotter:
                    T,
                    export_path=None):
         """
-        Plots 2-D mode shape profiles in a square grid layout (2x2, 3x3 etc).
+        Plots 2-D mode shape profiles in a square grid layout (2×2, 3×3, …).
 
         Each mode occupies one cell with two side-by-side profile plots:
         left = X-displacement vs Z (blue), right = Y-displacement vs Z (green).
@@ -320,14 +320,28 @@ class plotter:
 
         Sign convention
         ---------------
-        Eigenvectors have arbitrary sign.  The method flips each mode so that
+        Eigenvectors have arbitrary sign. The method flips each mode so that
         the top-node displacement in the dominant horizontal direction is always
         positive.
 
-        Grid
-        ----
-        ncols = ceil(sqrt(N)),  nrows = ceil(N / ncols).
+        Grid layout
+        -----------
+        ``ncols = ceil(sqrt(N))``, ``nrows = ceil(N / ncols)``.
         Unused cells in the last row are hidden.
+
+        Title placement
+        ---------------
+        Each mode title (e.g. ``'Mode 1 [X-dir] — T₁ = 0.312 s'``) is placed
+        via ``fig.text()`` at the horizontal midpoint of both panels so that
+        it is centred over the X- and Y-displacement plots together.
+
+        Adaptive scaling
+        ----------------
+        Font sizes for node annotations, axis labels, tick marks, and panel
+        titles, as well as the vertical panel spacing (``hspace``) and the
+        figure top margin (``top``), all scale automatically with the number
+        of grid rows and the number of nodes per panel. This prevents text
+        and title overlap when plotting a large number of modes.
 
         Parameters
         ----------
@@ -335,11 +349,12 @@ class plotter:
             Ordered OpenSees node tags (base node first).
         mode_shape_vectors : list of numpy.ndarray, shape (n_nodes, 3)
             One array per mode; columns are [ux, uy, uz], pre-normalised by
-            max abs value as returned by do_modal_analysis.
+            max abs value as returned by ``do_modal_analysis``.
         T : list of float
             Natural periods [s] for each mode.
         export_path : str, optional
-            File path to save the figure.  If None the figure is displayed.
+            File path to save the figure. If ``None`` the figure is displayed
+            interactively.
 
         Returns
         -------
