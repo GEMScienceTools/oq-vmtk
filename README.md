@@ -38,6 +38,7 @@
 OQ-VMTK is a Python library for regional seismic vulnerability and risk modelling. It provides a self-contained workflow — from ground motion processing and structural model compilation through nonlinear analysis to fragility and vulnerability function derivation, powered by [OpenSeesPy](https://openseespydoc.readthedocs.io).
 
 The toolkit is designed for earthquake engineers and model developers, who need a reproducible and standardised library of functions to integrate to their structural assessment workflows. 
+
 ---
 
 ## Modules
@@ -246,8 +247,6 @@ A `CITATION.cff` file is provided at the repository root; GitHub displays a **Ci
 ## References
 
 - Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
-- Pagani, M., Monelli, D., Weatherill, G., et al. (2014). OpenQuake Engine: An Open Hazard (and Risk) Software for the Global Earthquake Model. *Seismological Research Letters*, 85(3), 692–702. https://doi.org/10.1785/0220130087
-- Rao, A., Yepes-Estrada, C., Johnson, K., et al. (2025). Evolution of the OpenQuake Engine: Enhanced capabilities, collaborative development, and global adoption. *Earthquake Spectra*, 41(5), 3299–3336. https://doi.org/10.1177/87552930251378157
 
 ---
 
