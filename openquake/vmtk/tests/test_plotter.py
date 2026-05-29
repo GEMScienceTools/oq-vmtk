@@ -252,7 +252,7 @@ class TestPlotterInit(unittest.TestCase):
         self.assertEqual(self.pl.figsize_anim, (10, 7))
 
     def test_resolution_default(self):
-        self.assertEqual(self.pl.resolution, 400)
+        self.assertEqual(self.pl.resolution, 500)
 
     def test_font_name_default(self):
         self.assertEqual(self.pl.font_name, 'Arial')
