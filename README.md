@@ -99,17 +99,17 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 
 
 ### 3. Install Dependencies
-   Install the required packages listed in `requirements.txt`.
+   Install the appropriate requirements file based on your operating system and Python version.
 
-   **For Windows Users:** Install the appropriate requirements file based on your Python version:
+   **For Windows Users:**
    ```bash
    pip install -r requirements-py311-win64.txt  # Python 3.11
    pip install -r requirements-py312-win64.txt  # Python 3.12
    ```
-   **For Linux Users:** Install the appropriate requirements file based on your Python version:
+   **For Linux Users:**
    ```bash
-   pip install -r requirements-py311-linux64.txt  # Python 3.11
-   pip install -r requirements-py312-linux64.txt  # Python 3.12
+   pip install -r requirements-py311-linux.txt  # Python 3.11
+   pip install -r requirements-py312-linux.txt  # Python 3.12
    ```
    **For macOS Users:** OpenSeesPy does not currently support macOS versions running on arm64 processors, such as M1 and M2 chips. As a result, newer OpenSeesPy versions are not available for macOS. To use OpenSeesPy on a Mac, it is advised to run a virtual machine with Linux or Windows.
 
@@ -122,12 +122,24 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 
 
 ### 4. Install the Package
-   Install the `oq-vmtk` package in editable mode:
+
+   **Standard install (recommended for users):**
+   ```bash
+   pip install .
+   ```
+
+   **Editable / developer install** — use only if you plan to modify the source:
    ```bash
    pip install -e .
    ```
 
 <img src="imgs/packaging.gif" alt="Logo" >
+
+### 5. Verify the Installation
+   ```bash
+   python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
+   ```
+   This should print the installed version (e.g., `1.0.0`).
 
 
 ## 📼 Demos
@@ -166,6 +178,28 @@ This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agp
 # 📚 Documentation
 
 For detailed documentation and user guidance on using the toolkit for vulnerability modeling, including installation instructions, key functionalities, and example workflows, please visit: [https://gemsciencetools.github.io/oq-vmtk](https://gemsciencetools.github.io/oq-vmtk/)
+
+# 📑 Citation
+
+If you use `oq-vmtk` in academic work, please cite the archived release. The v1.0.0 release is permanently archived on Zenodo:
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524871.svg)](https://doi.org/10.5281/zenodo.17524871)
+
+BibTeX:
+
+```bibtex
+@software{oq_vmtk_2025,
+  author       = {{GEM Foundation}},
+  title        = {{OpenQuake Vulnerability Modeller's Toolkit (oq-vmtk)}},
+  version      = {1.0.0},
+  date         = {2025-11-04},
+  doi          = {10.5281/zenodo.17524871},
+  url          = {https://github.com/GEMScienceTools/oq-vmtk}
+}
+```
+
+A `CITATION.cff` file is also provided at the repository root so that GitHub
+displays a "Cite this repository" widget.
 
 # 📑 References
 

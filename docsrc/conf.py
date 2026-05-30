@@ -12,9 +12,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../'))
 
 
 # -- Project information -----------------------------------------------------
@@ -45,9 +45,48 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'recommonmark',
     'nbsphinx'
 ]
+
+# Autodoc settings — pull docstrings automatically; mock heavy C-extensions
+# that are not available in the docs-build environment.
+autodoc_mock_imports = [
+    'openseespy',
+    'openseespy.opensees',
+    'openseespymac',
+    'openseespymac.opensees',
+    'scipy',
+    'scipy.linalg',
+    'scipy.stats',
+    'scipy.optimize',
+    'scipy.interpolate',
+    'matplotlib',
+    'matplotlib.pyplot',
+    'matplotlib.animation',
+    'matplotlib.colors',
+    'matplotlib.gridspec',
+    'matplotlib.patches',
+    'matplotlib.lines',
+    'matplotlib.ticker',
+    'pandas',
+    'statsmodels',
+    'statsmodels.api',
+    'statsmodels.miscmodels',
+    'statsmodels.miscmodels.ordinal_model',
+    'seaborn',
+    'pydantic',
+]
+
+autodoc_default_options = {
+    'show-inheritance': True,
+}
+
+autodoc_preserve_defaults = True
+
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -66,7 +105,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -94,7 +133,9 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []#['_static']
+html_static_path = ['_static']
+
+html_css_files = ['custom.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

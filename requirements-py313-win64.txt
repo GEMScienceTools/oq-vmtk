@@ -1,0 +1,21 @@
+# vmtk requirements
+# From OQ wheels
+#
+https://wheelhouse.openquake.org/v3/windows/py313/fiona-1.10.1-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/gdal-3.10.2-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/h5py-3.13.0-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/llvmlite-0.44.0-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/matplotlib-3.10.1-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/numba-0.61.2-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/numpy-2.2.6-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/pandas-2.2.3-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/pyproj-3.7.2-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/scipy-1.15.3-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/shapely-2.1.0-cp313-cp313-win_amd64.whl
+https://wheelhouse.openquake.org/v3/windows/py313/statsmodels-0.14.4-cp313-cp313-win_amd64.whl
+#pp
+#
+openseespy==3.7.0.6
+openseespywin==3.7.0.6
+https://wheelhouse.openquake.org/v3/py/click-8.1.7-py3-none-any.whl
+https://wheelhouse.openquake.org/v3/py/pydantic-2.10.6-py3-none-any.whl

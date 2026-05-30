@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7.4. GLM Fragility Functions &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="7.5. Ordinal Fragility Functions" href="calculate_ordinal_fragility.html" />
+    <link rel="prev" title="7.3. Fragility Function Rotation" href="calculate_rotated_fragility.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../pos.html">7. Postprocessing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="init.html">7.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.4. GLM Fragility Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.postprocessor.postprocessor.calculate_glm_fragility"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_glm_fragility()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_mca_results.html">7.6. Modified Cloud Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.12. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../pos.html"><span class="section-number">7. </span>Postprocessing</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">7.4. </span>GLM Fragility Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/pos/calculate_glm_fragility.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="glm-fragility-functions">
+<h1><span class="section-number">7.4. </span>GLM Fragility Functions<a class="headerlink" href="#glm-fragility-functions" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.calculate_glm_fragility">
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">calculate_glm_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'logit'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.calculate_glm_fragility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.calculate_glm_fragility" title="Link to this definition"></a></dt>
+<dd><p>Computes non-parametric fragility functions using Generalized
+Linear Models (GLM) with either a Logit or Probit link function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imls</strong> (<em>array-like</em>) – Intensity Measure Levels (IMLs) corresponding to each
+observation.</p></li>
+<li><p><strong>edps</strong> (<em>array-like</em>) – Engineering Demand Parameters (EDPs) representing structural
+response values.</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>array-like</em>) – List of thresholds defining different damage states.</p></li>
+<li><p><strong>intensities</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Intensity measure values at which probabilities of
+exceedance (PoEs) are evaluated. Defaults to
+np.round(np.geomspace(0.05, 10.0, 50), 3).</p></li>
+<li><p><strong>fragility_method</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Specifies the GLM model to be used for fragility function
+fitting. Options:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">'logit'</span></code> (default): Uses a logistic regression model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'probit'</span></code>: Uses a probit regression model.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>poes</strong> – A 2D array where each column represents the probability of
+exceeding a specific damage state at each intensity level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>1) Charvet, I., Ioannou, I., Rossetto, T., Suppasri, A., and
+Imamura, F.: Empirical fragility assessment of buildings
+affected by the 2011 Great East Japan tsunami using improved
+statistical models, Nat. Hazards, 73, 951-973, 2014.</p>
+<p>2) Lahcene, E., Ioannou, I., Suppasri, A., Pakoksung, K.,
+Paulik, R., Syamsidik, S., Bouchette, F., and Imamura, F.:
+Characteristics of building fragility curves for seismic and
+non-seismic tsunamis: case studies of the 2018 Sunda Strait,
+2018 Sulawesi-Palu, and 2004 Indian Ocean tsunamis, Nat.
+Hazards Earth Syst. Sci., 21, 2313-2344,
+<a class="reference external" href="https://doi.org/10.5194/nhess-21-2313-2021">https://doi.org/10.5194/nhess-21-2313-2021</a>, 2021.</p>
+<p>3) Lallemant, D., Kiremidjian, A., and Burton, H. (2015),
+Statistical procedures for developing earthquake damage
+fragility curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.
+doi: 10.1002/eqe.2522.</p>
+<p>4) Jalayer, F., Ebrahamian, H., Trevlopoulos, K., and Bradley,
+B. (2023). Empirical tsunami fragility modelling for
+hierarchical damage levels. Natural Hazards and Earth System
+Sciences, 23(2), 909-931.
+<a class="reference external" href="https://doi.org/10.5194/nhess-23-909-2023">https://doi.org/10.5194/nhess-23-909-2023</a></p>
+</dd></dl>
+
+<div class="admonition-theoretical-background admonition">
+<p class="admonition-title">Theoretical Background</p>
+<p>Generalised Linear Model (GLM) fragility fitting uses binary regression to estimate
+exceedance probabilities directly from damage observations, without assuming a
+lognormal form (Lallemant et al., 2015).</p>
+<p><strong>Binary response model</strong></p>
+<p>Let <span class="math notranslate nohighlight">\(y_j \in \{0, 1\}\)</span> indicate whether record <span class="math notranslate nohighlight">\(j\)</span> caused exceedance
+of the damage-state threshold. The exceedance probability is modelled as:</p>
+<div class="math notranslate nohighlight">
+\[P(\text{DS} \geq ds_i \mid \text{IM}_j) = g^{-1}(\eta_j),
+\quad \eta_j = \beta_0 + \beta_1 \ln(\text{IM}_j)\]</div>
+<p>where <span class="math notranslate nohighlight">\(g^{-1}\)</span> is the inverse link function. Two link functions are available:</p>
+<ul class="simple">
+<li><p><strong>Probit</strong>: <span class="math notranslate nohighlight">\(g^{-1}(\eta) = \Phi(\eta)\)</span> (standard normal CDF). This
+recovers the lognormal fragility model when the predictor is <span class="math notranslate nohighlight">\(\ln(\text{IM})\)</span>.</p></li>
+<li><p><strong>Logit</strong>: <span class="math notranslate nohighlight">\(g^{-1}(\eta) = 1/(1 + e^{-\eta})\)</span> (logistic sigmoid).</p></li>
+</ul>
+<p><strong>Maximum likelihood estimation</strong></p>
+<p>Parameters <span class="math notranslate nohighlight">\((\beta_0, \beta_1)\)</span> are estimated by maximising the Bernoulli
+log-likelihood:</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{L}(\beta_0, \beta_1) =
+\sum_{j=1}^{N} \Bigl[
+  y_j \ln p_j + (1 - y_j) \ln(1 - p_j)
+\Bigr],
+\quad p_j = g^{-1}(\beta_0 + \beta_1 \ln \text{IM}_j)\]</div>
+<p><strong>Dispersion</strong></p>
+<p>The record-to-record dispersion is derived from the fitted coefficients. For the
+probit link, <span class="math notranslate nohighlight">\(\beta_{\text{r2r}} = 1/\beta_1\)</span>. Total dispersion is then:</p>
+<div class="math notranslate nohighlight">
+\[\beta_{\text{total}} = \sqrt{\beta_{\text{r2r}}^2 + \beta_{\text{b2b}}^2 + \beta_{\text{DS}}^2}\]</div>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.postprocessor</span><span class="w"> </span><span class="kn">import</span> <span class="n">postprocessor</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">postprocessor</span><span class="p">()</span>
+<span class="n">intensities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="c1"># imls: 1-D array of IM levels; ds_flags: 1-D binary array (0/1) per record</span>
+<span class="n">poes</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calculate_glm_fragility</span><span class="p">(</span>
+    <span class="n">imls</span><span class="o">=</span><span class="n">imls</span><span class="p">,</span>
+    <span class="n">ds_flags</span><span class="o">=</span><span class="n">ds_flags</span><span class="p">,</span>
+    <span class="n">intensities</span><span class="o">=</span><span class="n">intensities</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;logit&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="calculate_rotated_fragility.html" class="btn btn-neutral float-left" title="7.3. Fragility Function Rotation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="calculate_ordinal_fragility.html" class="btn btn-neutral float-right" title="7.5. Ordinal Fragility Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

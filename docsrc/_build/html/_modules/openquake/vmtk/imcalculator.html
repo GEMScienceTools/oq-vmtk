@@ -1,0 +1,958 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openquake.vmtk.imcalculator &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">openquake.vmtk.imcalculator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openquake.vmtk.imcalculator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">integrate</span>
+
+<span class="c1"># Gravitational acceleration constant (m/s²)</span>
+<span class="n">_G</span> <span class="o">=</span> <span class="mf">9.81</span>
+
+<span class="c1"># Accepted unit strings for the input acceleration</span>
+<span class="n">_VALID_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;m/s2&quot;</span><span class="p">,</span> <span class="s2">&quot;m/s^2&quot;</span><span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">imcalculator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute various intensity measures (IMs) from a ground-motion record.</span>
+
+<span class="sd">    This class provides functionality to compute response spectra,</span>
+<span class="sd">    spectral accelerations, amplitude-based intensity measures,</span>
+<span class="sd">    Arias Intensity, Cumulative Absolute Velocity (CAV), significant</span>
+<span class="sd">    duration, and the filtered incremental velocity (FIV3) from an</span>
+<span class="sd">    acceleration time series.</span>
+
+<span class="sd">    The input acceleration may be supplied in units of g or m/s².</span>
+<span class="sd">    Internally, all computations normalise the record to g; the</span>
+<span class="sd">    ``acc_m_s2`` property provides the record in m/s² at any time.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    acc : numpy.ndarray</span>
+<span class="sd">        The acceleration time series stored internally in g.</span>
+
+<span class="sd">    dt : float</span>
+<span class="sd">        The time step of the accelerogram (s).</span>
+
+<span class="sd">    damping : float</span>
+<span class="sd">        The damping ratio (default is 5%).</span>
+
+<span class="sd">    unit : str</span>
+<span class="sd">        The unit string supplied at construction (``&quot;g&quot;``,</span>
+<span class="sd">        ``&quot;m/s2&quot;``, or ``&quot;m/s^2&quot;``).</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    get_spectrum(periods, damping_ratio)</span>
+<span class="sd">        Computes the response spectrum using the Newmark-beta method.</span>
+
+<span class="sd">    get_sa(period)</span>
+<span class="sd">        Computes the spectral acceleration at a given period.</span>
+
+<span class="sd">    get_saavg(period)</span>
+<span class="sd">        Computes the geometric mean of spectral accelerations over a</span>
+<span class="sd">        range of periods centred on the conditioning period.</span>
+
+<span class="sd">    get_saavg_user_defined(periods_list)</span>
+<span class="sd">        Computes the geometric mean of spectral accelerations for a</span>
+<span class="sd">        user-defined list of periods.</span>
+
+<span class="sd">    get_velocity_displacement_history()</span>
+<span class="sd">        Computes velocity and displacement history with zero-phase</span>
+<span class="sd">        high-pass filtering and baseline drift correction.</span>
+
+<span class="sd">    get_amplitude_ims()</span>
+<span class="sd">        Computes amplitude-based intensity measures (PGA, PGV, PGD).</span>
+
+<span class="sd">    get_arias_intensity()</span>
+<span class="sd">        Computes the Arias Intensity.</span>
+
+<span class="sd">    get_cav()</span>
+<span class="sd">        Computes the Cumulative Absolute Velocity (CAV).</span>
+
+<span class="sd">    get_significant_duration(start, end)</span>
+<span class="sd">        Computes the significant duration (time between specified</span>
+<span class="sd">        fractions of Arias intensity).</span>
+
+<span class="sd">    get_FIV3(period, alpha, beta)</span>
+<span class="sd">        Computes the filtered incremental velocity (FIV3).</span>
+
+<span class="sd">    get_rotdxx(acc2, percentile, periods, damping_ratio)</span>
+<span class="sd">        Computes the RotDxx orientation-independent spectral acceleration.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="imcalculator.__init__">
+<a class="viewcode-back" href="../../../contents/imc/init.html#openquake.vmtk.imcalculator.imcalculator.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">damping</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the imcalculator with the input ground-motion</span>
+<span class="sd">        record.</span>
+
+<span class="sd">        The acceleration is converted to g on input so that all</span>
+<span class="sd">        downstream methods use a consistent unit system. The original</span>
+<span class="sd">        unit label is stored in ``self.unit`` for reference.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        acc : list or numpy.ndarray</span>
+<span class="sd">            Acceleration time series. Units are specified by the</span>
+<span class="sd">            ``unit`` parameter.</span>
+
+<span class="sd">        dt : float</span>
+<span class="sd">            Time step of the accelerogram (s).</span>
+
+<span class="sd">        damping : float, optional</span>
+<span class="sd">            Damping ratio (default is 0.05, i.e. 5%).</span>
+
+<span class="sd">        unit : str, optional</span>
+<span class="sd">            Unit of the input acceleration. Accepted values are</span>
+<span class="sd">            ``&quot;g&quot;`` (default), ``&quot;m/s2&quot;``, or ``&quot;m/s^2&quot;``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``unit`` is not one of the accepted strings.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># Validate the unit string</span>
+        <span class="n">unit_lower</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">unit_lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_VALID_UNITS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;unit&#39; must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_VALID_UNITS</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got &#39;</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Store acceleration internally in g</span>
+        <span class="k">if</span> <span class="n">unit_lower</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;m/s2&quot;</span><span class="p">,</span> <span class="s2">&quot;m/s^2&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">acc</span> <span class="o">=</span> <span class="n">acc</span> <span class="o">/</span> <span class="n">_G</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">acc</span> <span class="o">=</span> <span class="n">acc</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damping</span> <span class="o">=</span> <span class="n">damping</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit_lower</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">acc_m_s2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Acceleration time series in m/s².</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            The acceleration record converted to m/s².</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc</span> <span class="o">*</span> <span class="n">_G</span>
+
+<div class="viewcode-block" id="imcalculator.get_spectrum">
+<a class="viewcode-back" href="../../../contents/imc/get_spectrum.html#openquake.vmtk.imcalculator.imcalculator.get_spectrum">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_spectrum</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">periods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+        <span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the response spectrum using the Newmark-beta method.</span>
+
+<span class="sd">        The method performs Newmark constant-average-acceleration</span>
+<span class="sd">        time integration (gamma = 0.5, beta = 0.25) for a unit-mass</span>
+<span class="sd">        single-degree-of-freedom oscillator at each requested period,</span>
+<span class="sd">        returning the spectral displacement, pseudo-velocity, and</span>
+<span class="sd">        pseudo-acceleration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        periods : numpy.ndarray, optional</span>
+<span class="sd">            Array of periods at which to compute the spectral response</span>
+<span class="sd">            (s). Default is 500 points linearly spaced from 1e-5 to</span>
+<span class="sd">            4.0 s.</span>
+
+<span class="sd">        damping_ratio : float, optional</span>
+<span class="sd">            Damping ratio for the SDOF oscillator. Default is 0.05</span>
+<span class="sd">            (5%).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        periods : numpy.ndarray</span>
+<span class="sd">            Periods of the response spectrum (s).</span>
+
+<span class="sd">        sd : numpy.ndarray</span>
+<span class="sd">            Spectral displacement (m).</span>
+
+<span class="sd">        sv : numpy.ndarray</span>
+<span class="sd">            Pseudo spectral velocity (m/s).</span>
+
+<span class="sd">        sa : numpy.ndarray</span>
+<span class="sd">            Pseudo spectral acceleration (g).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The Newmark-beta parameters used are gamma = 0.5 and</span>
+<span class="sd">        beta = 0.25, which correspond to the constant average</span>
+<span class="sd">        acceleration method (unconditionally stable).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Newmark-beta integration constants</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.25</span>
+        <span class="n">ms</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Unit mass (kg)</span>
+
+        <span class="c1"># Convert ground acceleration to m/s² and create force vector</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc_m_s2</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="n">ms</span> <span class="o">*</span> <span class="n">acc</span>
+
+        <span class="c1"># Number of time steps in the record</span>
+        <span class="n">time_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">acc</span><span class="p">)</span>
+
+        <span class="c1"># Initialize response arrays for all periods simultaneously</span>
+        <span class="n">num_periods</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">periods</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_periods</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">))</span>  <span class="c1"># Displacement</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_periods</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">))</span>  <span class="c1"># Velocity</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_periods</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">))</span>  <span class="c1"># Acceleration</span>
+
+        <span class="c1"># Compute stiffness, circular frequency, and damping coefficient</span>
+        <span class="c1"># for all periods at once (vectorised)</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">periods</span>  <span class="c1"># Circular frequency (rad/s)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># Stiffness (N/m)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">damping_ratio</span> <span class="o">*</span> <span class="n">ms</span> <span class="o">*</span> <span class="n">omega</span>  <span class="c1"># Damping coefficient</span>
+
+        <span class="c1"># Initial acceleration from the first force increment</span>
+        <span class="n">a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">ms</span>
+
+        <span class="c1"># Precompute effective stiffness and auxiliary coefficients</span>
+        <span class="n">k_bar</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">k</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span> <span class="o">*</span> <span class="n">c</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Newmark time integration (vectorised over all periods)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">time_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">dp</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">dp_bar</span> <span class="o">=</span> <span class="n">dp</span> <span class="o">+</span> <span class="n">A</span> <span class="o">*</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">B</span> <span class="o">*</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">du</span> <span class="o">=</span> <span class="n">dp_bar</span> <span class="o">/</span> <span class="n">k_bar</span>
+            <span class="n">dv</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span> <span class="o">*</span> <span class="n">du</span>
+                <span class="o">-</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span><span class="p">))</span> <span class="o">*</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">du</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="o">-</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+                <span class="o">-</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">du</span>
+            <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">dv</span>
+            <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">da</span>
+
+        <span class="c1"># Compute spectral values (vectorised across all periods)</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Spectral displacement (m)</span>
+        <span class="n">sv</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">*</span> <span class="n">omega</span>  <span class="c1"># Pseudo spectral velocity (m/s)</span>
+        <span class="n">sa</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">_G</span>  <span class="c1"># Pseudo spectral acceleration (g)</span>
+
+        <span class="k">return</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">sv</span><span class="p">,</span> <span class="n">sa</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_sa">
+<a class="viewcode-back" href="../../../contents/imc/get_sa.html#openquake.vmtk.imcalculator.imcalculator.get_sa">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes spectral acceleration at a given period by</span>
+<span class="sd">        interpolating the full response spectrum.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        period : float</span>
+<span class="sd">            The target period (s).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sa_interp : float</span>
+<span class="sd">            Spectral acceleration (g) at the requested period.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+
+        <span class="c1"># Interpolate to find SA at the requested period</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_saavg">
+<a class="viewcode-back" href="../../../contents/imc/get_saavg.html#openquake.vmtk.imcalculator.imcalculator.get_saavg">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_saavg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the geometric mean of spectral accelerations over a</span>
+<span class="sd">        range of periods centred on a conditioning period.</span>
+
+<span class="sd">        The period range spans from 0.2 * period to 1.5 * period,</span>
+<span class="sd">        sampled at 10 equally spaced points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        period : float</span>
+<span class="sd">            Conditioning period (s).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sa_avg : float</span>
+<span class="sd">            Geometric mean of spectral accelerations (g) over the</span>
+<span class="sd">            defined period range.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+
+        <span class="c1"># Define 10 equally spaced periods in [0.2T, 1.5T]</span>
+        <span class="n">period_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.2</span> <span class="o">*</span> <span class="n">period</span><span class="p">,</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">period</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="c1"># Interpolate SA values at the defined period range</span>
+        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">period_range</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span>
+
+        <span class="c1"># Clip to prevent underflow in the log-space geometric mean</span>
+        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sa_values</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Geometric mean via log-space averaging</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sa_values</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_saavg_user_defined">
+<a class="viewcode-back" href="../../../contents/imc/get_saavg_user_defined.html#openquake.vmtk.imcalculator.imcalculator.get_saavg_user_defined">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_saavg_user_defined</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">periods_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the geometric mean of spectral accelerations for a</span>
+<span class="sd">        user-defined list of periods.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        periods_list : list or numpy.ndarray</span>
+<span class="sd">            List of user-defined periods (s) at which spectral</span>
+<span class="sd">            accelerations are computed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sa_avg : float</span>
+<span class="sd">            Geometric mean of spectral accelerations (g) over the</span>
+<span class="sd">            user-defined periods.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+
+        <span class="c1"># Interpolate SA values at user-defined periods</span>
+        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">periods_list</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span>
+
+        <span class="c1"># Clip to prevent underflow in the log-space geometric mean</span>
+        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sa_values</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Geometric mean via log-space averaging</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sa_values</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_velocity_displacement_history">
+<a class="viewcode-back" href="../../../contents/imc/get_velocity_displacement_history.html#openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_velocity_displacement_history</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes velocity and displacement time histories with</span>
+<span class="sd">        baseline drift correction.</span>
+
+<span class="sd">        A zero-phase fourth-order Butterworth high-pass filter</span>
+<span class="sd">        (corner frequency 0.1 Hz) is applied to the acceleration</span>
+<span class="sd">        record before integration. Velocity and displacement are</span>
+<span class="sd">        obtained by trapezoidal integration of the filtered</span>
+<span class="sd">        acceleration, with linear detrending applied after each</span>
+<span class="sd">        integration step to remove residual drift.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vel : numpy.ndarray</span>
+<span class="sd">            Velocity time history (m/s).</span>
+
+<span class="sd">        disp : numpy.ndarray</span>
+<span class="sd">            Displacement time history (m).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The zero-phase filter (``sosfiltfilt``) applies the</span>
+<span class="sd">        Butterworth filter in both the forward and backward</span>
+<span class="sd">        directions, eliminating phase distortion.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Acceleration in m/s²</span>
+        <span class="n">acc_m_s2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc_m_s2</span>
+
+        <span class="c1"># Apply a zero-phase 4th-order Butterworth high-pass filter</span>
+        <span class="c1"># (corner at 0.1 Hz) to remove baseline drift without</span>
+        <span class="c1"># introducing phase distortion</span>
+        <span class="n">sos</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="mi">4</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">btype</span><span class="o">=</span><span class="s2">&quot;highpass&quot;</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;sos&quot;</span>
+        <span class="p">)</span>
+        <span class="n">acc_filtered</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">sosfiltfilt</span><span class="p">(</span><span class="n">sos</span><span class="p">,</span> <span class="n">acc_m_s2</span><span class="p">)</span>
+
+        <span class="c1"># Integrate filtered acceleration to obtain velocity</span>
+        <span class="n">vel</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span>
+            <span class="n">acc_filtered</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="c1"># Remove linear drift from velocity</span>
+        <span class="n">vel</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Integrate velocity to obtain displacement</span>
+        <span class="n">disp</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Remove residual linear drift from displacement</span>
+        <span class="n">disp</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">disp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vel</span><span class="p">,</span> <span class="n">disp</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_amplitude_ims">
+<a class="viewcode-back" href="../../../contents/imc/get_amplitude_ims.html#openquake.vmtk.imcalculator.imcalculator.get_amplitude_ims">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_amplitude_ims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes amplitude-based intensity measures.</span>
+
+<span class="sd">        Peak Ground Acceleration (PGA), Peak Ground Velocity (PGV),</span>
+<span class="sd">        and Peak Ground Displacement (PGD) are computed from the</span>
+<span class="sd">        acceleration time series by successive trapezoidal</span>
+<span class="sd">        integration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pga : float</span>
+<span class="sd">            Peak ground acceleration (g).</span>
+
+<span class="sd">        pgv : float</span>
+<span class="sd">            Peak ground velocity (m/s).</span>
+
+<span class="sd">        pgd : float</span>
+<span class="sd">            Peak ground displacement (m).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Acceleration in m/s²</span>
+        <span class="n">acc_m_s2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc_m_s2</span>
+        <span class="c1"># Integrate acceleration to obtain velocity</span>
+        <span class="n">vel</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span>
+            <span class="n">acc_m_s2</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="c1"># Integrate velocity to obtain displacement</span>
+        <span class="n">disp</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="p">)),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vel</span><span class="p">)),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">disp</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_arias_intensity">
+<a class="viewcode-back" href="../../../contents/imc/get_arias_intensity.html#openquake.vmtk.imcalculator.imcalculator.get_arias_intensity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_arias_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the Arias Intensity of the ground-motion record.</span>
+
+<span class="sd">        Arias Intensity is defined as:</span>
+
+<span class="sd">            AI = (pi / 2g) * integral(a(t)^2 dt)</span>
+
+<span class="sd">        where a(t) is the ground acceleration in m/s².</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ai : float</span>
+<span class="sd">            Arias Intensity (m/s).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Acceleration in m/s²</span>
+        <span class="n">acc_m_s2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc_m_s2</span>
+        <span class="c1"># Cumulative sum of squared acceleration scaled by pi/(2g)</span>
+        <span class="n">ai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">acc_m_s2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">_G</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+        <span class="c1"># Return the final (total) Arias Intensity value</span>
+        <span class="k">return</span> <span class="n">ai</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_cav">
+<a class="viewcode-back" href="../../../contents/imc/get_cav.html#openquake.vmtk.imcalculator.imcalculator.get_cav">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cav</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the Cumulative Absolute Velocity (CAV).</span>
+
+<span class="sd">        CAV is defined as:</span>
+
+<span class="sd">            CAV = integral( abs(a(t)) dt )</span>
+
+<span class="sd">        where a(t) is the ground acceleration in m/s².</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cav : float</span>
+<span class="sd">            Cumulative Absolute Velocity (m/s).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Integrate the absolute acceleration (m/s²) over the full</span>
+        <span class="c1"># record duration</span>
+        <span class="n">cav</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc_m_s2</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+        <span class="k">return</span> <span class="n">cav</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_significant_duration">
+<a class="viewcode-back" href="../../../contents/imc/get_significant_duration.html#openquake.vmtk.imcalculator.imcalculator.get_significant_duration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_significant_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the significant duration of the ground-motion record.</span>
+
+<span class="sd">        Significant duration is defined as the elapsed time between</span>
+<span class="sd">        specified fractions of the normalised Arias Intensity. The</span>
+<span class="sd">        default thresholds correspond to the 5%-95% significant</span>
+<span class="sd">        duration (t_5-95).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        start : float, optional</span>
+<span class="sd">            Lower fraction of normalised Arias Intensity. Default is</span>
+<span class="sd">            0.05 (5%).</span>
+
+<span class="sd">        end : float, optional</span>
+<span class="sd">            Upper fraction of normalised Arias Intensity. Default is</span>
+<span class="sd">            0.95 (95%).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sig_duration : float</span>
+<span class="sd">            Significant duration (s).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Because the Arias Intensity is normalised, the result is</span>
+<span class="sd">        independent of the acceleration unit (g or m/s²).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute cumulative Arias Intensity (un-normalised).</span>
+        <span class="c1"># Using self.acc (in g) is valid here because the subsequent</span>
+        <span class="c1"># normalisation cancels the unit factor.</span>
+        <span class="n">ai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">_G</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+        <span class="c1"># Normalise by the total Arias Intensity</span>
+        <span class="n">ai_norm</span> <span class="o">=</span> <span class="n">ai</span> <span class="o">/</span> <span class="n">ai</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Find the time instants at which the thresholds are exceeded</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">ai_norm</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+        <span class="n">t_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">ai_norm</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+
+        <span class="k">return</span> <span class="n">t_end</span> <span class="o">-</span> <span class="n">t_start</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_FIV3">
+<a class="viewcode-back" href="../../../contents/imc/get_FIV3.html#openquake.vmtk.imcalculator.imcalculator.get_FIV3">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_FIV3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the filtered incremental velocity (FIV3) intensity</span>
+<span class="sd">        measure for a given ground-motion record.</span>
+
+<span class="sd">        FIV3 is computed following Dávalos and Miranda (2019). A</span>
+<span class="sd">        second-order low-pass Butterworth filter is applied to the</span>
+<span class="sd">        acceleration record; the filtered incremental velocity (FIV)</span>
+<span class="sd">        is then obtained by integrating successive alpha*T windows.</span>
+<span class="sd">        FIV3 is the maximum of the sum of the three largest peaks and</span>
+<span class="sd">        the absolute sum of the three deepest troughs.</span>
+
+<span class="sd">        The FIV computation is fully vectorised using a cumulative-sum</span>
+<span class="sd">        approach for the sliding-window trapezoidal integrals,</span>
+<span class="sd">        avoiding the per-window Python loop.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        period : float</span>
+<span class="sd">            The period (s) used to define the filter cut-off frequency</span>
+<span class="sd">            and integration window length.</span>
+
+<span class="sd">        alpha : float</span>
+<span class="sd">            Period factor defining the integration window length</span>
+<span class="sd">            (window duration = alpha * period).</span>
+
+<span class="sd">        beta : float</span>
+<span class="sd">            Cut-off frequency factor for the low-pass Butterworth</span>
+<span class="sd">            filter (f_c = beta / period).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        FIV3 : float</span>
+<span class="sd">            FIV3 intensity measure (Eq. 3 of Dávalos &amp; Miranda 2019).</span>
+
+<span class="sd">        FIV : numpy.ndarray</span>
+<span class="sd">            Filtered incremental velocity time series (Eq. 2).</span>
+
+<span class="sd">        t : numpy.ndarray</span>
+<span class="sd">            Time instants corresponding to each FIV value (s).</span>
+
+<span class="sd">        ugf : numpy.ndarray</span>
+<span class="sd">            Low-pass-filtered acceleration time history (g).</span>
+
+<span class="sd">        pks : numpy.ndarray</span>
+<span class="sd">            Up to three largest peaks of the FIV series.</span>
+
+<span class="sd">        trs : numpy.ndarray</span>
+<span class="sd">            Up to three deepest troughs of the FIV series.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Dávalos H, Miranda E. &quot;Filtered incremental velocity: A novel</span>
+<span class="sd">        approach in intensity measures for seismic collapse</span>
+<span class="sd">        estimation.&quot; *Earthquake Engineering &amp; Structural Dynamics*,</span>
+<span class="sd">        2019, 48(12), 1384-1405.</span>
+<span class="sd">        DOI: 10.1002/eqe.3205.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="p">)</span>
+
+        <span class="c1"># Build time vector (vectorised replacement for list</span>
+        <span class="c1"># comprehension)</span>
+        <span class="n">tim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+
+        <span class="c1"># Apply a 2nd-order Butterworth low-pass filter to the ground</span>
+        <span class="c1"># motion record with normalised cut-off frequency</span>
+        <span class="n">Wn</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">/</span> <span class="n">period</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">Wn</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">)</span>
+        <span class="n">ugf</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="p">)</span>
+
+        <span class="c1"># Window length in samples</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">period</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span>
+
+        <span class="c1"># Determine valid starting indices: the remaining record must</span>
+        <span class="c1"># be at least alpha*T long (strict inequality matches the</span>
+        <span class="c1"># original loop condition)</span>
+        <span class="n">cutoff_time</span> <span class="o">=</span> <span class="n">tim</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">period</span>
+        <span class="n">valid_mask</span> <span class="o">=</span> <span class="n">tim</span> <span class="o">&lt;</span> <span class="n">cutoff_time</span>
+        <span class="n">valid_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">valid_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Further restrict so that i + w does not exceed n</span>
+        <span class="n">valid_idx</span> <span class="o">=</span> <span class="n">valid_idx</span><span class="p">[</span><span class="n">valid_idx</span> <span class="o">+</span> <span class="n">w</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">]</span>
+
+        <span class="c1"># Vectorised sliding-window trapezoidal integration.</span>
+        <span class="c1"># The trapezoidal integral of ugf[i : i+w] with unit spacing</span>
+        <span class="c1"># is: sum(ugf[i:i+w]) - 0.5*ugf[i] - 0.5*ugf[i+w-1].</span>
+        <span class="c1"># Multiplying by self.dt converts to physical units.</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">ugf</span><span class="p">)</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">cs</span><span class="p">))</span>  <span class="c1"># cs[k] = sum(ugf[0:k])</span>
+
+        <span class="n">window_sums</span> <span class="o">=</span> <span class="n">cs</span><span class="p">[</span><span class="n">valid_idx</span> <span class="o">+</span> <span class="n">w</span><span class="p">]</span> <span class="o">-</span> <span class="n">cs</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span>
+        <span class="n">FIV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">window_sums</span>
+            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">ugf</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span>
+            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">ugf</span><span class="p">[</span><span class="n">valid_idx</span> <span class="o">+</span> <span class="n">w</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">tim</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span>
+
+        <span class="c1"># Find the peaks and troughs of the FIV array</span>
+        <span class="n">pks_ind</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">(</span><span class="n">FIV</span><span class="p">)</span>
+        <span class="n">trs_ind</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">(</span><span class="o">-</span><span class="n">FIV</span><span class="p">)</span>
+
+        <span class="c1"># Sort peak and trough values</span>
+        <span class="n">pks_srt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">FIV</span><span class="p">[</span><span class="n">pks_ind</span><span class="p">])</span>
+        <span class="n">trs_srt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">FIV</span><span class="p">[</span><span class="n">trs_ind</span><span class="p">])</span>
+
+        <span class="c1"># Extract the three largest peaks and three deepest troughs</span>
+        <span class="n">pks</span> <span class="o">=</span> <span class="n">pks_srt</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+        <span class="n">trs</span> <span class="o">=</span> <span class="n">trs_srt</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="c1"># FIV3 = max of summed peak energy vs summed trough energy.</span>
+        <span class="c1"># Troughs are negative, so compare absolute values and return</span>
+        <span class="c1"># the dominant (unsigned) magnitude per Eq. (3) of the paper.</span>
+        <span class="n">FIV3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pks</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">trs</span><span class="p">))])</span>
+
+        <span class="k">return</span> <span class="n">FIV3</span><span class="p">,</span> <span class="n">FIV</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">ugf</span><span class="p">,</span> <span class="n">pks</span><span class="p">,</span> <span class="n">trs</span></div>
+
+
+<div class="viewcode-block" id="imcalculator.get_rotdxx">
+<a class="viewcode-back" href="../../../contents/imc/get_rotdxx.html#openquake.vmtk.imcalculator.imcalculator.get_rotdxx">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_rotdxx</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">acc2</span><span class="p">,</span>
+        <span class="n">percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">periods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+        <span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the RotDxx orientation-independent spectral</span>
+<span class="sd">        acceleration from two horizontal ground-motion components.</span>
+
+<span class="sd">        RotDxx is the *xx*-th percentile of the single-component</span>
+<span class="sd">        spectral acceleration computed over 180 equally spaced</span>
+<span class="sd">        rotation angles (0° to 179°). The rotated acceleration at</span>
+<span class="sd">        angle θ is:</span>
+
+<span class="sd">            a_rot(t, θ) = a₁(t) · cos θ + a₂(t) · sin θ</span>
+
+<span class="sd">        where a₁ and a₂ are the two orthogonal horizontal</span>
+<span class="sd">        components. Because the system is linear, the displacement</span>
+<span class="sd">        response to a_rot is:</span>
+
+<span class="sd">            u(t, θ) = cos θ · u₁(t) + sin θ · u₂(t)</span>
+
+<span class="sd">        where u₁ and u₂ are the SDOF displacement responses to a₁</span>
+<span class="sd">        and a₂ respectively. This allows the Newmark-β integration</span>
+<span class="sd">        to be performed only twice (once per component) rather than</span>
+<span class="sd">        180 times.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        acc2 : array_like</span>
+<span class="sd">            Second horizontal acceleration component. Must be the</span>
+<span class="sd">            same length as ``self.acc`` and supplied in the same</span>
+<span class="sd">            unit as the first component (the unit used when</span>
+<span class="sd">            constructing the :class:`imcalculator` instance).</span>
+
+<span class="sd">        percentile : float, optional</span>
+<span class="sd">            Percentile in [0, 100] across rotation angles used to</span>
+<span class="sd">            define RotDxx. Use 50 for RotD50 (median) or 100 for</span>
+<span class="sd">            RotD100 (maximum). Default is 50.</span>
+
+<span class="sd">        periods : numpy.ndarray, optional</span>
+<span class="sd">            Array of periods at which to compute RotDxx (s).</span>
+<span class="sd">            Default is 500 points linearly spaced from 1e-5 to</span>
+<span class="sd">            4.0 s.</span>
+
+<span class="sd">        damping_ratio : float, optional</span>
+<span class="sd">            Damping ratio for the SDOF oscillator. Default is</span>
+<span class="sd">            0.05 (5%).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        periods : numpy.ndarray</span>
+<span class="sd">            Periods of the RotDxx spectrum (s).</span>
+
+<span class="sd">        rotdxx : numpy.ndarray</span>
+<span class="sd">            RotDxx spectral acceleration (g) at each period.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Common choices are RotD50 (``percentile=50``), which is</span>
+<span class="sd">        used as the reference IM in ASCE 7-22 ground-motion</span>
+<span class="sd">        selection, and RotD100 (``percentile=100``), the</span>
+<span class="sd">        orientation-independent maximum.</span>
+
+<span class="sd">        When the second component is zero, RotD100 equals the</span>
+<span class="sd">        single-component SA and RotD50 equals SA · √2/2 (the</span>
+<span class="sd">        median of abs(cos θ) over 180 uniformly spaced angles).</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Boore, D.M. (2010). &quot;Orientation-independent, nongeometric-</span>
+<span class="sd">        mean measures of seismic intensity from two horizontal</span>
+<span class="sd">        components of motion.&quot; *Bulletin of the Seismological</span>
+<span class="sd">        Society of America*, 100(4), 1830–1835.</span>
+<span class="sd">        DOI: 10.1785/0120090400.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Newmark-beta integration constants (constant average</span>
+        <span class="c1"># acceleration — unconditionally stable)</span>
+        <span class="n">gamma_nb</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">beta_nb</span> <span class="o">=</span> <span class="mf">0.25</span>
+        <span class="n">ms</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Unit mass (kg)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+
+        <span class="c1"># Convert acc2 to g (matching the internal storage of acc1)</span>
+        <span class="n">acc2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">acc2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;m/s2&quot;</span><span class="p">,</span> <span class="s2">&quot;m/s^2&quot;</span><span class="p">):</span>
+            <span class="n">acc2_g</span> <span class="o">=</span> <span class="n">acc2</span> <span class="o">/</span> <span class="n">_G</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">acc2_g</span> <span class="o">=</span> <span class="n">acc2</span>
+
+        <span class="c1"># Precompute SDOF system properties (vectorised over periods)</span>
+        <span class="n">periods</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">periods</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">periods</span>          <span class="c1"># (n_periods,)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span>                    <span class="c1"># Stiffness (N/m)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">damping_ratio</span> <span class="o">*</span> <span class="n">ms</span> <span class="o">*</span> <span class="n">omega</span>   <span class="c1"># Damping coefficient</span>
+
+        <span class="n">k_bar</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">k</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="p">))</span> <span class="o">*</span> <span class="n">c</span>
+            <span class="o">+</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_newmark_u</span><span class="p">(</span><span class="n">acc_g</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return displacement history (n_periods, n_time) for acc_g.&quot;&quot;&quot;</span>
+            <span class="n">acc_ms2</span> <span class="o">=</span> <span class="n">acc_g</span> <span class="o">*</span> <span class="n">_G</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="n">ms</span> <span class="o">*</span> <span class="n">acc_ms2</span>
+            <span class="n">n_time</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">acc_ms2</span><span class="p">)</span>
+            <span class="n">n_per</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">periods</span><span class="p">)</span>
+
+            <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_per</span><span class="p">,</span> <span class="n">n_time</span><span class="p">))</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_per</span><span class="p">,</span> <span class="n">n_time</span><span class="p">))</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_per</span><span class="p">,</span> <span class="n">n_time</span><span class="p">))</span>
+
+            <span class="n">a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">ms</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_time</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">dp</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">dp_bar</span> <span class="o">=</span> <span class="n">dp</span> <span class="o">+</span> <span class="n">A</span> <span class="o">*</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">B</span> <span class="o">*</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">du</span> <span class="o">=</span> <span class="n">dp_bar</span> <span class="o">/</span> <span class="n">k_bar</span>
+                <span class="n">dv</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="p">))</span> <span class="o">*</span> <span class="n">du</span>
+                    <span class="o">-</span> <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">*</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                    <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma_nb</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta_nb</span><span class="p">))</span> <span class="o">*</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">da</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">du</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta_nb</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">du</span>
+                <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">dv</span>
+                <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">da</span>
+
+            <span class="k">return</span> <span class="n">u</span>
+
+        <span class="c1"># SDOF displacement responses for the two components</span>
+        <span class="n">u1</span> <span class="o">=</span> <span class="n">_newmark_u</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="p">)</span>   <span class="c1"># (n_periods, n_time)</span>
+        <span class="n">u2</span> <span class="o">=</span> <span class="n">_newmark_u</span><span class="p">(</span><span class="n">acc2_g</span><span class="p">)</span>     <span class="c1"># (n_periods, n_time)</span>
+
+        <span class="c1"># 180 rotation angles: 0°, 1°, …, 179°</span>
+        <span class="n">theta_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">180</span><span class="p">))</span>   <span class="c1"># (180,)</span>
+
+        <span class="c1"># SA at each (angle, period) combination</span>
+        <span class="c1"># u_rot(θ) = cos(θ)*u1 + sin(θ)*u2  →  shape (n_periods, n_time)</span>
+        <span class="c1"># Vectorise over angles by broadcasting</span>
+        <span class="c1"># cos_th: (180, 1, 1), u1: (1, n_periods, n_time)</span>
+        <span class="n">cos_th</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta_rad</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>  <span class="c1"># (180,1,1)</span>
+        <span class="n">sin_th</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta_rad</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>  <span class="c1"># (180,1,1)</span>
+        <span class="n">u_rot</span> <span class="o">=</span> <span class="n">cos_th</span> <span class="o">*</span> <span class="n">u1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">+</span> <span class="n">sin_th</span> <span class="o">*</span> <span class="n">u2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="c1"># u_rot shape: (180, n_periods, n_time)</span>
+
+        <span class="n">sd_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">u_rot</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># (180, n_periods)</span>
+        <span class="n">sa_rot</span> <span class="o">=</span> <span class="n">sd_rot</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">_G</span>   <span class="c1"># (180, n_periods)</span>
+
+        <span class="c1"># RotDxx: percentile across the 180 rotation angles</span>
+        <span class="n">rotdxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">sa_rot</span><span class="p">,</span> <span class="n">percentile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># (n_periods,)</span>
+
+        <span class="k">return</span> <span class="n">periods</span><span class="p">,</span> <span class="n">rotdxx</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

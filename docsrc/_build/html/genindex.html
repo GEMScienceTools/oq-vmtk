@@ -7,14 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Index &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=749cc255" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
@@ -42,13 +43,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">IM Calculator Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">Model Calibration Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">Model Building Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">Postprocessing Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">Storey-Loss Function Generation Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">Plotter Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -82,47 +87,40 @@
  | <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
- | <a href="#E"><strong>E</strong></a>
- | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
- | <a href="#I"><strong>I</strong></a>
- | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
- | <a href="#S"><strong>S</strong></a>
- | <a href="#T"><strong>T</strong></a>
- | <a href="#V"><strong>V</strong></a>
  
 </div>
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/plo.html#plotter.__init__">__init__() (plotter method)</a>
+      <li><a href="contents/cal/init.html#openquake.vmtk.calibration.calibration.__init__">__init__() (openquake.vmtk.calibration.calibration method)</a>
 
       <ul>
-        <li><a href="contents/slf.html#slf_generator.__init__">(slf_generator method)</a>
+        <li><a href="contents/imc/init.html#openquake.vmtk.imcalculator.imcalculator.__init__">(openquake.vmtk.imcalculator.imcalculator method)</a>
+</li>
+        <li><a href="contents/ims/init.html#openquake.vmtk.imselection.imselection.__init__">(openquake.vmtk.imselection.imselection method)</a>
+</li>
+        <li><a href="contents/mod/init.html#openquake.vmtk.modeller.modeller.__init__">(openquake.vmtk.modeller.modeller method)</a>
+</li>
+        <li><a href="contents/pos/init.html#openquake.vmtk.postprocessor.postprocessor.__init__">(openquake.vmtk.postprocessor.postprocessor method)</a>
+</li>
+        <li><a href="contents/slf/init.html#openquake.vmtk.slfgenerator.slfgenerator.__init__">(openquake.vmtk.slfgenerator.slfgenerator method)</a>
 </li>
       </ul></li>
-      <li><a href="contents/slf.html#slf_generator._define_edp_range">_define_edp_range() (slf_generator method)</a>
-</li>
-      <li><a href="contents/slf.html#slf_generator._get_component_data">_get_component_data() (slf_generator method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator._get_correlation_tree">_get_correlation_tree() (slf_generator method)</a>
-</li>
-      <li><a href="contents/slf.html#slf_generator._group_components">_group_components() (slf_generator method)</a>
-</li>
-      <li><a href="contents/plo.html#plotter._save_plot">_save_plot() (plotter method)</a>
-</li>
-      <li><a href="contents/plo.html#plotter._set_plot_style">_set_plot_style() (plotter method)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/plo.html#plotter.animate_model_run">animate_model_run() (plotter method)</a>
+      <li><a href="contents/plo/animate_cpo.html#openquake.vmtk.plotter.plotter.animate_cpo">animate_cpo() (openquake.vmtk.plotter.plotter method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="contents/plo/animate_nrha.html#openquake.vmtk.plotter.plotter.animate_nrha">animate_nrha() (openquake.vmtk.plotter.plotter method)</a>
+</li>
+      <li><a href="contents/plo/animate_spo.html#openquake.vmtk.plotter.plotter.animate_spo">animate_spo() (openquake.vmtk.plotter.plotter method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -130,36 +128,41 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/pos.html#postprocessor.calculate_average_annual_damage_probability">calculate_average_annual_damage_probability() (postprocessor method)</a>
+      <li><a href="contents/pos/calculate_average_annual_damage_probability.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_damage_probability">calculate_average_annual_damage_probability() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor.calculate_average_annual_loss">calculate_average_annual_loss() (postprocessor method)</a>
+      <li><a href="contents/pos/calculate_average_annual_loss.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_loss">calculate_average_annual_loss() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-      <li><a href="contents/slf.html#slf_generator.calculate_costs">calculate_costs() (slf_generator method)</a>
+      <li><a href="contents/pos/calculate_glm_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_glm_fragility">calculate_glm_fragility() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor.calculate_glm_fragility">calculate_glm_fragility() (postprocessor method)</a>
+      <li><a href="contents/pos/calculate_lognormal_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_lognormal_fragility">calculate_lognormal_fragility() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor.calculate_lognormal_fragility">calculate_lognormal_fragility() (postprocessor method)</a>
+      <li><a href="contents/pos/calculate_ordinal_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_ordinal_fragility">calculate_ordinal_fragility() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor.calculate_ordinal_fragility">calculate_ordinal_fragility() (postprocessor method)</a>
+      <li><a href="contents/pos/calculate_rotated_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_rotated_fragility">calculate_rotated_fragility() (openquake.vmtk.postprocessor.postprocessor method)</a>
+</li>
+      <li><a href="contents/pos/calculate_vulnerability_function.html#openquake.vmtk.postprocessor.postprocessor.calculate_vulnerability_function">calculate_vulnerability_function() (openquake.vmtk.postprocessor.postprocessor method)</a>
+</li>
+      <li><a href="contents/cal/calibrate_model.html#openquake.vmtk.calibration.calibration.calibrate_model">calibrate_model() (openquake.vmtk.calibration.calibration method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/pos.html#postprocessor.calculate_rotated_fragility">calculate_rotated_fragility() (postprocessor method)</a>
+      <li><a href="contents/ims/compare_ims.html#openquake.vmtk.imselection.imselection.compare_ims">compare_ims() (openquake.vmtk.imselection.imselection method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor.calculate_sigma_loss">calculate_sigma_loss() (postprocessor method)</a>
+      <li><a href="contents/mod/compile_model.html#openquake.vmtk.modeller.modeller.compile_model">compile_model() (openquake.vmtk.modeller.modeller method)</a>
 </li>
-      <li><a href="contents/cal.html#calibration.calibrate_model">calibrate_model() (in module calibration)</a>
+      <li><a href="contents/ims/compute_efficiency_ida.html#openquake.vmtk.imselection.imselection.compute_efficiency_ida">compute_efficiency_ida() (openquake.vmtk.imselection.imselection method)</a>
 </li>
-      <li>
-    calibration
-
-      <ul>
-        <li><a href="contents/cal.html#module-calibration">module</a>
+      <li><a href="contents/ims/compute_efficiency_mca.html#openquake.vmtk.imselection.imselection.compute_efficiency_mca">compute_efficiency_mca() (openquake.vmtk.imselection.imselection method)</a>
 </li>
-      </ul></li>
-      <li><a href="contents/mod.html#modeller.modeller.compile_model">compile_model() (modeller.modeller method)</a>
+      <li><a href="contents/ims/compute_proficiency_ida.html#openquake.vmtk.imselection.imselection.compute_proficiency_ida">compute_proficiency_ida() (openquake.vmtk.imselection.imselection method)</a>
 </li>
-      <li><a href="contents/mod.html#modeller.modeller.create_Pinching4_material">create_Pinching4_material() (modeller.modeller method)</a>
+      <li><a href="contents/ims/compute_proficiency_mca.html#openquake.vmtk.imselection.imselection.compute_proficiency_mca">compute_proficiency_mca() (openquake.vmtk.imselection.imselection method)</a>
+</li>
+      <li><a href="contents/ims/compute_rsm_general.html#openquake.vmtk.imselection.imselection.compute_rsm_general">compute_rsm_general() (openquake.vmtk.imselection.imselection method)</a>
+</li>
+      <li><a href="contents/ims/compute_rsm_ida.html#openquake.vmtk.imselection.imselection.compute_rsm_ida">compute_rsm_ida() (openquake.vmtk.imselection.imselection method)</a>
+</li>
+      <li><a href="contents/ims/compute_rsm_mca.html#openquake.vmtk.imselection.imselection.compute_rsm_mca">compute_rsm_mca() (openquake.vmtk.imselection.imselection method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -167,41 +170,15 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/pos.html#postprocessor.do_cloud_analysis">do_cloud_analysis() (postprocessor method)</a>
+      <li><a href="contents/mod/do_gravity_analysis.html#openquake.vmtk.modeller.modeller.do_gravity_analysis">do_gravity_analysis() (openquake.vmtk.modeller.modeller method)</a>
 </li>
-      <li><a href="contents/mod.html#modeller.modeller.do_cpo_analysis">do_cpo_analysis() (modeller.modeller method)</a>
-</li>
-      <li><a href="contents/mod.html#modeller.modeller.do_gravity_analysis">do_gravity_analysis() (modeller.modeller method)</a>
-</li>
-      <li><a href="contents/mod.html#modeller.modeller.do_modal_analysis">do_modal_analysis() (modeller.modeller method)</a>
+      <li><a href="contents/mod/do_modal_analysis.html#openquake.vmtk.modeller.modeller.do_modal_analysis">do_modal_analysis() (openquake.vmtk.modeller.modeller method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.do_monte_carlo_simulations">do_monte_carlo_simulations() (slf_generator method)</a>
+      <li><a href="contents/mod/do_nrha_analysis.html#openquake.vmtk.modeller.modeller.do_nrha_analysis">do_nrha_analysis() (openquake.vmtk.modeller.modeller method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor.do_multiple_stripe_analysis">do_multiple_stripe_analysis() (postprocessor method)</a>
-</li>
-      <li><a href="contents/mod.html#modeller.modeller.do_nrha_analysis">do_nrha_analysis() (modeller.modeller method)</a>
-</li>
-      <li><a href="contents/mod.html#modeller.modeller.do_spo_analysis">do_spo_analysis() (modeller.modeller method)</a>
-</li>
-      <li><a href="contents/plo.html#plotter.duplicate_for_drift">duplicate_for_drift() (plotter method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="E">E</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.estimate_accuracy">estimate_accuracy() (slf_generator method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="F">F</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.fragility_function">fragility_function() (slf_generator method)</a>
+      <li><a href="contents/mod/do_spo_analysis.html#openquake.vmtk.modeller.modeller.do_spo_analysis">do_spo_analysis() (openquake.vmtk.modeller.modeller method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -209,130 +186,65 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.generate">generate() (slf_generator method)</a>
+      <li><a href="contents/slf/generate.html#openquake.vmtk.slfgenerator.slfgenerator.generate">generate() (openquake.vmtk.slfgenerator.slfgenerator method)</a>
 </li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_amplitude_ims">get_amplitude_ims() (im_calculator.IMCalculator method)</a>
+      <li><a href="contents/imc/get_amplitude_ims.html#openquake.vmtk.imcalculator.imcalculator.get_amplitude_ims">get_amplitude_ims() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_arias_intensity">get_arias_intensity() (im_calculator.IMCalculator method)</a>
+      <li><a href="contents/imc/get_arias_intensity.html#openquake.vmtk.imcalculator.imcalculator.get_arias_intensity">get_arias_intensity() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_cav">get_cav() (im_calculator.IMCalculator method)</a>
+      <li><a href="contents/imc/get_cav.html#openquake.vmtk.imcalculator.imcalculator.get_cav">get_cav() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_duration_ims">get_duration_ims() (im_calculator.IMCalculator method)</a>
+      <li><a href="contents/imc/get_FIV3.html#openquake.vmtk.imcalculator.imcalculator.get_FIV3">get_FIV3() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_FIV3">get_FIV3() (im_calculator.IMCalculator method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_sa">get_sa() (im_calculator.IMCalculator method)</a>
-</li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_saavg">get_saavg() (im_calculator.IMCalculator method)</a>
-</li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_saavg_user_defined">get_saavg_user_defined() (im_calculator.IMCalculator method)</a>
-</li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_significant_duration">get_significant_duration() (im_calculator.IMCalculator method)</a>
-</li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_spectrum">get_spectrum() (im_calculator.IMCalculator method)</a>
-</li>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator.get_velocity_displacement_history">get_velocity_displacement_history() (im_calculator.IMCalculator method)</a>
-</li>
-      <li><a href="contents/pos.html#postprocessor.get_vulnerability_function">get_vulnerability_function() (postprocessor method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="I">I</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    im_calculator
-
-      <ul>
-        <li><a href="contents/imc.html#module-im_calculator">module</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/imc.html#im_calculator.IMCalculator">IMCalculator (class in im_calculator)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="M">M</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    modeller
-
-      <ul>
-        <li><a href="contents/mod.html#module-modeller">module</a>
-</li>
-      </ul></li>
-      <li><a href="contents/mod.html#modeller.modeller">modeller (class in modeller)</a>
+      <li><a href="contents/imc/get_rotdxx.html#openquake.vmtk.imcalculator.imcalculator.get_rotdxx">get_rotdxx() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    module
-
-      <ul>
-        <li><a href="contents/cal.html#module-calibration">calibration</a>
+      <li><a href="contents/imc/get_sa.html#openquake.vmtk.imcalculator.imcalculator.get_sa">get_sa() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-        <li><a href="contents/imc.html#module-im_calculator">im_calculator</a>
+      <li><a href="contents/imc/get_saavg.html#openquake.vmtk.imcalculator.imcalculator.get_saavg">get_saavg() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-        <li><a href="contents/mod.html#module-modeller">modeller</a>
+      <li><a href="contents/imc/get_saavg_user_defined.html#openquake.vmtk.imcalculator.imcalculator.get_saavg_user_defined">get_saavg_user_defined() (openquake.vmtk.imcalculator.imcalculator method)</a>
 </li>
-      </ul></li>
+      <li><a href="contents/imc/get_significant_duration.html#openquake.vmtk.imcalculator.imcalculator.get_significant_duration">get_significant_duration() (openquake.vmtk.imcalculator.imcalculator method)</a>
+</li>
+      <li><a href="contents/imc/get_spectrum.html#openquake.vmtk.imcalculator.imcalculator.get_spectrum">get_spectrum() (openquake.vmtk.imcalculator.imcalculator method)</a>
+</li>
+      <li><a href="contents/imc/get_velocity_displacement_history.html#openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history">get_velocity_displacement_history() (openquake.vmtk.imcalculator.imcalculator method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.perform_regression">perform_regression() (slf_generator method)</a>
+      <li><a href="contents/plo/plot_fragility_from_ida.html#openquake.vmtk.plotter.plotter.plot_fragility_from_ida">plot_fragility_from_ida() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter.plot_ansys_results">plot_ansys_results() (plotter method)</a>
+      <li><a href="contents/plo/plot_fragility_from_mca.html#openquake.vmtk.plotter.plotter.plot_fragility_from_mca">plot_fragility_from_mca() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter.plot_cloud_analysis">plot_cloud_analysis() (plotter method)</a>
+      <li><a href="contents/plo/plot_fragility_from_msa.html#openquake.vmtk.plotter.plotter.plot_fragility_from_msa">plot_fragility_from_msa() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter.plot_demand_profiles">plot_demand_profiles() (plotter method)</a>
+      <li><a href="contents/plo/plot_ida_analysis.html#openquake.vmtk.plotter.plotter.plot_ida_analysis">plot_ida_analysis() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter.plot_fragility_analysis">plot_fragility_analysis() (plotter method)</a>
+      <li><a href="contents/plo/plot_mca_analysis.html#openquake.vmtk.plotter.plotter.plot_mca_analysis">plot_mca_analysis() (openquake.vmtk.plotter.plotter method)</a>
+</li>
+      <li><a href="contents/mod/plot_model.html#openquake.vmtk.modeller.modeller.plot_model">plot_model() (openquake.vmtk.modeller.modeller method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/mod.html#modeller.modeller.plot_model">plot_model() (modeller.modeller method)</a>
+      <li><a href="contents/plo/plot_modes.html#openquake.vmtk.plotter.plotter.plot_modes">plot_modes() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter.plot_slf_model">plot_slf_model() (plotter method)</a>
+      <li><a href="contents/plo/plot_msa_analysis.html#openquake.vmtk.plotter.plotter.plot_msa_analysis">plot_msa_analysis() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter.plot_vulnerability_analysis">plot_vulnerability_analysis() (plotter method)</a>
+      <li><a href="contents/plo/plot_slf_model.html#openquake.vmtk.plotter.plotter.plot_slf_model">plot_slf_model() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/plo.html#plotter">plotter (built-in class)</a>
+      <li><a href="contents/plo/plot_vulnerability_function.html#openquake.vmtk.plotter.plotter.plot_vulnerability_function">plot_vulnerability_function() (openquake.vmtk.plotter.plotter method)</a>
 </li>
-      <li><a href="contents/pos.html#postprocessor">postprocessor (built-in class)</a>
+      <li><a href="contents/pos/process_ida_results.html#openquake.vmtk.postprocessor.postprocessor.process_ida_results">process_ida_results() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-  </ul></td>
-</tr></table>
-
-<h2 id="S">S</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator">slf_generator (built-in class)</a>
+      <li><a href="contents/pos/process_mca_results.html#openquake.vmtk.postprocessor.postprocessor.process_mca_results">process_mca_results() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
-  </ul></td>
-</tr></table>
-
-<h2 id="T">T</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.transform_output">transform_output() (slf_generator method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="V">V</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="contents/slf.html#slf_generator.validate_ds_dependence">validate_ds_dependence() (slf_generator method)</a>
+      <li><a href="contents/pos/process_msa_results.html#openquake.vmtk.postprocessor.postprocessor.process_msa_results">process_msa_results() (openquake.vmtk.postprocessor.postprocessor method)</a>
 </li>
   </ul></td>
 </tr></table>

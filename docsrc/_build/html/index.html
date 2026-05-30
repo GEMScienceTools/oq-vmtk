@@ -6,21 +6,22 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to the OpenQuake Vulnerability Modellers Toolkit’s documentation! &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+  <title>Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation! &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=749cc255" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="contents/installation.html" /> 
+    <link rel="next" title="1. Installation" href="contents/installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,13 +45,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">IM Calculator Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">Model Calibration Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">Model Building Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">Postprocessing Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">Storey-Loss Function Generation Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">Plotter Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -67,7 +72,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to the OpenQuake Vulnerability Modellers Toolkit’s documentation!</li>
+      <li class="breadcrumb-item active">Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation!</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -77,8 +82,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="welcome-to-the-openquake-vulnerability-modellers-toolkit-s-documentation">
-<h1>Welcome to the OpenQuake Vulnerability Modellers Toolkit’s documentation!<a class="headerlink" href="#welcome-to-the-openquake-vulnerability-modellers-toolkit-s-documentation" title="Link to this heading"></a></h1>
+  <section id="welcome-to-the-openquake-vulnerability-modeller-s-toolkit-s-documentation">
+<h1>Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation!<a class="headerlink" href="#welcome-to-the-openquake-vulnerability-modeller-s-toolkit-s-documentation" title="Link to this heading"></a></h1>
 <p>The OpenQuake Vulnerability Modellers Toolkit (<code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code>) is an open source
 library that provides an OpenSeesPy-based environment for modelling idealised
 building class models such as single (SDOF) and multi-degree-of-freedom
@@ -88,59 +93,142 @@ The vulnerability toolkit is developed by the Risk Team at the Global Earthquake
 Model (GEM) Foundation. Contributions from external users are very welcome!</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> code is hosted on GitHub at the following link:
 <a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk">https://github.com/GEMScienceTools/oq-vmtk</a>.</p>
-<p>Currently, the <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> includes eight sub-modules:</p>
+<p>Currently, the <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> includes the following sub-modules:</p>
 <ul class="simple">
-<li><p><strong>Intensity Measure Calculator (im_calculator)</strong>: Contains code used for
+<li><p><strong>Intensity Measure Calculator (imcalculator)</strong>: Contains code used for
 processing spectra and intensity measure types from ground-motion records.</p></li>
+<li><p><strong>Intensity Measure Selection (imselection)</strong>: Contains code for evaluating and
+comparing intensity measures using information-theoretic sufficiency metrics.</p></li>
 <li><p><strong>Model Calibration (calibration)</strong>: Contains code used for calibrating MDOF models
 based on SDOF low-level parameters.</p></li>
-<li><p><strong>Model Building (modeller)</strong>: Contains code used to compile SDOF and MDOF models
-in OpenSeesPy and run distinct analyses such as linear (i.e., modal analysis),
-nonlinear static (e.g., static and cyclic pushovers), and nonlinear time-history
+<li><p><strong>Model Building and Analysis (modeller)</strong>: Contains code used to compile SDOF and
+MDOF models in OpenSeesPy and run distinct analyses such as linear (i.e., modal
+analysis), nonlinear static (e.g., static pushovers), and nonlinear time-history
 analyses.</p></li>
-<li><p><strong>Fragility and Vulnerability Analysis (postprocessor)</strong>: Contains code for
-postprocessing cloud and multiple stripe analyses to derive fragility and
-vulnerability models.</p></li>
-<li><p><strong>Storey Loss Function Generator (slf_generator)</strong>: Contains code for generating
+<li><p><strong>Postprocessing (postprocessor)</strong>: Contains code for postprocessing cloud and
+multiple stripe analyses to derive fragility and vulnerability models.</p></li>
+<li><p><strong>Storey Loss Function Generator (slfgenerator)</strong>: Contains code for generating
 storey loss functions for a more refined loss assessment of building components.</p></li>
-<li><p><strong>Model Plotting (plotter)</strong>: Contains code for visualizing and graphically
+<li><p><strong>Visualisation (plotter)</strong>: Contains code for visualizing and graphically
 interpreting <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> outputs.</p></li>
-<li><p><strong>Units and Utilities</strong>: Contains miscellaneous code used for assigning units of
-measurements to OpenSeesPy models and to carry out other file management and
-variable handling tasks, respectively.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">IM Calculator Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contents/imc.html#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contents/imc.html#references">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/installation.html">1. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/installation.html#clone-the-repository">1.1. Clone the Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/installation.html#set-up-a-virtual-environment">1.2. Set Up a Virtual Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/installation.html#install-dependencies">1.3. Install Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/installation.html#install-the-package">1.4. Install the Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/installation.html#verify-the-installation">1.5. Verify the Installation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">Model Calibration Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contents/cal.html#functions">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contents/cal.html#references">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/changelog.html">2. Change Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/changelog.html#v1-1-0-in-development">2.1. v1.1.0 (in development)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/changelog.html#v1-0-0">2.2. v1.0.0</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">Model Building Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contents/mod.html#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contents/mod.html#references">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/imc.html">3. Intensity Measure Calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/init.html">3.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_spectrum.html">3.2. Response Spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_sa.html">3.3. Spectral Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_saavg.html">3.4. Average Spectral Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_saavg_user_defined.html">3.5. User-Defined Average Spectral Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_velocity_displacement_history.html">3.6. Velocity and Displacement History</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_amplitude_ims.html">3.7. Amplitude Intensity Measures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_arias_intensity.html">3.8. Arias Intensity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_cav.html">3.9. Cumulative Absolute Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_significant_duration.html">3.10. Significant Duration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_FIV3.html">3.11. Filtered Incremental Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc/get_rotdxx.html">3.12. Orientation-Independent Spectral Acceleration (RotDxx)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/imc.html#references">3.13. References</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">Postprocessing Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contents/pos.html#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contents/pos.html#references">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/ims.html">4. Intensity Measure Selection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/init.html">4.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_efficiency_mca.html">4.2. Efficiency — Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_efficiency_ida.html">4.3. Efficiency — Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_proficiency_mca.html">4.4. Proficiency — Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_proficiency_ida.html">4.5. Proficiency — Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_rsm_mca.html">4.6. Relative Score Method — Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_rsm_ida.html">4.7. Relative Score Method — Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compute_rsm_general.html">4.8. Relative Score Method — General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims/compare_ims.html">4.9. IM Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/ims.html#references">4.10. References</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">Storey-Loss Function Generation Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#example-usage">Example Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#references">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/cal.html">5. Model Calibration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/cal/init.html">5.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/cal/calibrate_model.html">5.2. SDOF-to-MDOF Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/cal.html#references">5.3. References</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">Plotter Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contents/plo.html#plotter"><code class="docutils literal notranslate"><span class="pre">plotter</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents/mod.html">6. Model Building and Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/init.html">6.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/compile_model.html">6.2. Model Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/plot_model.html">6.3. Model Visualisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/do_gravity_analysis.html">6.4. Gravity Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/do_modal_analysis.html">6.5. Modal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/do_spo_analysis.html">6.6. Static Pushover Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod/do_nrha_analysis.html">6.7. Nonlinear Time-History Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/mod.html#references">6.8. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/pos.html">7. Postprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/init.html">7.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_glm_fragility.html">7.4. GLM Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/process_mca_results.html">7.6. Modified Cloud Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos/calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/pos.html#references">7.12. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/slf.html">8. Storey Loss Function Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/slf/init.html">8.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/slf/generate.html">8.2. SLF Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/slf.html#references">8.3. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/plo.html">9. Visualisation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_modes.html">9.1. Modal Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/animate_spo.html">9.2. Static Pushover Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/animate_cpo.html">9.3. Cyclic Pushover Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/animate_nrha.html">9.4. Nonlinear Time-History Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_mca_analysis.html">9.5. MCA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_ida_analysis.html">9.6. IDA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_msa_analysis.html">9.7. MSA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_fragility_from_mca.html">9.8. Fragility Functions from MCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_fragility_from_ida.html">9.9. Fragility Functions from IDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_fragility_from_msa.html">9.10. Fragility Functions from MSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_slf_model.html">9.11. Storey Loss Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/plo/plot_vulnerability_function.html">9.12. Vulnerability Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/demos.html">10. Demos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/demos.html#launching-jupyterlab">10.1. Launching JupyterLab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/demos.html#available-demos">10.2. Available Demos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/demos.html#suggested-reading-order">10.3. Suggested Reading Order</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contents/examples.html">11. Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/intensity_measure_processing.html">11.1. Intensity Measure Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/intensity_measure_selection.html">11.2. Intensity Measure Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/model_compilation.html">11.3. Model Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/modal_analysis.html">11.4. Modal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/pushover_analysis.html">11.5. Pushover Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/nonlinear_time_history_analysis.html">11.6. Nonlinear Time-History Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/modified_cloud_analysis.html">11.7. Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/multiple_stripe_analysis.html">11.8. Multiple Stripe Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/incremental_dynamic_analysis.html">11.9. Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/fragility_analysis.html">11.10. Fragility Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/storey_loss_function_generation.html">11.11. Storey Loss Function Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contents/examples/storey_loss_function_application.html">11.12. Storey Loss Function Application</a></li>
 </ul>
 </li>
 </ul>
@@ -159,7 +247,7 @@ variable handling tasks, respectively.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="contents/installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="contents/installation.html" class="btn btn-neutral float-right" title="1. Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

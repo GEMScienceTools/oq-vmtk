@@ -6,22 +6,23 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+  <title>1. Installation &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=749cc255" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="IM Calculator Module" href="IMCalculator.html" />
-    <link rel="prev" title="Welcome to the OpenQuake Vulnerability Modellers Toolkit’s documentation!" href="../index.html" /> 
+    <link rel="next" title="2. Change Log" href="changelog.html" />
+    <link rel="prev" title="Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation!" href="../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,13 +46,24 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="IMCalculator.html">IM Calculator Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Calibration.html">Model Calibration Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Modeller.html">Model Building Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Postprocessor.html">Postprocessing Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="SLFGenerator.html">Storey-Loss Function Generation Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Plotter.html">Plotter Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#clone-the-repository">1.1. Clone the Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-up-a-virtual-environment">1.2. Set Up a Virtual Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-dependencies">1.3. Install Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-the-package">1.4. Install the Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verify-the-installation">1.5. Verify the Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -68,7 +80,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Installation</li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>Installation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/contents/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -79,8 +91,8 @@
            <div itemprop="articleBody">
              
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
-<p>Follow these steps to install the oq-vmtk package and its dependencies. Note that
+<h1><span class="section-number">1. </span>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>Follow these steps to install the <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> package and its dependencies. Note that
 this procedure implies the installation of the OpenQuake engine dependencies.
 This procedure was tested on Windows and Linux OS. It is highly recommended
 to use a virtual environment to install this tool. A virtual environment is an
@@ -88,62 +100,81 @@ isolated Python environment that allows you to manage dependencies for this
 project separately from your system’s Python installation. This ensures that the
 required dependencies for the OpenQuake engine do not interfere with other Python
 projects or system packages, which could lead to version conflicts.</p>
-<p>### 1. Clone the Repository</p>
+<section id="clone-the-repository">
+<h2><span class="section-number">1.1. </span>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Link to this heading"></a></h2>
 <p>Open your terminal, and run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>&lt;virtual_environment_directory&gt;
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/GEMScienceTools/oq-vmtk.git
 <span class="nb">cd</span><span class="w"> </span>oq-vmtk
 </pre></div>
 </div>
-<p>### 2. Set Up a Virtual Environment (Recommended)</p>
+</section>
+<section id="set-up-a-virtual-environment">
+<h2><span class="section-number">1.2. </span>Set Up a Virtual Environment<a class="headerlink" href="#set-up-a-virtual-environment" title="Link to this heading"></a></h2>
 <p>Create a virtual environment to manage dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">  </span><span class="c1"># On Windows</span>
-python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">  </span><span class="c1"># On Linux</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">   </span><span class="c1"># On Windows</span>
+python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">  </span><span class="c1"># On Linux / macOS</span>
 </pre></div>
 </div>
 <p>Activate the virtual environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">  </span><span class="c1"># On Windows</span>
-<span class="nb">source</span><span class="w"> </span>.venv/Scripts/activate<span class="w">  </span><span class="c1"># On Linux</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">        </span><span class="c1"># On Windows</span>
+<span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">     </span><span class="c1"># On macOS</span>
+<span class="nb">source</span><span class="w"> </span>.venv/Scripts/activate<span class="w"> </span><span class="c1"># On Linux</span>
 </pre></div>
 </div>
-<p>### 3. Install Dependencies</p>
-<p>Install the required packages listed in <cite>requirements.txt</cite>.</p>
-<p><strong>For Windows Users:</strong> Install the appropriate requirements file based on your Python version:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py310-win64.txt<span class="w">  </span><span class="c1"># Python 3.10</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py311-win64.txt<span class="w">  </span><span class="c1"># Python 3.11</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py312-win64.txt<span class="w">  </span><span class="c1"># Python 3.12</span>
-</pre></div>
-</div>
-<p><strong>For Linux Users:</strong> Install the appropriate requirements file based on your Python version:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py310-linux64.txt<span class="w">  </span><span class="c1"># Python 3.10</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py311-linux64.txt<span class="w">  </span><span class="c1"># Python 3.11</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py312-linux64.txt<span class="w">  </span><span class="c1"># Python 3.12</span>
-</pre></div>
-</div>
-<p><strong>Note:</strong> To check your current Python version, run the following command:</p>
+</section>
+<section id="install-dependencies">
+<h2><span class="section-number">1.3. </span>Install Dependencies<a class="headerlink" href="#install-dependencies" title="Link to this heading"></a></h2>
+<p>Install the appropriate requirements file based on your operating system and
+Python version. Pinned-dependency files are provided for Python 3.11, 3.12 and
+3.13 on Linux, Windows, and macOS (arm64).</p>
+<p>To check your current Python version, run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>--version
 </pre></div>
 </div>
-<p>### 4. Install the Package</p>
-<p>Install the <cite>oq-vmtk</cite> package in editable mode:</p>
+<p>Then pick the matching file. The naming convention is
+<code class="docutils literal notranslate"><span class="pre">requirements-py&lt;MAJOR&gt;&lt;MINOR&gt;-&lt;os&gt;.txt</span></code> (for example
+<code class="docutils literal notranslate"><span class="pre">requirements-py312-linux.txt</span></code> for Python 3.12 on Linux):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Linux (replace 312 with 311 or 313 to match your Python version)</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py312-linux.txt
+
+<span class="c1"># Windows</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py312-win64.txt
+
+<span class="c1"># macOS (arm64)</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-py312-macos_arm64.txt
+</pre></div>
+</div>
+</section>
+<section id="install-the-package">
+<h2><span class="section-number">1.4. </span>Install the Package<a class="headerlink" href="#install-the-package" title="Link to this heading"></a></h2>
+<p><strong>Standard install (recommended for users):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p><strong>Editable / developer install</strong> — use this only if you plan to modify the
+source:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><strong>For macOS Users:</strong> OpenSeesPy does not currently support macOS versions running
-on arm64 processors, such as M1 and M2 chips. As a result, newer OpenSeesPy versions
-are not available for macOS. To use OpenSeesPy on a Mac, it is advised to run a virtual
-machine with Linux or Windows.</p>
+</section>
+<section id="verify-the-installation">
+<h2><span class="section-number">1.5. </span>Verify the Installation<a class="headerlink" href="#verify-the-installation" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import openquake.vmtk; print(openquake.vmtk.__version__)&quot;</span>
+</pre></div>
 </div>
+<p>This should print the installed version (e.g., <code class="docutils literal notranslate"><span class="pre">1.0.0</span></code>). The version reported
+here is the same version archived on Zenodo (DOI
+<a class="reference external" href="https://doi.org/10.5281/zenodo.17524871">10.5281/zenodo.17524871</a>).</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to the OpenQuake Vulnerability Modellers Toolkit’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="IMCalculator.html" class="btn btn-neutral float-right" title="IM Calculator Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to the OpenQuake Vulnerability Modeller’s Toolkit’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="changelog.html" class="btn btn-neutral float-right" title="2. Change Log" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

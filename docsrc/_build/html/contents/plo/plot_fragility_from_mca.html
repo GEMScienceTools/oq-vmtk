@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9.8. Fragility Functions from MCA &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="9.9. Fragility Functions from IDA" href="plot_fragility_from_ida.html" />
+    <link rel="prev" title="9.7. MSA Results" href="plot_msa_analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../plo.html">9. Visualisation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plot_modes.html">9.1. Modal Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animate_spo.html">9.2. Static Pushover Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animate_cpo.html">9.3. Cyclic Pushover Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animate_nrha.html">9.4. Nonlinear Time-History Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_mca_analysis.html">9.5. MCA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_ida_analysis.html">9.6. IDA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_msa_analysis.html">9.7. MSA Results</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">9.8. Fragility Functions from MCA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.plotter.plotter.plot_fragility_from_mca"><code class="docutils literal notranslate"><span class="pre">plotter.plot_fragility_from_mca()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plot_fragility_from_ida.html">9.9. Fragility Functions from IDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_fragility_from_msa.html">9.10. Fragility Functions from MSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_slf_model.html">9.11. Storey Loss Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_vulnerability_function.html">9.12. Vulnerability Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../plo.html"><span class="section-number">9. </span>Visualisation</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">9.8. </span>Fragility Functions from MCA</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/plo/plot_fragility_from_mca.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fragility-functions-from-mca">
+<h1><span class="section-number">9.8. </span>Fragility Functions from MCA<a class="headerlink" href="#fragility-functions-from-mca" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.plotter.plotter.plot_fragility_from_mca">
+<span class="sig-prename descclassname"><span class="pre">plotter.</span></span><span class="sig-name descname"><span class="pre">plot_fragility_from_mca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cloud_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imt_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cloud_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pFlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/plotter.html#plotter.plot_fragility_from_mca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.plotter.plotter.plot_fragility_from_mca" title="Link to this definition"></a></dt>
+<dd><p>Generates a fragility analysis plot showing the Probability of
+Exceedance (PoE) for multiple damage states using Modified Cloud
+Analysis (MCA) results.</p>
+<p>Supports both uncertainty quantification approaches:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'bootstrap'</span></code>: plots the mean fragility curves and,
+optionally, individual bootstrap realizations as a faint
+background cloud.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'classical'</span></code>: plots the Robust Fragility mean and a
+shaded ±k·σ confidence band derived from the posterior
+variance (Jalayer et al. 2017).</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">cloud_method</span></code> is auto-detected from
+<code class="docutils literal notranslate"><span class="pre">cloud_dict['fragility']['cloud_method']</span></code> when the argument is
+<code class="docutils literal notranslate"><span class="pre">None</span></code> (default), falling back to <code class="docutils literal notranslate"><span class="pre">'bootstrap'</span></code> for dicts
+produced by older code that does not carry the key.</p>
+<p>The figure uses <code class="docutils literal notranslate"><span class="pre">self.figsize</span></code> with <code class="docutils literal notranslate"><span class="pre">constrained_layout</span></code> and
+is saved without <code class="docutils literal notranslate"><span class="pre">bbox_inches='tight'</span></code> so that every output
+image has identical, deterministic pixel dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cloud_dict</strong> (<em>dict</em>) – <p>Standardized dictionary returned by
+<code class="docutils literal notranslate"><span class="pre">postprocessor.process_mca_results()</span></code>. Required keys:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">'fragility'</span></code>: contains <code class="docutils literal notranslate"><span class="pre">intensities</span></code> (1-D array),
+<code class="docutils literal notranslate"><span class="pre">poes</span></code> (2-D), <code class="docutils literal notranslate"><span class="pre">medians</span></code>, <code class="docutils literal notranslate"><span class="pre">betas_total</span></code>.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">'bootstrap'</span></code>: <code class="docutils literal notranslate"><span class="pre">'bootstraps'</span></code> sub-dict with
+<code class="docutils literal notranslate"><span class="pre">alpha0</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha1</span></code> arrays and optional <code class="docutils literal notranslate"><span class="pre">poes_all</span></code>
+(3-D array of per-iteration curves).</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">'classical'</span></code>: <code class="docutils literal notranslate"><span class="pre">'fragility'</span></code> must also contain
+<code class="docutils literal notranslate"><span class="pre">poes_robust_plus</span></code> and <code class="docutils literal notranslate"><span class="pre">poes_robust_minus</span></code>; and
+<code class="docutils literal notranslate"><span class="pre">'mcmc'</span></code> sub-dict with <code class="docutils literal notranslate"><span class="pre">chi_mean</span></code>.</p></li>
+</ul>
+</p></li>
+<li><p><strong>imt_label</strong> (<em>str</em>) – X-axis label (e.g., <code class="docutils literal notranslate"><span class="pre">'PGA</span> <span class="pre">[g]'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Sa(T1)</span> <span class="pre">[g]'</span></code>).</p></li>
+<li><p><strong>xlims</strong> (<em>tuple</em><em> of </em><em>float</em>) – <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> limits for the X-axis.</p></li>
+<li><p><strong>ylims</strong> (<em>tuple</em><em> of </em><em>float</em>) – <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> limits for the Y-axis.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Custom plot title. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a method-specific default
+is used.</p></li>
+<li><p><strong>cloud_method</strong> (<em>{'bootstrap'</em><em>, </em><em>'classical'}</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Selects the plotting style. When <code class="docutils literal notranslate"><span class="pre">None</span></code> (default), the
+value is read from
+<code class="docutils literal notranslate"><span class="pre">cloud_dict['fragility'].get('cloud_method',</span> <span class="pre">'bootstrap')</span></code>.</p></li>
+<li><p><strong>plot_bootstrap</strong> (<em>bool</em><em>, </em><em>default False</em>) – <em>Bootstrap only.</em> If <code class="docutils literal notranslate"><span class="pre">True</span></code>, plots all individual
+bootstrap fragility curves with low alpha as a background
+cloud. Ignored when <code class="docutils literal notranslate"><span class="pre">cloud_method='classical'</span></code>.</p></li>
+<li><p><strong>pFlag</strong> (<em>bool</em><em>, </em><em>default True</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, renders and/or saves the figure. If <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+closes the figure immediately (useful for batch runs).</p></li>
+<li><p><strong>export_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Full file path (including extension) for saving the figure.
+The parent directory is created automatically if needed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotter</span>
+
+<span class="n">pl</span> <span class="o">=</span> <span class="n">plotter</span><span class="p">()</span>
+<span class="c1"># cloud_dict from postprocessor.process_mca_results()</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">plot_fragility_from_mca</span><span class="p">(</span>
+    <span class="n">cloud_dict</span><span class="o">=</span><span class="n">cloud_dict</span><span class="p">,</span>
+    <span class="n">imt_label</span><span class="o">=</span><span class="s2">&quot;Sa(T1) [g]&quot;</span><span class="p">,</span>
+    <span class="n">ds_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Slight&quot;</span><span class="p">,</span> <span class="s2">&quot;Moderate&quot;</span><span class="p">,</span> <span class="s2">&quot;Extensive&quot;</span><span class="p">,</span> <span class="s2">&quot;Complete&quot;</span><span class="p">],</span>
+    <span class="n">export_path</span><span class="o">=</span><span class="s2">&quot;fragility_mca.png&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plot_msa_analysis.html" class="btn btn-neutral float-left" title="9.7. MSA Results" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plot_fragility_from_ida.html" class="btn btn-neutral float-right" title="9.9. Fragility Functions from IDA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

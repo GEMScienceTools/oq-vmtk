@@ -1,0 +1,226 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10. Demos &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="11. Examples" href="examples.html" />
+    <link rel="prev" title="9.12. Vulnerability Functions" href="plo/plot_vulnerability_function.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">9. Visualisation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">10. Demos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#launching-jupyterlab">10.1. Launching JupyterLab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-demos">10.2. Available Demos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suggested-reading-order">10.3. Suggested Reading Order</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">10. </span>Demos</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/demos.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="demos">
+<h1><span class="section-number">10. </span>Demos<a class="headerlink" href="#demos" title="Link to this heading"></a></h1>
+<p>The repository ships with a set of Jupyter notebooks under the
+<a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos">demos/</a>
+folder that walk through the typical <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> workflow end-to-end. Each
+notebook is self-contained: it lists the modules it uses, loads its own input
+files, and saves outputs to its own <code class="docutils literal notranslate"><span class="pre">out/</span></code> directory.</p>
+<section id="launching-jupyterlab">
+<h2><span class="section-number">10.1. </span>Launching JupyterLab<a class="headerlink" href="#launching-jupyterlab" title="Link to this heading"></a></h2>
+<p>JupyterLab is pulled in as a transitive dependency when <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> is
+installed, so you do not need to install it separately. From the project root
+with the virtual environment activated:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># On Windows</span>
+.venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
+<span class="c1"># On Linux/macOS</span>
+<span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+
+jupyter-lab
+</pre></div>
+</div>
+<p>Then navigate to the <code class="docutils literal notranslate"><span class="pre">demos/</span></code> directory in the JupyterLab file browser and
+open the notebook of interest.</p>
+</section>
+<section id="available-demos">
+<h2><span class="section-number">10.2. </span>Available Demos<a class="headerlink" href="#available-demos" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Notebook</p></th>
+<th class="head"><p>What it shows</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IntensityMeasureProcessing</span></code></p></td>
+<td><p>Compute response spectra and a wide range of intensity measures (PGA,
+PGV, PGD, Sa, AvgSa, Arias intensity, CAV, significant duration, FIV3,
+RotDxx) from raw acceleration records using the <code class="docutils literal notranslate"><span class="pre">imcalculator</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IntensityMeasureSelection</span></code></p></td>
+<td><p>Compare candidate intensity measures using information-theoretic
+sufficiency metrics from the <code class="docutils literal notranslate"><span class="pre">imselection</span></code> module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ModelCompilation</span></code></p></td>
+<td><p>Compile single- and multi-degree-of-freedom OpenSeesPy models from
+low-level parameters; demonstrates the <code class="docutils literal notranslate"><span class="pre">modeller</span></code> and <code class="docutils literal notranslate"><span class="pre">calibration</span></code>
+modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModalAnalysis</span></code></p></td>
+<td><p>Run modal analysis on a compiled MDOF model and extract periods and
+mode shapes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PushoverAnalysis</span></code></p></td>
+<td><p>Static and cyclic pushover on an MDOF stick model — base shear,
+interstorey drift, and energy dissipation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NonlinearTimeHistoryAnalysis</span></code></p></td>
+<td><p>Nonlinear response-history analysis using ground-motion records, with
+postprocessing of peak storey drifts and floor accelerations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CloudAnalysis</span></code></p></td>
+<td><p>End-to-end cloud-analysis workflow producing fragility and
+vulnerability functions from MDOF response.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MultipleStripeAnalysis</span></code></p></td>
+<td><p>Multiple-stripe analysis variant of the same end-to-end workflow.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IncrementalDynamicAnalysis</span></code></p></td>
+<td><p>Incremental dynamic analysis (IDA) with collapse-fragility derivation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FragilityAnalysis</span></code></p></td>
+<td><p>Multiple fragility-fitting approaches (lognormal CDF, GLM, ordinal),
+fragility rotation, and additional epistemic uncertainty.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StoreyLossFunctionGeneration</span></code></p></td>
+<td><p>Generate Storey Loss Functions from a component inventory using the
+<code class="docutils literal notranslate"><span class="pre">slfgenerator</span></code> module. Bundled inventories live in
+<code class="docutils literal notranslate"><span class="pre">demos/StoreyLossFunctionGeneration/in/</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StoreyLossFunctionApplication</span></code></p></td>
+<td><p>Apply previously generated SLFs to derive nonstructural-component
+vulnerability functions.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each demo folder contains a short <code class="docutils literal notranslate"><span class="pre">README.md</span></code> describing the inputs,
+outputs, and the modules being exercised.</p>
+</section>
+<section id="suggested-reading-order">
+<h2><span class="section-number">10.3. </span>Suggested Reading Order<a class="headerlink" href="#suggested-reading-order" title="Link to this heading"></a></h2>
+<p>For first-time users, we recommend the following order:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">IntensityMeasureProcessing</span></code> — get familiar with the IM types.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ModelCompilation</span></code> — build an MDOF stick model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NonlinearTimeHistoryAnalysis</span></code> — run dynamic analysis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CloudAnalysis</span></code> — full vulnerability workflow.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">StoreyLossFunctionGeneration</span></code> and <code class="docutils literal notranslate"><span class="pre">StoreyLossFunctionApplication</span></code> —
+add component-level loss modelling.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plo/plot_vulnerability_function.html" class="btn btn-neutral float-left" title="9.12. Vulnerability Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="11. Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

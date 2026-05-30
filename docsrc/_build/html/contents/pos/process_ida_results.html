@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7.7. Incremental Dynamic Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="7.8. Multiple Stripe Analysis Postprocessing" href="process_msa_results.html" />
+    <link rel="prev" title="7.6. Modified Cloud Analysis Postprocessing" href="process_mca_results.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../pos.html">7. Postprocessing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="init.html">7.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.4. GLM Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_mca_results.html">7.6. Modified Cloud Analysis Postprocessing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.7. Incremental Dynamic Analysis Postprocessing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.postprocessor.postprocessor.process_ida_results"><code class="docutils literal notranslate"><span class="pre">postprocessor.process_ida_results()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.12. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../pos.html"><span class="section-number">7. </span>Postprocessing</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">7.7. </span>Incremental Dynamic Analysis Postprocessing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/pos/process_ida_results.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="incremental-dynamic-analysis-postprocessing">
+<h1><span class="section-number">7.7. </span>Incremental Dynamic Analysis Postprocessing<a class="headerlink" href="#incremental-dynamic-analysis-postprocessing" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.process_ida_results">
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_ida_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ansys_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">im_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(0.00,</span> <span class="pre">0.05,</span> <span class="pre">101)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_ida_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_ida_results" title="Link to this definition"></a></dt>
+<dd><p>Perform fragility function fitting and statistical processing on
+Incremental Dynamic Analysis (IDA) results.</p>
+<p>This method processes raw IDA data by interpolating individual
+record response curves to a continuous Engineering Demand
+Parameter (EDP) range. It accounts for “flatlining” (global
+dynamic instability) using Maximum Likelihood Estimation (MLE)
+for censored data to estimate the fragility parameters (median
+and dispersion) for multiple damage states. It also supports
+fragility curve rotation around a target percentile to account
+for modeling uncertainties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ansys_dict</strong> (<em>dict</em>) – <p>A dictionary containing the structural response data with keys:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">'max_peak_drift_list'</span></code> or <code class="docutils literal notranslate"><span class="pre">'max_peak_accel_list'</span></code>: a list
+where each entry maps Scale Factors (SF) to peak drift or
+acceleration values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sf_matrix'</span></code>: a 2D numpy array (n_records × max_runs)
+of scale factors used for each analysis run.</p></li>
+</ul>
+</p></li>
+<li><p><strong>im_matrix</strong> (<em>numpy.ndarray</em>) – A 2D array of intensity measure levels corresponding to the
+ground motion records and number of runs carried out in IDA.</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>list</em><em> of </em><em>float</em>) – A list of EDP-based damage thresholds (e.g., interstorey
+drift ratios) defining different limit states (e.g., Slight,
+Moderate, Extensive, Collapse).</p></li>
+<li><p><strong>edp_key</strong> (<em>str</em><em>, </em><em>optional</em><em>,</em>) – default=’max_peak_drift_list’ (other: ‘max_peak_accel_list’)
+The key in <cite>ansys_dict</cite> used to retrieve the engineering
+demand parameter data.</p></li>
+<li><p><strong>sigma_build2build</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.3</em>) – The modeling uncertainty or building-to-building variability.
+This is combined with the record-to-record variability to
+calculate total fragility dispersion.</p></li>
+<li><p><strong>sigma_ds</strong> (<em>float</em><em>, </em><em>optional</em>) – The logarithmic standard deviation representing uncertainty
+in damage-state thresholds. Default value is 0.30.</p></li>
+<li><p><strong>intensities</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em><em>,</em>) – default=np.geomspace(0.05, 10.0, 50)
+The array of intensity measure levels over which the final
+fragility functions (POEs) will be sampled.</p></li>
+<li><p><strong>edp_range</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em><em>,</em>) – default=np.linspace(0.00, 0.05, 101) (0% to 5% drift)
+The array of engineering demand parameters over which the
+IDA curves will be evaluated.</p></li>
+<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – Flag to determine if the fragility curves should be rotated
+around a specific percentile to adjust for modeling bias or
+target reliability levels.</p></li>
+<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.10</em>) – The target percentile (0.0 to 1.0) around which the fragility
+curve rotation is anchored if <cite>fragility_rotation</cite> is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>ida_dict</strong> – A nested dictionary with the following top-level keys:</p>
+<dl class="simple">
+<dt><strong>’ida_inputs’</strong><span class="classifier">dict</span></dt><dd><p>Raw IDA data and analysis configuration.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'target_edps'</span></code> : array — continuous EDP axis
+over which IM values are interpolated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'raw_curves'</span></code> : list of dicts, one per record,
+each containing <code class="docutils literal notranslate"><span class="pre">'im'</span></code> (sorted IM array) and
+<code class="docutils literal notranslate"><span class="pre">'edp'</span></code> (monotonic EDP array).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'damage_thresholds'</span></code> : list — EDP values that
+define each damage state boundary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'im_matrix'</span></code> : array — IM values applied to
+each record at each run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'n_records'</span></code> : int — number of ground-motion
+records in the analysis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'im_max_analyzed'</span></code> : float — maximum IM level
+reached across all records and runs.</p></li>
+</ul>
+</dd>
+<dt><strong>’fragility’</strong><span class="classifier">dict</span></dt><dd><p>MLE-fitted fragility parameters and PoEs.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'fragility_method'</span></code> : str — always
+‘mle_ida_censored’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'intensities'</span></code> : array — IM levels at which
+PoEs are evaluated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'poes'</span></code> : ndarray, shape (n_IM, n_DS) —
+probabilities of exceedance per damage state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'medians'</span></code> : list, length n_DS — median IM
+(theta) for each damage state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sigma_record2record'</span></code> : list, length n_DS —
+record-to-record dispersion per damage state,
+estimated via MLE on censored capacities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sigma_build2build'</span></code> : list, length n_DS —
+building-to-building modelling uncertainty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sigma_ds'</span></code> : list, length n_DS — uncertainty
+in the damage-state threshold definition.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'betas_total'</span></code> : list, length n_DS — total
+logarithmic standard deviation per damage state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'rotation_active'</span></code> : bool — whether fragility
+rotation around a percentile was applied.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'rotation_percentile'</span></code> : float or None — the
+percentile used for rotation, or None if inactive.</p></li>
+</ul>
+</dd>
+<dt><strong>’stats’</strong><span class="classifier">dict</span></dt><dd><p>Statistical IDA curves across all records.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'fitted_edps'</span></code> : array — EDP axis shared with
+<code class="docutils literal notranslate"><span class="pre">'target_edps'</span></code> in <code class="docutils literal notranslate"><span class="pre">'ida_inputs'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'median_im'</span></code> : array — median IM across all
+records at each EDP level (50th percentile curve).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'p16_im'</span></code> : array — 16th percentile IM across
+records at each EDP level.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'p84_im'</span></code> : array — 84th percentile IM across
+records at each EDP level.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The method uses a log-likelihood minimization approach to handle
+records that do not reach a specific damage threshold within the
+analyzed range (right-censored data), ensuring the fragility
+curves remain statistically robust even near collapse.</p>
+</div>
+</dd></dl>
+
+<div class="admonition-theoretical-background admonition">
+<p class="admonition-title">Theoretical Background</p>
+<p>Incremental Dynamic Analysis (IDA) scales each record to multiple intensity levels
+and traces the structural response from elastic behaviour to collapse, producing
+IDA curves and a statistical basis for fragility derivation (Vamvatsikos &amp; Cornell, 2002).</p>
+<p><strong>IDA curves</strong></p>
+<p>For each ground-motion record <span class="math notranslate nohighlight">\(r\)</span> and scaling factor <span class="math notranslate nohighlight">\(\lambda\)</span>, the
+scaled IM is <span class="math notranslate nohighlight">\(\text{IM}_{r,\lambda} = \lambda \cdot \text{IM}_{r,1}\)</span> and the
+resulting peak EDP is recorded. The full set of <span class="math notranslate nohighlight">\((\text{IM}, \text{EDP})\)</span> pairs
+for record <span class="math notranslate nohighlight">\(r\)</span> forms its IDA curve.</p>
+<p><strong>Limit-state capacity</strong></p>
+<p>The IM capacity <span class="math notranslate nohighlight">\(C_i^{(r)}\)</span> of record <span class="math notranslate nohighlight">\(r\)</span> for damage state <span class="math notranslate nohighlight">\(i\)</span>
+is the smallest IM at which the IDA curve first exceeds the threshold
+<span class="math notranslate nohighlight">\(\delta_i\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[C_i^{(r)} = \inf\bigl\{\text{IM} : \text{EDP}(\text{IM}) \geq \delta_i\bigr\}\]</div>
+<p><strong>Lognormal fragility fitting</strong></p>
+<p>Across all records, the capacities <span class="math notranslate nohighlight">\(\{C_i^{(r)}\}\)</span> are assumed lognormally
+distributed. The median <span class="math notranslate nohighlight">\(\theta_i\)</span> and logarithmic standard deviation
+<span class="math notranslate nohighlight">\(\beta_{\text{rr}}\)</span> are estimated by maximum likelihood:</p>
+<div class="math notranslate nohighlight">
+\[\theta_i = \exp\!\left(\frac{1}{N}\sum_{r=1}^{N} \ln C_i^{(r)}\right), \qquad
+\beta_{\text{r2r}} = \sqrt{\frac{1}{N-1}\sum_{r=1}^{N}\bigl(\ln C_i^{(r)} - \ln \theta_i\bigr)^2}\]</div>
+<p><strong>Total dispersion</strong></p>
+<p>Additional sources of uncertainty are combined in quadrature:</p>
+<div class="math notranslate nohighlight">
+\[\beta_{\text{total}} = \sqrt{\beta_{\text{r2r}}^2 + \beta_{\text{b2b}}^2 + \beta_{\text{DS}}^2}\]</div>
+<p><strong>Fragility function</strong></p>
+<p>The probability of exceeding damage state <span class="math notranslate nohighlight">\(i\)</span> at a given IM is:</p>
+<div class="math notranslate nohighlight">
+\[P(\text{DS} \geq ds_i \mid \text{IM}) =
+\Phi\!\left(\frac{\ln(\text{IM}/\theta_i)}{\beta_{\text{total}}}\right)\]</div>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.postprocessor</span><span class="w"> </span><span class="kn">import</span> <span class="n">postprocessor</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">postprocessor</span><span class="p">()</span>
+<span class="c1"># stripe_imls, stripe_edps: 2-D arrays (n_records × n_stripes) from IDA</span>
+<span class="n">ida_dict</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">process_ida_results</span><span class="p">(</span>
+    <span class="n">stripe_imls</span><span class="o">=</span><span class="n">stripe_imls</span><span class="p">,</span>
+    <span class="n">stripe_edps</span><span class="o">=</span><span class="n">stripe_edps</span><span class="p">,</span>
+    <span class="n">damage_thresholds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.040</span><span class="p">],</span>
+    <span class="n">imt_key</span><span class="o">=</span><span class="s2">&quot;Sa(T1)&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ida_dict</span><span class="p">[</span><span class="s1">&#39;fragility&#39;</span><span class="p">][</span><span class="s1">&#39;medians&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="process_mca_results.html" class="btn btn-neutral float-left" title="7.6. Modified Cloud Analysis Postprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="process_msa_results.html" class="btn btn-neutral float-right" title="7.8. Multiple Stripe Analysis Postprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

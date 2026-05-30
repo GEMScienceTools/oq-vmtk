@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7.8. Multiple Stripe Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="7.9. Vulnerability Functions" href="calculate_vulnerability_function.html" />
+    <link rel="prev" title="7.7. Incremental Dynamic Analysis Postprocessing" href="process_ida_results.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../pos.html">7. Postprocessing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="init.html">7.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.4. GLM Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_mca_results.html">7.6. Modified Cloud Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.8. Multiple Stripe Analysis Postprocessing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.postprocessor.postprocessor.process_msa_results"><code class="docutils literal notranslate"><span class="pre">postprocessor.process_msa_results()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.12. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../pos.html"><span class="section-number">7. </span>Postprocessing</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">7.8. </span>Multiple Stripe Analysis Postprocessing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/pos/process_msa_results.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="multiple-stripe-analysis-postprocessing">
+<h1><span class="section-number">7.8. </span>Multiple Stripe Analysis Postprocessing<a class="headerlink" href="#multiple-stripe-analysis-postprocessing" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.process_msa_results">
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_msa_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_msa_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_msa_results" title="Link to this definition"></a></dt>
+<dd><p>Perform maximum likelihood estimation (MLE) for fragility curve
+fitting following a multiple stripe analysis. This method
+calculates the fragility function by fitting to the provided
+intensity measure levels (IMLs) and engineering demand parameters
+(EDPs) “stripes”, with the option to rotate the fragility curve
+around a target percentile.</p>
+<p>The method is useful for deriving fragility functions by
+determining the probability of exceedance for various damage
+states based on the provided data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imls</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of intensity measure levels (IMLs)
+representing the seismic intensity levels used for sampling
+the fragility functions.</p></li>
+<li><p><strong>edps</strong> (<em>list</em><em> or </em><em>array</em>) – A list or array of engineering demand parameters (EDPs),
+which describe the structural response to seismic events.
+Examples include maximum interstorey drifts, maximum peak
+floor acceleration, or top displacements.</p></li>
+<li><p><strong>damage_thresholds</strong> (<em>list</em>) – A list of EDP-based damage thresholds that correspond to
+different levels of structural damage, such as slight,
+moderate, extensive, and complete. These thresholds help
+categorize the severity of damage based on EDP values.</p></li>
+<li><p><strong>sigma_build2build</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.3</em>) – The building-to-building variability or modeling uncertainty.
+It accounts for differences in performance between buildings
+with similar characteristics due to random variations or
+model uncertainties.</p></li>
+<li><p><strong>sigma_ds</strong> (<em>float</em><em>, </em><em>optional</em>) – The logarithmic standard deviation representing uncertainty
+in damage-state thresholds. Default value is 0.30.</p></li>
+<li><p><strong>intensities</strong> (<em>array</em><em>, </em><em>optional</em><em>, </em><em>default=np.geomspace</em><em>(</em><em>0.05</em><em>, </em><em>10.0</em><em>, </em><em>50</em><em>)</em>) – An array of intensity measure levels over which the fragility
+function will be sampled. By default, this is a logarithmic
+space ranging from 0.05 to 10.0, with 50 sample points.</p></li>
+<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – A boolean flag that determines whether or not to rotate the
+fragility curve about a given percentile. If <cite>True</cite>, the
+fragility curve will be adjusted based on the specified
+<cite>rotation_percentile</cite>.</p></li>
+<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.10</em>) – The target percentile (between 0 and 1) around which the
+fragility function will be rotated. A value of 0.10
+corresponds to rotating the curve to the 10th percentile.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>msa_dict</strong> – A nested dictionary with the following top-level keys:</p>
+<dl class="simple">
+<dt><strong>’msa_inputs’</strong><span class="classifier">dict</span></dt><dd><p>Inputs passed to the analysis.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'imls'</span></code> : array — intensity measure levels
+used for each stripe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'edps'</span></code> : array — engineering demand
+parameters recorded at each stripe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'damage_thresholds'</span></code> : list — EDP values
+defining each damage state boundary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sigma_build2build'</span></code> : float — building-to-
+building modelling uncertainty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sigma_ds'</span></code> : float — uncertainty in the
+damage-state threshold definition.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'is_rotated'</span></code> : bool — whether fragility
+rotation was applied.</p></li>
+</ul>
+</dd>
+<dt><strong>’fragility’</strong><span class="classifier">dict</span></dt><dd><p>MLE-fitted fragility function results.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'fragility_method'</span></code> : str — always ‘mle’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'intensities'</span></code> : array — IM levels at which
+PoEs are evaluated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'poes'</span></code> : ndarray, shape (n_IM, n_DS) —
+probabilities of exceedance per damage state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'medians'</span></code> : list, length n_DS — median IM
+(theta) for each damage state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'sigma_record2record'</span></code> : list, length n_DS —
+record-to-record dispersion per damage state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'betas_total'</span></code> : list, length n_DS — total
+logarithmic standard deviation per damage state,
+combining record-to-record, building-to-building,
+and damage-state threshold uncertainties.</p></li>
+</ul>
+</dd>
+<dt><strong>’metadata’</strong><span class="classifier">dict</span></dt><dd><p>Stripe-level summary information.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'stripe_levels'</span></code> : array — mean IM value for
+each stripe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'observed_fractions'</span></code> : list of lists,
+shape (n_DS, n_stripes) — observed fraction of
+ground-motion records exceeding each damage
+threshold at each stripe level.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>This method fits the fragility curve using MLE, which minimizes
+the difference between observed and predicted exceedance
+probabilities. The option for fragility curve rotation allows for
+adjusting the curve to better match the expected percentile of
+damage occurrence, offering greater flexibility in representing
+the fragility of the structure.</p>
+</div>
+</dd></dl>
+
+<div class="admonition-theoretical-background admonition">
+<p class="admonition-title">Theoretical Background</p>
+<p>Multiple Stripe Analysis (MSA) conditions structural response on discrete intensity
+levels (stripes), fitting fragility functions directly from binomial observations at
+each stripe (Baker, 2015).</p>
+<p><strong>Observed data per stripe</strong></p>
+<p>At each intensity level <span class="math notranslate nohighlight">\(\text{IM}_j\)</span>, <span class="math notranslate nohighlight">\(n_j\)</span> ground-motion records are
+run and <span class="math notranslate nohighlight">\(z_j\)</span> records result in exceedance of the damage-state threshold.
+The empirical exceedance rate at stripe <span class="math notranslate nohighlight">\(j\)</span> is <span class="math notranslate nohighlight">\(\hat{p}_j = z_j / n_j\)</span>.</p>
+<p><strong>Maximum likelihood estimation</strong></p>
+<p>Assuming a lognormal fragility model
+<span class="math notranslate nohighlight">\(F(\text{IM};\,\theta,\beta) = \Phi\!\bigl(\ln(\text{IM}/\theta)/\beta\bigr)\)</span>,
+the parameters <span class="math notranslate nohighlight">\((\theta, \beta)\)</span> are estimated by maximising the binomial
+log-likelihood across all stripes:</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{L}(\theta, \beta) =
+\sum_{j=1}^{m} \left[
+  z_j \ln F(\text{IM}_j;\,\theta,\beta)
+  + (n_j - z_j) \ln\bigl(1 - F(\text{IM}_j;\,\theta,\beta)\bigr)
+\right]\]</div>
+<p>where <span class="math notranslate nohighlight">\(m\)</span> is the total number of stripes, <span class="math notranslate nohighlight">\(\theta\)</span> is the median IM
+capacity, and <span class="math notranslate nohighlight">\(\beta\)</span> is the logarithmic standard deviation.</p>
+<p><strong>Total dispersion</strong></p>
+<p>The fitted <span class="math notranslate nohighlight">\(\beta_{\text{r2r}}\)</span> represents record-to-record variability.
+Additional modelling uncertainties are combined in quadrature:</p>
+<div class="math notranslate nohighlight">
+\[\beta_{\text{total}} = \sqrt{\beta_{\text{r2r}}^2 + \beta_{\text{b2b}}^2 + \beta_{\text{DS}}^2}\]</div>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.postprocessor</span><span class="w"> </span><span class="kn">import</span> <span class="n">postprocessor</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">postprocessor</span><span class="p">()</span>
+<span class="c1"># stripe_imls, stripe_edps: 2-D arrays (n_records × n_stripes) from MSA</span>
+<span class="n">msa_dict</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">process_msa_results</span><span class="p">(</span>
+    <span class="n">stripe_imls</span><span class="o">=</span><span class="n">stripe_imls</span><span class="p">,</span>
+    <span class="n">stripe_edps</span><span class="o">=</span><span class="n">stripe_edps</span><span class="p">,</span>
+    <span class="n">damage_thresholds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.040</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">msa_dict</span><span class="p">[</span><span class="s1">&#39;fragility&#39;</span><span class="p">][</span><span class="s1">&#39;medians&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="process_ida_results.html" class="btn btn-neutral float-left" title="7.7. Incremental Dynamic Analysis Postprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="calculate_vulnerability_function.html" class="btn btn-neutral float-right" title="7.9. Vulnerability Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

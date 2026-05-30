@@ -1,0 +1,152 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7.1. Initialisation &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="7.2. Lognormal Fragility Functions" href="calculate_lognormal_fragility.html" />
+    <link rel="prev" title="7. Postprocessing" href="../pos.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../pos.html">7. Postprocessing</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.1. Initialisation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.postprocessor.postprocessor.__init__"><code class="docutils literal notranslate"><span class="pre">postprocessor.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.4. GLM Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_mca_results.html">7.6. Modified Cloud Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.12. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../pos.html"><span class="section-number">7. </span>Postprocessing</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">7.1. </span>Initialisation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/pos/init.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="initialisation">
+<h1><span class="section-number">7.1. </span>Initialisation<a class="headerlink" href="#initialisation" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.__init__">
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.postprocessor</span><span class="w"> </span><span class="kn">import</span> <span class="n">postprocessor</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">postprocessor</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../pos.html" class="btn btn-neutral float-left" title="7. Postprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="calculate_lognormal_fragility.html" class="btn btn-neutral float-right" title="7.2. Lognormal Fragility Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

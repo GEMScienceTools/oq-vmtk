@@ -1,0 +1,259 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3.12. Orientation-Independent Spectral Acceleration (RotDxx) &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="4. Intensity Measure Selection" href="../ims.html" />
+    <link rel="prev" title="3.11. Filtered Incremental Velocity" href="get_FIV3.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="init.html">3.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_spectrum.html">3.2. Response Spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_sa.html">3.3. Spectral Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_saavg.html">3.4. Average Spectral Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_saavg_user_defined.html">3.5. User-Defined Average Spectral Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_velocity_displacement_history.html">3.6. Velocity and Displacement History</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_amplitude_ims.html">3.7. Amplitude Intensity Measures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_arias_intensity.html">3.8. Arias Intensity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_cav.html">3.9. Cumulative Absolute Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_significant_duration.html">3.10. Significant Duration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_FIV3.html">3.11. Filtered Incremental Velocity</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.12. Orientation-Independent Spectral Acceleration (RotDxx)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.imcalculator.imcalculator.get_rotdxx"><code class="docutils literal notranslate"><span class="pre">imcalculator.get_rotdxx()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../imc.html#references">3.13. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../imc.html"><span class="section-number">3. </span>Intensity Measure Calculation</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">3.12. </span>Orientation-Independent Spectral Acceleration (RotDxx)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/imc/get_rotdxx.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="orientation-independent-spectral-acceleration-rotdxx">
+<h1><span class="section-number">3.12. </span>Orientation-Independent Spectral Acceleration (RotDxx)<a class="headerlink" href="#orientation-independent-spectral-acceleration-rotdxx" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.imcalculator.imcalculator.get_rotdxx">
+<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_rotdxx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(1e-5,</span> <span class="pre">4.0,</span> <span class="pre">500)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_rotdxx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_rotdxx" title="Link to this definition"></a></dt>
+<dd><p>Computes the RotDxx orientation-independent spectral
+acceleration from two horizontal ground-motion components.</p>
+<p>RotDxx is the <em>xx</em>-th percentile of the single-component
+spectral acceleration computed over 180 equally spaced
+rotation angles (0° to 179°). The rotated acceleration at
+angle θ is:</p>
+<blockquote>
+<div><p>a_rot(t, θ) = a₁(t) · cos θ + a₂(t) · sin θ</p>
+</div></blockquote>
+<p>where a₁ and a₂ are the two orthogonal horizontal
+components. Because the system is linear, the displacement
+response to a_rot is:</p>
+<blockquote>
+<div><p>u(t, θ) = cos θ · u₁(t) + sin θ · u₂(t)</p>
+</div></blockquote>
+<p>where u₁ and u₂ are the SDOF displacement responses to a₁
+and a₂ respectively. This allows the Newmark-β integration
+to be performed only twice (once per component) rather than
+180 times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>acc2</strong> (<em>array_like</em>) – Second horizontal acceleration component. Must be the
+same length as <code class="docutils literal notranslate"><span class="pre">self.acc</span></code> and supplied in the same
+unit as the first component (the unit used when
+constructing the <code class="xref py py-class docutils literal notranslate"><span class="pre">imcalculator</span></code> instance).</p></li>
+<li><p><strong>percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – Percentile in [0, 100] across rotation angles used to
+define RotDxx. Use 50 for RotD50 (median) or 100 for
+RotD100 (maximum). Default is 50.</p></li>
+<li><p><strong>periods</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Array of periods at which to compute RotDxx (s).
+Default is 500 points linearly spaced from 1e-5 to
+4.0 s.</p></li>
+<li><p><strong>damping_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Damping ratio for the SDOF oscillator. Default is
+0.05 (5%).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>periods</strong> (<em>numpy.ndarray</em>) – Periods of the RotDxx spectrum (s).</p></li>
+<li><p><strong>rotdxx</strong> (<em>numpy.ndarray</em>) – RotDxx spectral acceleration (g) at each period.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Common choices are RotD50 (<code class="docutils literal notranslate"><span class="pre">percentile=50</span></code>), which is
+used as the reference IM in ASCE 7-22 ground-motion
+selection, and RotD100 (<code class="docutils literal notranslate"><span class="pre">percentile=100</span></code>), the
+orientation-independent maximum.</p>
+<p>When the second component is zero, RotD100 equals the
+single-component SA and RotD50 equals SA · √2/2 (the
+median of abs(cos θ) over 180 uniformly spaced angles).</p>
+</div>
+<p class="rubric">References</p>
+<p>Boore, D.M. (2010). “Orientation-independent, nongeometric-
+mean measures of seismic intensity from two horizontal
+components of motion.” <em>Bulletin of the Seismological
+Society of America</em>, 100(4), 1830–1835.
+DOI: 10.1785/0120090400.</p>
+</dd></dl>
+
+<div class="admonition-theoretical-background admonition">
+<p class="admonition-title">Theoretical Background</p>
+<p>RotDxx is an orientation-independent intensity measure that summarises the
+spectral acceleration from two orthogonal horizontal ground-motion components
+by taking the <em>xx</em>-th percentile across all non-redundant rotation angles
+(Boore, 2010). It removes the arbitrary choice of sensor orientation and is
+therefore preferred for ground-motion selection and record scaling.</p>
+<p><strong>Rotated acceleration</strong></p>
+<p>For a rotation angle <span class="math notranslate nohighlight">\(\theta \in [0°, 179°]\)</span>, the single-component
+acceleration is:</p>
+<div class="math notranslate nohighlight">
+\[a_\theta(t) = a_1(t)\cos\theta + a_2(t)\sin\theta\]</div>
+<p>where <span class="math notranslate nohighlight">\(a_1\)</span> and <span class="math notranslate nohighlight">\(a_2\)</span> are the two orthogonal horizontal
+components.</p>
+<p><strong>Linear superposition of SDOF responses</strong></p>
+<p>Because the SDOF oscillator is linear, the displacement response to the
+rotated excitation is:</p>
+<div class="math notranslate nohighlight">
+\[u(t,\theta) = \cos\theta\; u_1(t) + \sin\theta\; u_2(t)\]</div>
+<p>where <span class="math notranslate nohighlight">\(u_1(t)\)</span> and <span class="math notranslate nohighlight">\(u_2(t)\)</span> are the Newmark-<span class="math notranslate nohighlight">\(\beta\)</span>
+displacement histories for <span class="math notranslate nohighlight">\(a_1\)</span> and <span class="math notranslate nohighlight">\(a_2\)</span> respectively.
+This means only two Newmark integrations are required (one per component),
+regardless of the number of rotation angles.</p>
+<p><strong>Spectral acceleration at angle</strong> <span class="math notranslate nohighlight">\(\theta\)</span></p>
+<p>The pseudo-spectral acceleration at period <span class="math notranslate nohighlight">\(T\)</span> for rotation angle
+<span class="math notranslate nohighlight">\(\theta\)</span> is:</p>
+<div class="math notranslate nohighlight">
+\[SA(T,\theta) = \omega^2\,\max_t\bigl|u(t,\theta)\bigr|\Big/g\]</div>
+<p>where <span class="math notranslate nohighlight">\(\omega = 2\pi/T\)</span>.</p>
+<p><strong>RotDxx definition</strong></p>
+<p>RotDxx is the <em>xx</em>-th percentile of <span class="math notranslate nohighlight">\(SA(T, \theta)\)</span> over all 180
+rotation angles:</p>
+<div class="math notranslate nohighlight">
+\[\text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{SA(T,\theta) :
+\theta \in \{0°, 1°, \ldots, 179°\}\bigr\}\]</div>
+<p>Common choices are <strong>RotD50</strong> (median, used as reference IM in ASCE 7-22)
+and <strong>RotD100</strong> (maximum, the largest possible single-component response).</p>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.imcalculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">imcalculator</span>
+
+<span class="n">acc1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;openquake/vmtk/tests/test_data/acceleration.txt&quot;</span><span class="p">)</span>
+<span class="n">acc2</span> <span class="o">=</span> <span class="n">acc1</span> <span class="o">*</span> <span class="mf">0.85</span>   <span class="c1"># synthetic orthogonal component</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">imcalculator</span><span class="p">(</span><span class="n">acc1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.005</span><span class="p">)</span>
+
+<span class="n">rotd50</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_rotdxx</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">acc2</span><span class="o">=</span><span class="n">acc2</span><span class="p">,</span> <span class="n">percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RotD50(T=1.0s) = </span><span class="si">{</span><span class="n">rotd50</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> g&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="get_FIV3.html" class="btn btn-neutral float-left" title="3.11. Filtered Incremental Velocity" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../ims.html" class="btn btn-neutral float-right" title="4. Intensity Measure Selection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

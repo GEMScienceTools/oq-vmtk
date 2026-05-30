@@ -1,0 +1,7 @@
+# Modal Analysis Demo
+
+This demonstration presents a structured workflow for the development and verification of simplified structural models in OpenSees for regional vulnerability and risk applications. The focus is on constructing idealised representations of typical buildings (i.e., stick-and-mass models), and evaluating their dynamic characteristics through modal analysis.
+
+This Jupyter Notebook provides an example application of the `modeller` and `calibration` modules for generating simplified structural representations of regional building stock and analysing their modal properties.
+
+The example presents the development of MDOF stick-and-mass models calibrated based on SDOF capacity. The calibration of MDOF models is carried out to achieve consistency with target global dynamic properties derived from the SDOF representations. This calibration procedure adjusts inter-storey stiffness and mass distributions so that the fundamental period and modal participation characteristics of the MDOF model align with the simplified SDOF system. Then, the stick-and-mass model is modelled where each floor is represented by a lumped mass connected through zero-length elements representing the lateral stiffness of load-resisting elements. This representation enables the computation of modal properties including natural frequencies, periods, and mode shapes that characterise the dynamic response of the structure.

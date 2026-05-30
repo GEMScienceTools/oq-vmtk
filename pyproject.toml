@@ -35,19 +35,19 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
-requires-python = ">=3.10, <3.13"
+requires-python = ">=3.11, <3.14"
 dependencies = [
 	"seaborn >= 0.13.0",
     "ipykernel >= 4.8.0",
     "ipython >= 6.2.0",
     "jupyter_client >= 5.0.0",
     "notebook >= 5.0.0",
-    "pyproj >= 3.6.1",
-    "scipy < 1.14.0",
-    "matplotlib >= 3.8.2",
-    "numpy >= 1.26.2",
-    "numba >= 0.58.1",
-    "pandas >= 2.0.3",
+    "pyproj >= 3.7.2",
+    "scipy >= 1.15.3",
+    "matplotlib >= 3.10.1",
+    "numpy >= 2.2.6",
+    "numba >= 0.61.2",
+    "pandas >= 2.2.3",
     "statsmodels >= 0.14.4",
     "pydantic >= 2.10.6 ",
 ]

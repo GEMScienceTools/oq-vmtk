@@ -1,0 +1,1396 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openquake.vmtk.calibration &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">openquake.vmtk.calibration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openquake.vmtk.calibration</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">eigh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.modeller</span><span class="w"> </span><span class="kn">import</span> <span class="n">modeller</span> <span class="k">as</span> <span class="n">_modeller</span>
+
+<span class="c1"># Gravitational acceleration constant (m/s²)</span>
+<span class="n">_G</span> <span class="o">=</span> <span class="mf">9.81</span>
+
+<span class="c1"># Building height classification thresholds (number of storeys)</span>
+<span class="n">_LOW_RISE_MAX</span> <span class="o">=</span> <span class="mi">3</span>   <span class="c1"># 1–3 storeys</span>
+<span class="n">_MID_RISE_MAX</span> <span class="o">=</span> <span class="mi">9</span>   <span class="c1"># 4–9 storeys</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">calibration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calibrate MDOF storey force-deformation relationships from</span>
+<span class="sd">    SDOF spectral capacity parameters.</span>
+
+<span class="sd">    This class encapsulates the complete SDOF-to-MDOF</span>
+<span class="sd">    transformation pipeline: building classification, mass and</span>
+<span class="sd">    stiffness matrix assembly, eigenvalue-based modal analysis,</span>
+<span class="sd">    period scaling, storey force-drift distribution, and</span>
+<span class="sd">    (optionally) OpenSees SPO verification.</span>
+
+<span class="sd">    The calibration uses a stick-and-mass idealisation consistent</span>
+<span class="sd">    with the ``modeller`` class: each storey is represented by a</span>
+<span class="sd">    Pinching4 hysteretic spring whose stiffness and strength are</span>
+<span class="sd">    derived from the input SDOF capacity curve via first-mode</span>
+<span class="sd">    N2 / Capacity Spectrum relationships.</span>
+
+<span class="sd">    The assumptions are fixed for all systems and building heights:</span>
+
+<span class="sd">        Uniform ductility  : all storeys share the same displacement</span>
+<span class="sd">                             backbone. Every storey drift equals the</span>
+<span class="sd">                             first-storey drift (Sd x Gamma x phi[0]),</span>
+<span class="sd">                             so only storey forces vary with height</span>
+<span class="sd">                             via the first-mode shear ratio</span>
+<span class="sd">                             V_i / V_base.</span>
+
+<span class="sd">        Stiffness grouping : adjacent storeys are paired</span>
+<span class="sd">                             (group_size = 2), reducing the number of</span>
+<span class="sd">                             independent spring stiffnesses to</span>
+<span class="sd">                             ceil(nst / 2) and leading to stiffness</span>
+<span class="sd">                             decay per ``k = 1.0 - 0.30 * h``,</span>
+<span class="sd">                             min 0.50.</span>
+
+<span class="sd">        Default roof mass factor: 0.75.</span>
+
+<span class="sd">        No higher-mode correction is applied.  Only the first mode is</span>
+<span class="sd">        used for the SDOF-to-MDOF transformation.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nst : int</span>
+<span class="sd">        Number of storeys.</span>
+<span class="sd">    sdof_capacity : numpy.ndarray</span>
+<span class="sd">        SDOF capacity array ``[Sd (m), Sa (g)]``, shape</span>
+<span class="sd">        ``(n_points, 2)``.</span>
+<span class="sd">    Sd : numpy.ndarray</span>
+<span class="sd">        Spectral displacement values (m) extracted from</span>
+<span class="sd">        *sdof_capacity*.</span>
+<span class="sd">    Sa : numpy.ndarray</span>
+<span class="sd">        Spectral acceleration values (g) extracted from</span>
+<span class="sd">        *sdof_capacity*.</span>
+<span class="sd">    is_sos : bool</span>
+<span class="sd">        ``True`` if a soft-storey system.</span>
+<span class="sd">    storey_heights : list or None</span>
+<span class="sd">        Storey heights in metres (triggers OpenSees</span>
+<span class="sd">        verification when provided).</span>
+<span class="sd">    T_target : float</span>
+<span class="sd">        Target fundamental period (s), derived from the first</span>
+<span class="sd">        capacity point.</span>
+<span class="sd">    category : str</span>
+<span class="sd">        Building height classification (``&#39;low-rise&#39;``,</span>
+<span class="sd">        ``&#39;mid-rise&#39;``, or ``&#39;high-rise&#39;``).</span>
+<span class="sd">    roof_mass_factor : float</span>
+<span class="sd">        Ratio of roof mass to typical floor mass.</span>
+<span class="sd">    soft_storey_factor : float</span>
+<span class="sd">        Ground-floor stiffness reduction for soft-storey</span>
+<span class="sd">        systems.</span>
+<span class="sd">    stiffness_group_size : int</span>
+<span class="sd">        Number of storeys per stiffness group.</span>
+<span class="sd">    validate_results : bool</span>
+<span class="sd">        Whether capacity curves are validated after</span>
+<span class="sd">        calibration.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether to print progress to console.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    calibrate_model()</span>
+<span class="sd">        Run the full SDOF-to-MDOF calibration pipeline and</span>
+<span class="sd">        return ``(floor_masses, storey_drifts, storey_forces,</span>
+<span class="sd">        phi, metadata)``.</span>
+
+<span class="sd">    build_mass_matrix(mass_profile=None)</span>
+<span class="sd">        Build a diagonal mass matrix normalised to 1.0.</span>
+
+<span class="sd">    build_stiffness_matrix(stiffness_profile=None)</span>
+<span class="sd">        Build a tri-diagonal lateral stiffness matrix.</span>
+
+<span class="sd">    compute_modal_properties(M, K, num_modes=None)</span>
+<span class="sd">        Solve the generalised eigenvalue problem and return</span>
+<span class="sd">        modal properties.</span>
+
+<span class="sd">    compute_storey_distribution_ratios(phi, M)</span>
+<span class="sd">        Compute shear and drift distribution ratios from the</span>
+<span class="sd">        first mode shape.</span>
+
+<span class="sd">    transform_sdof_to_mdof(Sd, Sa, phi, M, Gamma, M_eff,</span>
+<span class="sd">            shear_ratios, drift_ratios=None)</span>
+<span class="sd">        Transform SDOF capacity to MDOF storey force-drift</span>
+<span class="sd">        curves.</span>
+
+<span class="sd">    validate_capacity_curve(drifts, forces)</span>
+<span class="sd">        Ensure monotonic displacement and positive values.</span>
+
+<span class="sd">    mdof_to_sdof(base_shear, roof_disp, Gamma, M_eff,</span>
+<span class="sd">            phi_roof=1.0)</span>
+<span class="sd">        Convert MDOF pushover results to SDOF coordinates.</span>
+
+<span class="sd">    sdof_to_mdof_global(Sd, Sa, Gamma, M_eff, phi_roof=1.0)</span>
+<span class="sd">        Convert SDOF capacity to MDOF global response.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Fajfar, P. (1999). &quot;Capacity spectrum method based on</span>
+<span class="sd">           inelastic demand spectra.&quot; Earthquake Engng Struct Dyn.</span>
+
+<span class="sd">    .. [2] Priestley, M.J.N., Calvi, G.M., and Kowalsky, M.J.</span>
+<span class="sd">           (2007). &quot;Displacement-Based Seismic Design of</span>
+<span class="sd">           Structures.&quot; IUSS Press.</span>
+
+<span class="sd">    .. [3] Lu X, McKenna F, Cheng Q, Xu Z, Zeng X, Mahin SA.</span>
+<span class="sd">           An open-source framework for regional earthquake loss</span>
+<span class="sd">           estimation using the city-scale nonlinear time history</span>
+<span class="sd">           analysis. Earthquake Spectra. 2020;36(2):806-831.</span>
+<span class="sd">           doi:10.1177/8755293019891724</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="calibration.__init__">
+<a class="viewcode-back" href="../../../contents/cal/init.html#openquake.vmtk.calibration.calibration.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nst</span><span class="p">,</span>
+        <span class="n">sdof_capacity</span><span class="p">,</span>
+        <span class="n">is_sos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">storey_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">stiffness_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mass_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">phi_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">roof_mass_factor</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+        <span class="n">soft_storey_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">stiffness_group_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">validate_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise the calibration object and validate inputs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nst : int</span>
+<span class="sd">            Number of storeys. Must be a positive integer.</span>
+
+<span class="sd">        sdof_capacity : numpy.ndarray</span>
+<span class="sd">            SDOF capacity array ``[Sd (m), Sa (g)]``, shape</span>
+<span class="sd">            ``(n, 2)``. Must not include ``(0, 0)`` rows and</span>
+<span class="sd">            must contain at least 2 non-zero points.</span>
+
+<span class="sd">        is_sos : bool, optional</span>
+<span class="sd">            ``True`` if a soft-storey system. Reduces the</span>
+<span class="sd">            ground-floor stiffness by *soft_storey_factor*.</span>
+<span class="sd">            Default is ``False``.</span>
+
+<span class="sd">        storey_heights : list of float, optional</span>
+<span class="sd">            Storey heights in metres, length *nst*. When</span>
+<span class="sd">            provided, triggers OpenSees period-matching and</span>
+<span class="sd">            SPO verification inside ``calibrate_model()``.</span>
+<span class="sd">            Default is ``None``.</span>
+
+<span class="sd">        stiffness_profile : numpy.ndarray, optional</span>
+<span class="sd">            Custom relative storey stiffnesses (length *nst*).</span>
+<span class="sd">            Overrides the default decay profile. Default is</span>
+<span class="sd">            ``None``.</span>
+
+<span class="sd">        mass_profile : numpy.ndarray, optional</span>
+<span class="sd">            Custom floor masses (length *nst*, should sum to</span>
+<span class="sd">            1.0). Overrides the default mass distribution.</span>
+<span class="sd">            Default is ``None``.</span>
+
+<span class="sd">        phi_target : numpy.ndarray, optional</span>
+<span class="sd">            Custom first mode shape (length *nst*,</span>
+<span class="sd">            roof-normalised). Overrides the eigenvalue-based</span>
+<span class="sd">            mode shape. Default is ``None``.</span>
+
+<span class="sd">        roof_mass_factor : float, optional</span>
+<span class="sd">            Ratio of roof mass to typical floor mass. Default</span>
+<span class="sd">            is 0.75.</span>
+
+<span class="sd">        soft_storey_factor : float, optional</span>
+<span class="sd">            Multiplicative reduction for the ground-floor</span>
+<span class="sd">            stiffness when *is_sos* is ``True``. If ``None``,</span>
+<span class="sd">            defaults to 0.35 for soft-storey systems and 0.50</span>
+<span class="sd">            otherwise.</span>
+
+<span class="sd">        stiffness_group_size : int, optional</span>
+<span class="sd">            Number of storeys per stiffness group. Default</span>
+<span class="sd">            is 2.</span>
+
+<span class="sd">        validate_results : bool, optional</span>
+<span class="sd">            If ``True``, capacity curves are validated for</span>
+<span class="sd">            monotonicity and positive values after</span>
+<span class="sd">            calibration. Default is ``True``.</span>
+
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            If ``True``, print calibration progress to</span>
+<span class="sd">            console. Default is ``False``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If any input has an incorrect type.</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">            If any input has an invalid value or inconsistent</span>
+<span class="sd">            dimensions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># nst check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nst</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;nst&#39; must be a positive integer.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># sdof_capacity check</span>
+        <span class="n">sdof_capacity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sdof_capacity</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">sdof_capacity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;sdof_capacity&#39; must have shape (n, 2) with &quot;</span>
+                <span class="s2">&quot;columns [Sd, Sa].&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Strip leading (0, 0) rows</span>
+        <span class="n">nonzero</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">sdof_capacity</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="o">&amp;</span> <span class="p">(</span><span class="n">sdof_capacity</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">nonzero</span><span class="p">):</span>
+            <span class="n">n_stripped</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">~</span><span class="n">nonzero</span><span class="p">))</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Stripped </span><span class="si">{</span><span class="n">n_stripped</span><span class="si">}</span><span class="s2"> leading (0,0) row(s) &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;from sdof_capacity.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">sdof_capacity</span> <span class="o">=</span> <span class="n">sdof_capacity</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sdof_capacity</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;sdof_capacity&#39; must have at least 2 &quot;</span>
+                <span class="s2">&quot;non-zero points.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sdof_capacity</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">sdof_capacity</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;First capacity point must have Sd &gt; 0 and &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Sa &gt; 0. Got Sd=</span><span class="si">{</span><span class="n">sdof_capacity</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Sa=</span><span class="si">{</span><span class="n">sdof_capacity</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">sdof_capacity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;All values in &#39;sdof_capacity&#39; must be &quot;</span>
+                <span class="s2">&quot;positive.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># is_sos check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_sos</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;is_sos&#39; must be a bool, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">is_sos</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># storey_heights check</span>
+        <span class="k">if</span> <span class="n">storey_heights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storey_heights</span><span class="p">,</span> <span class="s1">&#39;__len__&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;&#39;storey_heights&#39; must be a list or &quot;</span>
+                    <span class="s2">&quot;array.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">storey_heights</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nst</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;storey_heights&#39; length &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">storey_heights</span><span class="p">)</span><span class="si">}</span><span class="s2">) must match &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;nst&#39; (</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">h</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">storey_heights</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;All values in &#39;storey_heights&#39; must &quot;</span>
+                    <span class="s2">&quot;be positive.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># stiffness_profile check</span>
+        <span class="k">if</span> <span class="n">stiffness_profile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stiffness_profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">stiffness_profile</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stiffness_profile</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nst</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;stiffness_profile&#39; length &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">stiffness_profile</span><span class="p">)</span><span class="si">}</span><span class="s2">) must match &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;nst&#39; (</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">stiffness_profile</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;All values in &#39;stiffness_profile&#39; must &quot;</span>
+                    <span class="s2">&quot;be positive.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># mass_profile check</span>
+        <span class="k">if</span> <span class="n">mass_profile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mass_profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">mass_profile</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mass_profile</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nst</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;mass_profile&#39; length &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mass_profile</span><span class="p">)</span><span class="si">}</span><span class="s2">) must match &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;nst&#39; (</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mass_profile</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;All values in &#39;mass_profile&#39; must be &quot;</span>
+                    <span class="s2">&quot;positive.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># phi_target check</span>
+        <span class="k">if</span> <span class="n">phi_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">phi_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">phi_target</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">phi_target</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nst</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;phi_target&#39; length &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">phi_target</span><span class="p">)</span><span class="si">}</span><span class="s2">) must match &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;nst&#39; (</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># roof_mass_factor check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">roof_mass_factor</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;roof_mass_factor&#39; must be a number.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">roof_mass_factor</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">roof_mass_factor</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;roof_mass_factor&#39; must be in (0, 1.0].&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># stiffness_group_size check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stiffness_group_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;stiffness_group_size&#39; must be an integer.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">stiffness_group_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;stiffness_group_size&#39; must be &gt;= 1.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Resolve soft_storey_factor default</span>
+        <span class="k">if</span> <span class="n">soft_storey_factor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">soft_storey_factor</span> <span class="o">=</span> <span class="mf">0.35</span> <span class="k">if</span> <span class="n">is_sos</span> <span class="k">else</span> <span class="mf">0.50</span>
+
+        <span class="c1"># Store validated attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nst</span> <span class="o">=</span> <span class="n">nst</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sdof_capacity</span> <span class="o">=</span> <span class="n">sdof_capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sd</span> <span class="o">=</span> <span class="n">sdof_capacity</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sa</span> <span class="o">=</span> <span class="n">sdof_capacity</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_sos</span> <span class="o">=</span> <span class="n">is_sos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storey_heights</span> <span class="o">=</span> <span class="n">storey_heights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stiffness_profile</span> <span class="o">=</span> <span class="n">stiffness_profile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass_profile</span> <span class="o">=</span> <span class="n">mass_profile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_target</span> <span class="o">=</span> <span class="n">phi_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">roof_mass_factor</span> <span class="o">=</span> <span class="n">roof_mass_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_storey_factor</span> <span class="o">=</span> <span class="n">soft_storey_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stiffness_group_size</span> <span class="o">=</span> <span class="n">stiffness_group_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_results</span> <span class="o">=</span> <span class="n">validate_results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="c1"># Derived attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sa</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">_G</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classify_building</span><span class="p">()</span></div>
+
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                       INTERNAL HELPERS                          #</span>
+    <span class="c1">##################################################################</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_classify_building</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Classify the building by its number of storeys.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            One of ``&#39;low-rise&#39;``, ``&#39;mid-rise&#39;``, or</span>
+<span class="sd">            ``&#39;high-rise&#39;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nst</span> <span class="o">&lt;=</span> <span class="n">_LOW_RISE_MAX</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;low-rise&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nst</span> <span class="o">&lt;=</span> <span class="n">_MID_RISE_MAX</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;mid-rise&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;high-rise&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_storey_stiffness_profile</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">group_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute a relative inter-storey stiffness profile.</span>
+
+<span class="sd">        The profile follows ``k = 1.0 - 0.30 * h`` with a</span>
+<span class="sd">        minimum of 0.50, where *h* is the normalised height</span>
+<span class="sd">        of the group centroid (0 at ground, 1 at roof).</span>
+<span class="sd">        Sections change every *group_size* storeys.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nst : int</span>
+<span class="sd">            Number of storeys.</span>
+
+<span class="sd">        group_size : int, optional</span>
+<span class="sd">            Number of storeys per stiffness group. Default</span>
+<span class="sd">            is 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Relative stiffness values of length *nst*.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_groups</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">nst</span> <span class="o">/</span> <span class="n">group_size</span><span class="p">))</span>
+        <span class="n">k_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_groups</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">):</span>
+            <span class="n">i_mid</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">g</span> <span class="o">*</span> <span class="n">group_size</span> <span class="o">+</span> <span class="p">(</span><span class="n">group_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="p">)</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">i_mid</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">nst</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">k_groups</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="mf">0.30</span> <span class="o">*</span> <span class="n">h</span><span class="p">,</span> <span class="mf">0.50</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">k_groups</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="n">group_size</span><span class="p">,</span> <span class="n">n_groups</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+        <span class="p">])</span>
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                      MATRIX ASSEMBLY                           #</span>
+    <span class="c1">##################################################################</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_mass_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a diagonal mass matrix normalised to a total</span>
+<span class="sd">        of 1.0.</span>
+
+<span class="sd">        The SDOF capacity curve is defined for a unit-mass</span>
+<span class="sd">        oscillator (1 tonne), so the MDOF mass matrix must</span>
+<span class="sd">        also sum to 1.0 for the modal transformation to</span>
+<span class="sd">        remain consistent:</span>
+
+<span class="sd">            V_base = Sa x M_eff</span>
+<span class="sd">            where M_eff = (phi^T M 1)^2 / (phi^T M phi)</span>
+
+<span class="sd">        All intermediate floors carry an equal share; the roof</span>
+<span class="sd">        carries a reduced fraction controlled by</span>
+<span class="sd">        *roof_mass_factor*:</span>
+
+<span class="sd">            m_floor = 1.0 / (nst - 1 + roof_mass_factor)</span>
+<span class="sd">            m_roof  = m_floor x roof_mass_factor</span>
+
+<span class="sd">        For ``nst = 1`` the single floor mass is 1.0 (SDOF).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mass_profile : numpy.ndarray, optional</span>
+<span class="sd">            If provided, used directly as the diagonal (must</span>
+<span class="sd">            sum to 1.0; length must equal *nst*). If ``None``,</span>
+<span class="sd">            uses the instance&#39;s *mass_profile* attribute.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Diagonal mass matrix of shape ``(nst, nst)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mp</span> <span class="o">=</span> <span class="p">(</span><span class="n">mass_profile</span> <span class="k">if</span> <span class="n">mass_profile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+              <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_profile</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mp</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nst</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">]])</span>
+        <span class="n">m_floor</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nst</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">roof_mass_factor</span>
+        <span class="p">)</span>
+        <span class="n">masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nst</span><span class="p">,</span> <span class="n">m_floor</span><span class="p">)</span>
+        <span class="n">masses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">m_floor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">roof_mass_factor</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_stiffness_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stiffness_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a tri-diagonal lateral stiffness matrix.</span>
+
+<span class="sd">        Uses a uniform-decay profile ``k = 1.0 - 0.30 * h``</span>
+<span class="sd">        (min 0.50) with sections grouped every</span>
+<span class="sd">        *stiffness_group_size* storeys. Pass</span>
+<span class="sd">        *stiffness_profile* to override entirely. If *is_sos*</span>
+<span class="sd">        is ``True``, the ground-floor spring is reduced by</span>
+<span class="sd">        *soft_storey_factor*.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stiffness_profile : numpy.ndarray, optional</span>
+<span class="sd">            Custom relative stiffness values (length *nst*).</span>
+<span class="sd">            Overrides the default decay profile and the</span>
+<span class="sd">            instance&#39;s stored profile if provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Stiffness matrix of shape ``(nst, nst)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="p">(</span><span class="n">stiffness_profile</span>
+              <span class="k">if</span> <span class="n">stiffness_profile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+              <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">stiffness_profile</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storey_stiffness_profile</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nst</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stiffness_group_size</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sos</span><span class="p">:</span>
+                <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soft_storey_factor</span>
+
+        <span class="n">nst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nst</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">):</span>
+            <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">k</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">nst</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">K</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">K</span>
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                      MODAL ANALYSIS                            #</span>
+    <span class="c1">##################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_modal_properties</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">num_modes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute modal properties from mass and stiffness</span>
+<span class="sd">        matrices.</span>
+
+<span class="sd">        Solves the generalised eigenvalue problem</span>
+<span class="sd">        ``K phi = omega^2 M phi`` and returns periods, mode</span>
+<span class="sd">        shapes, participation factors, effective masses, and</span>
+<span class="sd">        mass participation ratios.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        M : numpy.ndarray</span>
+<span class="sd">            Mass matrix, shape ``(nst, nst)``.</span>
+
+<span class="sd">        K : numpy.ndarray</span>
+<span class="sd">            Stiffness matrix, shape ``(nst, nst)``.</span>
+
+<span class="sd">        num_modes : int, optional</span>
+<span class="sd">            Number of modes to compute. Defaults to all.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing:</span>
+
+<span class="sd">            - ``&#39;eigenvalues&#39;``: omega^2 for each mode.</span>
+<span class="sd">            - ``&#39;frequencies&#39;``: omega (rad/s).</span>
+<span class="sd">            - ``&#39;periods&#39;``: T (s).</span>
+<span class="sd">            - ``&#39;mode_shapes&#39;``: phi matrix</span>
+<span class="sd">              ``(nst, num_modes)``, each column is a</span>
+<span class="sd">              roof-normalised mode shape.</span>
+<span class="sd">            - ``&#39;participation_factors&#39;``: Gamma.</span>
+<span class="sd">            - ``&#39;effective_masses&#39;``: M*.</span>
+<span class="sd">            - ``&#39;mass_participation_ratios&#39;``: MPR.</span>
+<span class="sd">            - ``&#39;cumulative_mass_participation&#39;``:</span>
+<span class="sd">              cumulative MPR.</span>
+<span class="sd">            - ``&#39;M_total&#39;``: total mass (trace of M).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">num_modes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_modes</span> <span class="o">=</span> <span class="n">nst</span>
+        <span class="n">num_modes</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_modes</span><span class="p">,</span> <span class="n">nst</span><span class="p">)</span>
+
+        <span class="c1"># Solve generalised eigenvalue problem</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+
+        <span class="c1"># Sort by eigenvalue</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Take only requested modes</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[:</span><span class="n">num_modes</span><span class="p">]</span>
+        <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="p">:</span><span class="n">num_modes</span><span class="p">]</span>
+
+        <span class="c1"># Normalise mode shapes: roof = 1.0,</span>
+        <span class="c1"># first non-zero sign positive</span>
+        <span class="n">mode_shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_modes</span><span class="p">):</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">1e-14</span><span class="p">:</span>
+                <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">phi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">max_val</span> <span class="o">&gt;</span> <span class="mf">1e-14</span><span class="p">:</span>
+                    <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">max_val</span>
+            <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">phi</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">comp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">phi</span> <span class="o">=</span> <span class="o">-</span><span class="n">phi</span>
+                    <span class="k">break</span>
+            <span class="n">mode_shapes</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">phi</span>
+
+        <span class="c1"># Compute modal properties</span>
+        <span class="n">ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+        <span class="n">M_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+        <span class="n">frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">periods</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">frequencies</span>
+
+        <span class="n">participation_factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_modes</span><span class="p">)</span>
+        <span class="n">effective_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_modes</span><span class="p">)</span>
+        <span class="n">mass_participation_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_modes</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_modes</span><span class="p">):</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">mode_shapes</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">L_n</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">@</span> <span class="n">M</span> <span class="o">@</span> <span class="n">ones</span>
+            <span class="n">M_n</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">@</span> <span class="n">M</span> <span class="o">@</span> <span class="n">phi</span>
+
+            <span class="n">participation_factors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">L_n</span> <span class="o">/</span> <span class="n">M_n</span>
+            <span class="n">effective_masses</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">L_n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">M_n</span>
+            <span class="n">mass_participation_ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">effective_masses</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">M_total</span>
+            <span class="p">)</span>
+
+        <span class="n">cumulative_mpr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span>
+            <span class="n">mass_participation_ratios</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;eigenvalues&quot;</span><span class="p">:</span> <span class="n">eigenvalues</span><span class="p">,</span>
+            <span class="s2">&quot;frequencies&quot;</span><span class="p">:</span> <span class="n">frequencies</span><span class="p">,</span>
+            <span class="s2">&quot;periods&quot;</span><span class="p">:</span> <span class="n">periods</span><span class="p">,</span>
+            <span class="s2">&quot;mode_shapes&quot;</span><span class="p">:</span> <span class="n">mode_shapes</span><span class="p">,</span>
+            <span class="s2">&quot;participation_factors&quot;</span><span class="p">:</span> <span class="n">participation_factors</span><span class="p">,</span>
+            <span class="s2">&quot;effective_masses&quot;</span><span class="p">:</span> <span class="n">effective_masses</span><span class="p">,</span>
+            <span class="s2">&quot;mass_participation_ratios&quot;</span><span class="p">:</span> <span class="n">mass_participation_ratios</span><span class="p">,</span>
+            <span class="s2">&quot;cumulative_mass_participation&quot;</span><span class="p">:</span> <span class="n">cumulative_mpr</span><span class="p">,</span>
+            <span class="s2">&quot;M_total&quot;</span><span class="p">:</span> <span class="n">M_total</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                    MODAL DISTRIBUTION                          #</span>
+    <span class="c1">##################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_storey_distribution_ratios</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">M</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute shear and drift distribution ratios from the</span>
+<span class="sd">        first mode shape.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phi : numpy.ndarray</span>
+<span class="sd">            First mode shape (roof-normalised), length *nst*.</span>
+
+<span class="sd">        M : numpy.ndarray</span>
+<span class="sd">            Diagonal mass matrix, shape ``(nst, nst)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        shear_ratios : numpy.ndarray</span>
+<span class="sd">            ``V_i / V_base`` for each storey, computed as</span>
+<span class="sd">            ``sum(m_j phi_j for j &gt;= i) /</span>
+<span class="sd">            sum(m_j phi_j)``.</span>
+
+<span class="sd">        drift_ratios : numpy.ndarray</span>
+<span class="sd">            ``delta_phi_i / delta_phi_1`` for each storey,</span>
+<span class="sd">            where ``delta_phi_i = phi[i] - phi[i-1]`` and</span>
+<span class="sd">            ``delta_phi_1 = phi[0]``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">m_diag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+        <span class="c1"># Shear ratios</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">m_diag</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-14</span><span class="p">:</span>
+            <span class="n">shear_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shear_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">m_diag</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span> <span class="o">*</span> <span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">:])</span> <span class="o">/</span> <span class="n">total</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+            <span class="p">])</span>
+
+        <span class="c1"># Drift ratios</span>
+        <span class="n">delta_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+        <span class="n">delta_phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">nst</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">delta_phi</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">phi</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">phi</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">delta_phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;First inter-storey mode-shape increment &quot;</span>
+                <span class="s2">&quot;is near zero; using uniform drift ratios.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">drift_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">drift_ratios</span> <span class="o">=</span> <span class="n">delta_phi</span> <span class="o">/</span> <span class="n">ref</span>
+
+        <span class="c1"># Ensure drift ratios remain positive</span>
+        <span class="n">drift_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">drift_ratios</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">shear_ratios</span><span class="p">,</span> <span class="n">drift_ratios</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_sdof_to_mdof</span><span class="p">(</span>
+        <span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">M_eff</span><span class="p">,</span>
+        <span class="n">shear_ratios</span><span class="p">,</span> <span class="n">drift_ratios</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform SDOF capacity to MDOF storey force-drift</span>
+<span class="sd">        curves.</span>
+
+<span class="sd">        Default behaviour (``drift_ratios=None``):</span>
+<span class="sd">        uniform-ductility assumption — every storey shares</span>
+<span class="sd">        the same drift backbone equal to the first-storey</span>
+<span class="sd">        drift ``Sd x Gamma x phi[0]``.</span>
+
+<span class="sd">        When *drift_ratios* are supplied, each storey drift</span>
+<span class="sd">        is scaled by its ratio relative to the first storey:</span>
+
+<span class="sd">            delta_i = delta_1 x drift_ratios[i]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Sd : numpy.ndarray</span>
+<span class="sd">            Spectral displacement (m).</span>
+
+<span class="sd">        Sa : numpy.ndarray</span>
+<span class="sd">            Spectral acceleration (g).</span>
+
+<span class="sd">        phi : numpy.ndarray</span>
+<span class="sd">            First mode shape (roof-normalised).</span>
+
+<span class="sd">        M : numpy.ndarray</span>
+<span class="sd">            Mass matrix.</span>
+
+<span class="sd">        Gamma : float</span>
+<span class="sd">            Modal participation factor.</span>
+
+<span class="sd">        M_eff : float</span>
+<span class="sd">            Effective modal mass.</span>
+
+<span class="sd">        shear_ratios : numpy.ndarray</span>
+<span class="sd">            Storey shear ratios ``V_i / V_base``.</span>
+
+<span class="sd">        drift_ratios : numpy.ndarray, optional</span>
+<span class="sd">            ``delta_phi_i / delta_phi_1`` for each storey.</span>
+<span class="sd">            If ``None``, uniform ductility is assumed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        storey_forces : numpy.ndarray</span>
+<span class="sd">            Forces in g x mass units ``(nst, n_points)``.</span>
+
+<span class="sd">        storey_drifts : numpy.ndarray</span>
+<span class="sd">            Inter-storey drifts in metres</span>
+<span class="sd">            ``(nst, n_points)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">n_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Sd</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">drift_ratios</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">drift_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+
+        <span class="n">base_shear</span> <span class="o">=</span> <span class="n">Sa</span> <span class="o">*</span> <span class="n">M_eff</span>
+        <span class="n">first_storey_drift</span> <span class="o">=</span> <span class="n">Sd</span> <span class="o">*</span> <span class="n">Gamma</span> <span class="o">*</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">storey_forces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">n_points</span><span class="p">))</span>
+        <span class="n">storey_drifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">n_points</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">):</span>
+            <span class="n">storey_forces</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">base_shear</span> <span class="o">*</span> <span class="n">shear_ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">storey_drifts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">first_storey_drift</span> <span class="o">*</span> <span class="n">drift_ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">storey_forces</span><span class="p">,</span> <span class="n">storey_drifts</span>
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                        VALIDATION                              #</span>
+    <span class="c1">##################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_capacity_curve</span><span class="p">(</span><span class="n">drifts</span><span class="p">,</span> <span class="n">forces</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure monotonic displacement and positive values.</span>
+
+<span class="sd">        If any displacement is not strictly increasing, it is</span>
+<span class="sd">        nudged to ``1.01 x`` the previous value. All values</span>
+<span class="sd">        are forced to be positive (absolute value).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        drifts : numpy.ndarray</span>
+<span class="sd">            Storey drift values.</span>
+
+<span class="sd">        forces : numpy.ndarray</span>
+<span class="sd">            Storey force values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        drifts : numpy.ndarray</span>
+<span class="sd">            Validated drift values.</span>
+
+<span class="sd">        forces : numpy.ndarray</span>
+<span class="sd">            Validated force values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">drifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">drifts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="n">forces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">forces</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">drifts</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">drifts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">drifts</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">drifts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">drifts</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.01</span>
+
+        <span class="k">return</span> <span class="n">drifts</span><span class="p">,</span> <span class="n">forces</span>
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                   MAIN CALIBRATION METHOD                      #</span>
+    <span class="c1">##################################################################</span>
+
+<div class="viewcode-block" id="calibration.calibrate_model">
+<a class="viewcode-back" href="../../../contents/cal/calibrate_model.html#openquake.vmtk.calibration.calibration.calibrate_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calibrate_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the full SDOF-to-MDOF calibration pipeline.</span>
+
+<span class="sd">        The method performs the following steps:</span>
+
+<span class="sd">        1. Build mass and stiffness matrices.</span>
+<span class="sd">        2. Scale the stiffness matrix so that the first</span>
+<span class="sd">           analytical period matches ``T_target``.</span>
+<span class="sd">        3. Extract the first mode shape and compute modal</span>
+<span class="sd">           participation factors.</span>
+<span class="sd">        4. Compute storey shear and drift distribution ratios.</span>
+<span class="sd">        5. Rebuild the stiffness matrix from shear ratios for</span>
+<span class="sd">           mutual consistency with the storey forces.</span>
+<span class="sd">        6. Transform the SDOF capacity curve to MDOF storey</span>
+<span class="sd">           force-drift backbones.</span>
+<span class="sd">        7. Scale storey forces so that spring stiffnesses match</span>
+<span class="sd">           ``T_target``.</span>
+<span class="sd">        8. (Optional) If *storey_heights* were provided, build</span>
+<span class="sd">           an OpenSees model, verify the period, and run a</span>
+<span class="sd">           static pushover for validation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        floor_masses : list of float</span>
+<span class="sd">            Diagonal floor masses from the mass matrix.</span>
+
+<span class="sd">        storey_drifts : numpy.ndarray</span>
+<span class="sd">            Inter-storey drift capacities in metres, shape</span>
+<span class="sd">            ``(nst, n_points)``.</span>
+
+<span class="sd">        storey_forces : numpy.ndarray</span>
+<span class="sd">            Storey shear-force capacities in g x mass units,</span>
+<span class="sd">            shape ``(nst, n_points)``.</span>
+
+<span class="sd">        phi : numpy.ndarray</span>
+<span class="sd">            First mode shape (roof-normalised).</span>
+
+<span class="sd">        metadata : dict</span>
+<span class="sd">            Dictionary of calibration metadata including</span>
+<span class="sd">            ``T_target``, ``Gamma``, ``M_eff``,</span>
+<span class="sd">            ``shear_ratios``, ``drift_ratios``, mass and</span>
+<span class="sd">            stiffness matrices, and (when *storey_heights*</span>
+<span class="sd">            is provided) SPO verification results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nst</span>
+        <span class="n">Sd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sd</span>
+        <span class="n">Sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sa</span>
+
+        <span class="c1"># ── Modal matrices ───────────────────────────────</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_mass_matrix</span><span class="p">()</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_stiffness_matrix</span><span class="p">()</span>
+
+        <span class="c1"># ── Scale K so T1_analytical = T_target exactly ──</span>
+        <span class="n">omega_target</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span>
+        <span class="n">evals_raw</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">eigvals_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lambda_1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">evals_raw</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">omega_target</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">lambda_1</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">K</span> <span class="o">*</span> <span class="n">alpha</span>
+
+        <span class="n">modal_props</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_modal_properties</span><span class="p">(</span>
+            <span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">num_modes</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ── Mode shape ───────────────────────────────────</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">phi_target</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+            <span class="p">)</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">phi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+            <span class="n">Gamma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">M</span> <span class="o">@</span> <span class="n">ones</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">M</span> <span class="o">@</span> <span class="n">phi</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">M_eff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">M</span> <span class="o">@</span> <span class="n">ones</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="o">/</span> <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">M</span> <span class="o">@</span> <span class="n">phi</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;mode_shapes&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">Gamma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;participation_factors&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">M_eff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;effective_masses&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="n">MPR_mode1</span> <span class="o">=</span> <span class="n">M_eff</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">shear_ratios</span><span class="p">,</span> <span class="n">drift_ratios</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_storey_distribution_ratios</span><span class="p">(</span>
+                <span class="n">phi</span><span class="p">,</span> <span class="n">M</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ── Rebuild K from shear_ratios ──────────────────</span>
+        <span class="n">K_SR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">):</span>
+            <span class="n">K_SR</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">shear_ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">shear_ratios</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">nst</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">K_SR</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">shear_ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">K_SR</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">shear_ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">lam_SR</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+                <span class="n">eigh</span><span class="p">(</span><span class="n">K_SR</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">eigvals_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">omega_target</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">lam_SR</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">K_SR</span> <span class="o">*</span> <span class="n">alpha</span>
+
+        <span class="c1"># ── SDOF -&gt; MDOF ────────────────────────────────</span>
+        <span class="n">storey_forces</span><span class="p">,</span> <span class="n">storey_drifts</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transform_sdof_to_mdof</span><span class="p">(</span>
+                <span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">M_eff</span><span class="p">,</span>
+                <span class="n">shear_ratios</span><span class="p">,</span> <span class="n">drift_ratios</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ── Scale forces for T_target consistency ────────</span>
+        <span class="n">drift0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">Sd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">Gamma</span> <span class="o">*</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">drift_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">base_shear_kN</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">Sa</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">M_eff</span> <span class="o">*</span> <span class="n">_G</span><span class="p">)</span>
+        <span class="n">k_implied</span> <span class="o">=</span> <span class="n">base_shear_kN</span> <span class="o">/</span> <span class="n">drift0</span>
+        <span class="n">k_needed</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">shear_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">force_scale</span> <span class="o">=</span> <span class="n">k_needed</span> <span class="o">/</span> <span class="n">k_implied</span>
+        <span class="n">storey_forces</span> <span class="o">=</span> <span class="n">storey_forces</span> <span class="o">*</span> <span class="n">force_scale</span>
+
+        <span class="n">floor_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_results</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">):</span>
+                <span class="n">storey_drifts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">storey_forces</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_capacity_curve</span><span class="p">(</span>
+                        <span class="n">storey_drifts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
+                        <span class="n">storey_forces</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># ── u_roof_target ────────────────────────────────</span>
+        <span class="n">u_roof_target</span> <span class="o">=</span> <span class="n">Sd</span> <span class="o">*</span> <span class="n">Gamma</span> <span class="o">*</span> <span class="n">phi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># ── Metadata ─────────────────────────────────────</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;building_category&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="s2">&quot;num_storeys&quot;</span><span class="p">:</span> <span class="n">nst</span><span class="p">,</span>
+            <span class="s2">&quot;T1&quot;</span><span class="p">:</span> <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;periods&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;T_target&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span><span class="p">,</span>
+            <span class="s2">&quot;Gamma&quot;</span><span class="p">:</span> <span class="n">Gamma</span><span class="p">,</span>
+            <span class="s2">&quot;M_eff&quot;</span><span class="p">:</span> <span class="n">M_eff</span><span class="p">,</span>
+            <span class="s2">&quot;MPR_mode1&quot;</span><span class="p">:</span> <span class="n">MPR_mode1</span><span class="p">,</span>
+            <span class="s2">&quot;shear_ratios&quot;</span><span class="p">:</span> <span class="n">shear_ratios</span><span class="p">,</span>
+            <span class="s2">&quot;drift_ratios&quot;</span><span class="p">:</span> <span class="n">drift_ratios</span><span class="p">,</span>
+            <span class="s2">&quot;M&quot;</span><span class="p">:</span> <span class="n">M</span><span class="p">,</span>
+            <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="n">K</span><span class="p">,</span>
+            <span class="s2">&quot;stiffness_group_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stiffness_group_size</span><span class="p">,</span>
+            <span class="s2">&quot;participation_factors&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;participation_factors&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;effective_masses&quot;</span><span class="p">:</span> <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;effective_masses&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;mass_participation_ratios&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;mass_participation_ratios&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;cumulative_mass_participation&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">modal_props</span><span class="p">[</span><span class="s2">&quot;cumulative_mass_participation&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;u_roof_target&quot;</span><span class="p">:</span> <span class="n">u_roof_target</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storey_heights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">floor_masses</span><span class="p">,</span> <span class="n">storey_drifts</span><span class="p">,</span>
+                <span class="n">storey_forces</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># ─────────────────────────────────────────────────</span>
+        <span class="c1"># OpenSees SPO verification</span>
+        <span class="c1"># ─────────────────────────────────────────────────</span>
+        <span class="n">u_roof_ultimate</span> <span class="o">=</span> <span class="n">u_roof_target</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;calibrate_model  nst=</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2">  &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;T_target=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">T_target</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> s&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;  Gamma=</span><span class="si">{</span><span class="n">Gamma</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;M_eff=</span><span class="si">{</span><span class="n">M_eff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+        <span class="n">T_opensees</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">period_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">spo_Sd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">spo_Sa</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">spo_roof_disp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">spo_base_shear</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Unit storey heights for verification model</span>
+            <span class="n">_sh_verify</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">nst</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">_modeller</span><span class="p">(</span>
+                <span class="n">nst</span><span class="p">,</span> <span class="n">_sh_verify</span><span class="p">,</span> <span class="n">floor_masses</span><span class="p">,</span>
+                <span class="n">storey_drifts</span><span class="p">,</span> <span class="n">storey_forces</span> <span class="o">*</span> <span class="n">_G</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">compile_model</span><span class="p">()</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">do_gravity_analysis</span><span class="p">()</span>
+
+            <span class="c1"># OpenSees eigen solvers enforce N-1 DOF limit.</span>
+            <span class="c1"># For nst == 1, compute T analytically.</span>
+            <span class="k">if</span> <span class="n">nst</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">k11</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="n">m11</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="n">omega1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">k11</span> <span class="o">/</span> <span class="n">m11</span><span class="p">)</span>
+                <span class="n">T_opensees</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">omega1</span>
+                <span class="n">period_error</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">abs</span><span class="p">(</span><span class="n">T_opensees</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span><span class="p">)</span>
+                    <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">n_modes</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">nst</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="n">T_arr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">do_modal_analysis</span><span class="p">(</span>
+                    <span class="n">num_modes</span><span class="o">=</span><span class="n">n_modes</span><span class="p">,</span>
+                    <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;-genBandArpack&#39;</span><span class="p">,</span>
+                    <span class="n">plot_modes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">T_opensees</span> <span class="o">=</span> <span class="n">T_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">period_error</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">abs</span><span class="p">(</span><span class="n">T_opensees</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span><span class="p">)</span>
+                    <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_target</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;  [T]  OpenSees &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;T1=</span><span class="si">{</span><span class="n">T_opensees</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> s  &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;target=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">T_target</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> s  &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;err=</span><span class="si">{</span><span class="n">period_error</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">ref_disp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">u_roof_target</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1e-4</span><span class="p">)</span>
+            <span class="n">disp_scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">u_roof_ultimate</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">ref_disp</span><span class="p">,</span> <span class="mf">2.0</span>
+            <span class="p">)</span>
+            <span class="n">spo_res</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">do_spo_analysis</span><span class="p">(</span>
+                <span class="n">ref_disp</span><span class="o">=</span><span class="n">ref_disp</span><span class="p">,</span>
+                <span class="n">disp_scale_factor</span><span class="o">=</span><span class="n">disp_scale</span><span class="p">,</span>
+                <span class="n">push_dir</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">phi</span><span class="o">=</span><span class="n">phi</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="n">pFlag</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">spo_roof_disp</span> <span class="o">=</span> <span class="n">spo_res</span><span class="p">[</span><span class="s1">&#39;spo_disps&#39;</span><span class="p">][:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">spo_base_shear</span> <span class="o">=</span> <span class="n">spo_res</span><span class="p">[</span><span class="s1">&#39;spo_rxn&#39;</span><span class="p">]</span>
+            <span class="n">spo_Sd</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">spo_roof_disp</span> <span class="o">/</span> <span class="p">(</span><span class="n">Gamma</span> <span class="o">*</span> <span class="n">phi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="n">spo_Sa</span> <span class="o">=</span> <span class="n">spo_base_shear</span> <span class="o">/</span> <span class="p">(</span><span class="n">_G</span> <span class="o">*</span> <span class="n">M_eff</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">k_pt</span><span class="p">,</span> <span class="n">sd_t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Sd</span><span class="p">):</span>
+                    <span class="n">sa_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">sd_t</span><span class="p">,</span> <span class="n">spo_Sd</span><span class="p">,</span> <span class="n">spo_Sa</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;  [SPO] Pt</span><span class="si">{</span><span class="n">k_pt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Sd=</span><span class="si">{</span><span class="n">sd_t</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Sa_spo=</span><span class="si">{</span><span class="n">sa_norm</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">g  &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Sa_target=</span><span class="si">{</span><span class="n">Sa</span><span class="p">[</span><span class="n">k_pt</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">g&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OpenSees SPO failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+            <span class="s2">&quot;T_achieved&quot;</span><span class="p">:</span> <span class="n">T_opensees</span><span class="p">,</span>
+            <span class="s2">&quot;period_error_final&quot;</span><span class="p">:</span> <span class="n">period_error</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="k">if</span> <span class="n">spo_Sd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;spo_sdof_Sd&quot;</span><span class="p">:</span> <span class="n">spo_Sd</span><span class="p">,</span>
+                <span class="s2">&quot;spo_sdof_Sa&quot;</span><span class="p">:</span> <span class="n">spo_Sa</span><span class="p">,</span>
+                <span class="s2">&quot;spo_roof_disp&quot;</span><span class="p">:</span> <span class="n">spo_roof_disp</span><span class="p">,</span>
+                <span class="s2">&quot;spo_base_shear&quot;</span><span class="p">:</span> <span class="n">spo_base_shear</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">floor_masses</span><span class="p">,</span> <span class="n">storey_drifts</span><span class="p">,</span> <span class="n">storey_forces</span><span class="p">,</span>
+            <span class="n">phi</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1">##################################################################</span>
+    <span class="c1">#                     UTILITY METHODS                             #</span>
+    <span class="c1">##################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mdof_to_sdof</span><span class="p">(</span><span class="n">base_shear</span><span class="p">,</span> <span class="n">roof_disp</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span>
+                     <span class="n">M_eff</span><span class="p">,</span> <span class="n">phi_roof</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert MDOF pushover results to SDOF coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        base_shear : numpy.ndarray</span>
+<span class="sd">            Base shear (kN).</span>
+
+<span class="sd">        roof_disp : numpy.ndarray</span>
+<span class="sd">            Roof displacement (m).</span>
+
+<span class="sd">        Gamma : float</span>
+<span class="sd">            Modal participation factor.</span>
+
+<span class="sd">        M_eff : float</span>
+<span class="sd">            Effective modal mass.</span>
+
+<span class="sd">        phi_roof : float, optional</span>
+<span class="sd">            Roof mode-shape value (usually 1.0). Default</span>
+<span class="sd">            is 1.0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Sd : numpy.ndarray</span>
+<span class="sd">            Spectral displacement (m).</span>
+
+<span class="sd">        Sa : numpy.ndarray</span>
+<span class="sd">            Spectral acceleration (g).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Sd</span> <span class="o">=</span> <span class="n">roof_disp</span> <span class="o">/</span> <span class="p">(</span><span class="n">Gamma</span> <span class="o">*</span> <span class="n">phi_roof</span><span class="p">)</span>
+        <span class="n">Sa</span> <span class="o">=</span> <span class="n">base_shear</span> <span class="o">/</span> <span class="p">(</span><span class="n">_G</span> <span class="o">*</span> <span class="n">M_eff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sdof_to_mdof_global</span><span class="p">(</span><span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">M_eff</span><span class="p">,</span>
+                            <span class="n">phi_roof</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert SDOF capacity to MDOF global response.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Sd : numpy.ndarray</span>
+<span class="sd">            Spectral displacement (m).</span>
+
+<span class="sd">        Sa : numpy.ndarray</span>
+<span class="sd">            Spectral acceleration (g).</span>
+
+<span class="sd">        Gamma : float</span>
+<span class="sd">            Modal participation factor.</span>
+
+<span class="sd">        M_eff : float</span>
+<span class="sd">            Effective modal mass.</span>
+
+<span class="sd">        phi_roof : float, optional</span>
+<span class="sd">            Roof mode-shape value (usually 1.0). Default</span>
+<span class="sd">            is 1.0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        V_base : numpy.ndarray</span>
+<span class="sd">            Base shear (kN).</span>
+
+<span class="sd">        u_roof : numpy.ndarray</span>
+<span class="sd">            Roof displacement (m).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">V_base</span> <span class="o">=</span> <span class="n">Sa</span> <span class="o">*</span> <span class="n">_G</span> <span class="o">*</span> <span class="n">M_eff</span>
+        <span class="n">u_roof</span> <span class="o">=</span> <span class="n">Sd</span> <span class="o">*</span> <span class="n">Gamma</span> <span class="o">*</span> <span class="n">phi_roof</span>
+        <span class="k">return</span> <span class="n">V_base</span><span class="p">,</span> <span class="n">u_roof</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">calibrate_model</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">is_sos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">storey_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience wrapper around :class:`calibration`.</span>
+
+<span class="sd">    Instantiates a :class:`calibration` object with the supplied</span>
+<span class="sd">    parameters and immediately calls its</span>
+<span class="sd">    :meth:`~calibration.calibrate_model` method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nst : int</span>
+<span class="sd">        Number of storeys.</span>
+
+<span class="sd">    sdof_capacity : numpy.ndarray</span>
+<span class="sd">        SDOF capacity array ``[Sd (m), Sa (g)]``, shape ``(n, 2)``.</span>
+
+<span class="sd">    is_sos : bool, optional</span>
+<span class="sd">        ``True`` for soft-storey systems. Default is ``False``.</span>
+
+<span class="sd">    storey_heights : list of float, optional</span>
+<span class="sd">        Storey heights (m). Triggers OpenSees SPO verification</span>
+<span class="sd">        when provided. Default is ``None``.</span>
+
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Print calibration progress if ``True``. Default is</span>
+<span class="sd">        ``False``.</span>
+
+<span class="sd">    **kwargs</span>
+<span class="sd">        Additional keyword arguments forwarded to</span>
+<span class="sd">        :class:`calibration`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    floor_masses : list of float</span>
+<span class="sd">        Diagonal floor masses.</span>
+
+<span class="sd">    storey_drifts : numpy.ndarray</span>
+<span class="sd">        Inter-storey drift capacities (m), shape ``(nst, n_points)``.</span>
+
+<span class="sd">    storey_forces : numpy.ndarray</span>
+<span class="sd">        Storey shear-force capacities (g × mass), shape</span>
+<span class="sd">        ``(nst, n_points)``.</span>
+
+<span class="sd">    phi : numpy.ndarray</span>
+<span class="sd">        First mode shape (roof-normalised).</span>
+
+<span class="sd">    metadata : dict</span>
+<span class="sd">        Calibration metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">(</span>
+        <span class="n">nst</span><span class="o">=</span><span class="n">nst</span><span class="p">,</span>
+        <span class="n">sdof_capacity</span><span class="o">=</span><span class="n">sdof_capacity</span><span class="p">,</span>
+        <span class="n">is_sos</span><span class="o">=</span><span class="n">is_sos</span><span class="p">,</span>
+        <span class="n">storey_heights</span><span class="o">=</span><span class="n">storey_heights</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">cal</span><span class="o">.</span><span class="n">calibrate_model</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

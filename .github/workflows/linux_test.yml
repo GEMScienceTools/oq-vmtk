@@ -5,7 +5,7 @@ on:
     inputs:
       git-ref:
         description: Git Ref
-        default: master
+        default: main
         required: true
       debug_enabled:
         type: boolean
@@ -22,11 +22,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04]
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone Repository (Main)
+        uses: actions/checkout@v6
+        if: github.event.inputs.git-ref == ''
+      - name: Clone Repository (Custom Ref)
+        uses: actions/checkout@v6
+        if: github.event.inputs.git-ref != ''
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
       - name: Set up Python  ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup debugging session
@@ -34,6 +41,8 @@ jobs:
         timeout-minutes: 60
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: Install Dependencies of OpenQuake engine
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -L -O https://github.com/gem/oq-engine/raw/master/install.py
           python install.py user --version=master
@@ -56,21 +65,21 @@ jobs:
     needs: vulnerability_test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.11"
     - name: Install sphinx and themes
       run: |
         python -m pip install --upgrade pip
-        pip install sphinx
-        pip install recommonmark
-        pip install sphinx_rtd_theme
-        pip install nbsphinx
+        pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
+        # Install package so autodoc can import modules (openseespy mocked in conf.py)
+        pip install numpy scipy pandas matplotlib
+        pip install -e .
     - name: Make html pages
       run: |
-        cd docsrc ; sphinx-apidoc -o contents/ ../openquake ; make html
+        cd docsrc && make html
         touch _build/html/.nojekyll
 
     - name: Deploy to GitHub Pages
