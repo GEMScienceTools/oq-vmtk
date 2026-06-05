@@ -1,5 +1,28 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- `plotter.plot_vulnerability_function`: new optional `xlims` parameter (`[min, max]`) to restrict the plotted intensity range. Data arrays are filtered before plot creation so the violin axis is never distorted.
+
+### Changed
+- `plotter.plot_modes`: mode titles are now placed via `fig.text()` centred over both the X- and Y-displacement panels instead of being attached only to the left panel. Font sizes for node annotations, axis labels, tick marks, and panel titles, and the vertical spacing parameters (`hspace`, `top`), now scale adaptively with the number of grid rows and nodes per panel, preventing text and title overlap when plotting many modes.
+- `plotter.plot_vulnerability_function`: x-axis tick label font size reduced to prevent overlap when many intensity levels are present.
+- Demo `NonlinearTimeHistoryAnalysis`: introduction and section descriptions updated to match the concise style used across other demos; verbose bullet-point input/output argument lists removed.
+- Demo `PushoverAnalysis`: cyclic pushover protocol updated to a two-repetition-per-level scheme (ATC-24 / FEMA 461 style), producing 20 full hysteresis loops instead of 11.
+- Demo `StoreyLossFunctionApplication`: loss vs. IM fitting replaced with a power-law regression (OLS in log space, monotone by construction) paired with a Beta distribution dispersion model; COV estimated per quantile bin from the cloud scatter and propagated through the collapse-conditioning step using the law of total variance; summary tables of IML / mean loss / COV printed at both the non-conditioned and conditioned stages.
+- `README.md`: all module and demo descriptions updated; badge URLs corrected (`.svg` suffix removed from shields.io GitHub badges; Zenodo DOI badge migrated to shields.io static endpoint); contributor shield URLs fixed; installation, license, citation, and references sections added.
+- Demo `README.md` files: titles and descriptions corrected across `MultipleStripeAnalysis`, `FragilityAnalysis`, `IntensityMeasureProcessing`; `IntensityMeasureSelection/README.md` created; `demos/README.md` index updated to list all 13 demos.
+
+### Fixed
+- `plotter.plot_fragility_from_mca`: `title` parameter was silently ignored (variable was set but `ax.set_title()` was never called); title is now correctly applied to the figure.
+- `plotter.plot_vulnerability_function`: Beta distribution sampling returned all-NaN when CoV was zero (division by zero produced `inf` parameters); now returns a point mass at the mean for the degenerate case.
+
+### Renamed
+- `imcalculator.get_velocity_displacement_history` → `imcalculator.get_vel_disp_history`. Documentation and examples updated accordingly.
+
+---
+
 ## v1.1.0 — 2026-05-12
 
 ### Added
