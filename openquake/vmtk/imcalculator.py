@@ -53,7 +53,7 @@ class imcalculator:
         Computes the geometric mean of spectral accelerations for a
         user-defined list of periods.
 
-    get_velocity_displacement_history()
+    get_vel_disp_history()
         Computes velocity and displacement history with zero-phase
         high-pass filtering and baseline drift correction.
 
@@ -335,7 +335,7 @@ class imcalculator:
         # Geometric mean via log-space averaging
         return np.exp(np.mean(np.log(sa_values)))
 
-    def get_velocity_displacement_history(self):
+    def get_vel_disp_history(self):
         """
         Computes velocity and displacement time histories with
         baseline drift correction.

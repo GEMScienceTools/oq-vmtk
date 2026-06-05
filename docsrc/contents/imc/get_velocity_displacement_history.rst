@@ -1,7 +1,7 @@
 Velocity and Displacement History
 =================================
 
-.. automethod:: openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history
+.. automethod:: openquake.vmtk.imcalculator.imcalculator.get_vel_disp_history
 
 .. admonition:: Example
    :class: note
@@ -14,7 +14,7 @@ Velocity and Displacement History
       acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
       im = imcalculator(acc, dt=0.005)
 
-      vel, disp = im.get_velocity_displacement_history()
+      vel, disp = im.get_vel_disp_history()
       pgv = max(abs(vel))
       pgd = max(abs(disp))
       print(f"PGV = {pgv:.4f} m/s,  PGD = {pgd:.4f} m")

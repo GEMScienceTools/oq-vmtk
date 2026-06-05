@@ -11,8 +11,10 @@ Modal Shapes
       from openquake.vmtk.plotter import plotter
 
       pl = plotter()
-      # modal_dict from modelbuilder.do_modal_analysis()
+      # T, mode_shapes from modeller.do_modal_analysis()
       pl.plot_modes(
-          modal_dict=modal_dict,
-          num_modes=3,
+          node_list=model.node_list,
+          mode_shape_vectors=mode_shapes,
+          T=T,
+          export_path="mode_shapes.png",
       )

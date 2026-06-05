@@ -724,7 +724,7 @@ class modeller:
                 col_x + 0.11,
                 z,
                 f"Node {i}   z = {z:.2f} m   m = {m:.3f} t",
-                fontsize=7,
+                fontsize=9,
                 color=COL_ANN,
                 va="center",
                 ha="left",
@@ -750,7 +750,7 @@ class modeller:
                 bx_st - 0.05,
                 z_mid,
                 f"{sh:.2f} m",
-                fontsize=6,
+                fontsize=8,
                 color="#90A4AE",
                 ha="right",
                 va="center",
@@ -765,7 +765,7 @@ class modeller:
                 col_x + 0.09,
                 z_mid,
                 f"Ele. {ele_id}",
-                fontsize=6.5,
+                fontsize=8,
                 color=COL_SPRING,
                 ha="left",
                 va="center",
@@ -782,12 +782,12 @@ class modeller:
         ax1.set_ylim(0, total_h + 0.5)
         ax1.set_ylabel(
             "Height,  z  [m]",
-            fontsize=9, fontweight="bold", color=COL_ANN, labelpad=6
+            fontsize=11, fontweight="bold", color=COL_ANN, labelpad=6
         )
-        ax1.tick_params(axis="y", labelsize=8, colors=COL_ANN)
+        ax1.tick_params(axis="y", labelsize=10, colors=COL_ANN)
         ax1.set_title(
             "Node Positions",
-            fontsize=10, fontweight="bold", color="#1A237E", pad=8
+            fontsize=12, fontweight="bold", color="#1A237E", pad=8
         )
 
         ax2.grid(True, color=COL_GRID, linewidth=0.7, zorder=0)
@@ -827,22 +827,22 @@ class modeller:
         ax2.set_ylim(bottom=0)
         ax2.set_xlabel(
             "Storey Drift Capacity,  \u03b4\u1d62  [m]",
-            fontsize=9,
+            fontsize=11,
             fontweight="bold",
             color=COL_ANN,
             labelpad=7,
         )
         ax2.set_ylabel(
             "Storey Shear Force,  V\u1d62  [kN]",
-            fontsize=9,
+            fontsize=11,
             fontweight="bold",
             color=COL_ANN,
             labelpad=7,
         )
-        ax2.tick_params(labelsize=8, colors=COL_ANN)
+        ax2.tick_params(labelsize=10, colors=COL_ANN)
         ax2.set_title(
             "Storey Force\u2013Deformation Relationships",
-            fontsize=10,
+            fontsize=12,
             fontweight="bold",
             color="#1A237E",
             pad=8,
@@ -879,8 +879,7 @@ class modeller:
             for i in range(n_st)
         ]
 
-        plt.tight_layout()
-        plt.subplots_adjust(bottom=0.16)
+        plt.tight_layout(rect=[0, 0.15, 1, 0.96])
         fig.canvas.draw()
 
         p1 = ax1.get_position()
@@ -890,7 +889,7 @@ class modeller:
         fig.legend(
             handles=handles1,
             handler_map={spring_handle: _SpringHandler()},
-            fontsize=7.5,
+            fontsize=10,
             ncol=3,
             loc="lower center",
             bbox_to_anchor=(p1.x0 + p1.width / 2, leg_y),
@@ -902,7 +901,7 @@ class modeller:
         )
         fig.legend(
             handles=handles2,
-            fontsize=7.5,
+            fontsize=10,
             ncol=min(n_st, 5),
             loc="lower center",
             bbox_to_anchor=(p2.x0 + p2.width / 2, leg_y),
@@ -917,10 +916,9 @@ class modeller:
         label = "SDOF Oscillator" if n_st == 1 else f"{n_st}-Storey MDOF"
         fig.suptitle(
             f"OpenSees {label}  \u2014  Stick-and-Mass Model",
-            fontsize=11,
+            fontsize=13,
             fontweight="bold",
             color="#1A237E",
-            y=1.01,
         )
 
         # Save or Show
@@ -929,7 +927,7 @@ class modeller:
                 directory = os.path.dirname(export_path)
                 if directory and not os.path.exists(directory):
                     os.makedirs(directory, exist_ok=True)
-                plt.savefig(export_path, dpi=300)
+                plt.savefig(export_path, dpi=500, bbox_inches='tight')
                 plt.show()
             else:
                 plt.show()
