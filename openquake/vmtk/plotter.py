@@ -854,7 +854,7 @@ class plotter:
         ax_curve.tick_params(labelsize=_FS)
 
         # Governing Drift Hysteresis (Base Shear vs MIDR)
-        ax_drift.set_xlabel('Maximum Interstorey Drift [-]', fontsize=_FS)
+        ax_drift.set_xlabel('Maximum Interstorey Drift [%]', fontsize=_FS)
         ax_drift.set_ylabel('Base Shear [kN]', fontsize=_FS)
         ax_drift.set_title('Hysteretic Curve', fontsize=_FS, fontweight='bold')
         ax_drift.plot(governing_drift_history, cpo_rxn, 'gray', linewidth=2,
