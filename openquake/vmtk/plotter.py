@@ -854,7 +854,7 @@ class plotter:
         ax_curve.tick_params(labelsize=_FS)
 
         # Governing Drift Hysteresis (Base Shear vs MIDR)
-        ax_drift.set_xlabel('Maximum Interstorey Drift [-]', fontsize=_FS)
+        ax_drift.set_xlabel('Maximum Interstorey Drift [%]', fontsize=_FS)
         ax_drift.set_ylabel('Base Shear [kN]', fontsize=_FS)
         ax_drift.set_title('Hysteretic Curve', fontsize=_FS, fontweight='bold')
         ax_drift.plot(governing_drift_history, cpo_rxn, 'gray', linewidth=2,
@@ -1455,10 +1455,10 @@ class plotter:
             ax.set_xlim([0, 5.0])
 
         # Add title
-        default_title = "Seismic Demand Profiles"
-        fig.suptitle(title if title else default_title,
-                     fontsize=self.font_sizes['title'],
-                     fontname=self.font_name)
+        if title:
+            fig.suptitle(title,
+                         fontsize=self.font_sizes['title'],
+                         fontname=self.font_name)
 
         # Save or Show
         if pFlag:
@@ -1722,8 +1722,8 @@ class plotter:
             (min, max) limits for the Y-axis (IML axis).
 
         title : str, optional, default=None
-            A custom title for the figure. If not provided, a default title
-            incorporating the Intensity Measure (IM) label is used.
+            A custom title for the figure. If not provided, no title is
+            displayed.
 
         pFlag : bool, optional, default=True
             If True, the plot is processed (saved/shown).
@@ -1879,7 +1879,7 @@ class plotter:
         ylims : tuple of float
             (min, max) for the IM (y) axis.
         title : str, optional
-            Figure title.  Defaults to a standard MSA title.
+            Figure title. If not provided, no title is displayed.
         pFlag : bool, default True
             Show/save the figure when True; close silently when False.
         export_path : str, optional
@@ -2049,8 +2049,7 @@ class plotter:
             ``(min, max)`` limits for the Y-axis.
 
         title : str, optional
-            Custom plot title. If ``None``, a method-specific default
-            is used.
+            Custom plot title. If ``None``, no title is displayed.
 
         cloud_method : {'bootstrap', 'classical'} or None, optional
             Selects the plotting style. When ``None`` (default), the
@@ -2138,10 +2137,6 @@ class plotter:
                         label=label,
                         zorder=3)
 
-            default_title = (
-                "Fragility Functions from Modified Cloud Analysis"
-                " (Bootstrap)")
-
         # -----------------------------------------------------------------
         # Classical (Bayesian MCMC) rendering
         # -----------------------------------------------------------------
@@ -2182,10 +2177,6 @@ class plotter:
                         label=label,
                         zorder=3)
 
-            default_title = (
-                "Robust Fragility Functions from Modified Cloud Analysis"
-                " (Classical / Jalayer et al. 2017)")
-
         else:
             raise ValueError(
                 f"Unknown cloud_method '{cloud_method}'. "
@@ -2194,10 +2185,11 @@ class plotter:
         # -----------------------------------------------------------------
         # Final formatting
         # -----------------------------------------------------------------
-        ax.set_title(
-            title if title else default_title,
-            fontsize=self.font_sizes['title'],
-            fontname=self.font_name)
+        if title:
+            ax.set_title(
+                title,
+                fontsize=self.font_sizes['title'],
+                fontname=self.font_name)
         ax.set_xlim([xlims[0], xlims[1]])
         ax.set_ylim([ylims[0], ylims[1]])
         ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -2292,6 +2284,7 @@ class plotter:
 
         self._set_plot_style(
             ax,
+            title=title,
             xlabel=imt_label,
             ylabel=r'Probability of Exceedance $P(DS \geq ds | IM)$')
 
@@ -2401,6 +2394,7 @@ class plotter:
         fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
         self._set_plot_style(
             ax,
+            title=title,
             xlabel=imt_label,
             ylabel=r'Probability of Exceedance $P(DS \geq ds | IM)$')
 
@@ -2561,7 +2555,7 @@ class plotter:
             ax.legend(fontsize=self.font_sizes['legend'])
 
         self._set_plot_style(ax,
-                             title=title or "Storey Loss Function",
+                             title=title,
                              xlabel=edp_label,
                              ylabel=loss_label)
 
@@ -2686,6 +2680,7 @@ class plotter:
 
         # Set plot style
         self._set_plot_style(ax1,
+                             title=title,
                              xlabel=imt_label,
                              ylabel=loss_label)
 

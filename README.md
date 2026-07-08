@@ -202,7 +202,7 @@ OQ-VMTK is released under the **GNU Affero General Public License v3.0 (AGPL-3.0
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-You are free to use, modify, and distribute this software under the terms of the AGPL v3. Any modifications made to the source code must also be released under the same licence. See the [LICENSE](./LICENSE) file for the full licence text.
+You are free to use, modify, and distribute this software under the terms of the AGPL v3. Any modifications made to the source code must also be released under the same licence. See the [LICENSE](./LICENSE.txt) file for the full licence text.
 
 ---
 
@@ -274,4 +274,4 @@ Contributions are welcome. Please read the [contributing guidelines](./contribut
 [issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/oq-vmtk?style=for-the-badge
 [issues-url]: https://github.com/GEMScienceTools/oq-vmtk/issues
 [license-shield]: https://img.shields.io/github/license/GEMScienceTools/oq-vmtk?style=for-the-badge
-[license-url]: https://github.com/GEMScienceTools/oq-vmtk/blob/master/LICENSE.txt
+[license-url]: https://github.com/GEMScienceTools/oq-vmtk/blob/main/LICENSE.txt

@@ -1781,11 +1781,41 @@ class modeller:
                 # Data Recording (only if successful)
                 if ok == 0:
                     curr_disp = ops.nodeDisp(control_node, push_dir)
-                    cpo_top_disp.append(curr_disp)
-
                     current_floor_disps = [
                         ops.nodeDisp(node, push_dir) for node in pattern_nodes
                     ]
+
+                    # Direct nodal cross-check: once a spring's material
+                    # dies, the storeys above it can decouple into a
+                    # zero-stiffness mechanism that DisplacementControl
+                    # still reports as "converged", with the affected
+                    # floors jumping to wildly divergent displacements
+                    # even though eleResponse('deformation') below stays
+                    # frozen under the MinMax bound (it reflects the last
+                    # valid material state, not the true nodal motion).
+                    # Catch that case from the raw nodal displacements
+                    # *before* recording them, so no divergent step is
+                    # ever appended to the results.
+                    prev_disp = 0.0
+                    for s_idx, floor_disp in enumerate(current_floor_disps):
+                        storey_disp = abs(floor_disp - prev_disp)
+                        prev_disp = floor_disp
+                        if storey_disp >= minmax_limits[s_idx]:
+                            if pFlag:
+                                print(
+                                    f"Interstorey displacement at "
+                                    f"storey {s_idx + 1} reached "
+                                    f"ultimate limit ({storey_disp:.4f} "
+                                    f">= {minmax_limits[s_idx]:.4f}) "
+                                    f"— stopping CPO analysis."
+                                )
+                            minmax_failed = True
+                            break
+
+                    if minmax_failed:
+                        break
+
+                    cpo_top_disp.append(curr_disp)
                     cpo_disps.append(current_floor_disps)
 
                     ops.reactions()
@@ -1864,10 +1894,14 @@ class modeller:
         pseudo_steps = np.arange(len(energy_steps))
         cpo_energy = np.column_stack((pseudo_steps, energy_steps))
 
-        # Calculate Interstorey Drifts
+        # Calculate Interstorey Drift Ratios (IDR), consistent with
+        # do_spo_analysis: normalise interstorey displacements by storey
+        # height and express as a percentage.
         base_disps = np.zeros((cpo_disps.shape[0], 1))
         padded_disps = np.hstack((base_disps, cpo_disps))
-        cpo_drifts = np.diff(padded_disps, axis=1)
+        cpo_isd = np.diff(padded_disps, axis=1)
+        storey_heights = np.array(self.storey_heights)
+        cpo_drifts = (cpo_isd / storey_heights) * 100
         max_interstorey_drift = np.max(np.abs(cpo_drifts))
 
         ops.wipeAnalysis()
