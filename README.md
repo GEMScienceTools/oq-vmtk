@@ -131,21 +131,28 @@ To deactivate later: `deactivate`
 
 ### 3. Install Dependencies
 
-Select the requirements file matching your OS and Python version:
+Select the requirements file matching your OS and Python version (3.11, 3.12, and 3.13 are supported):
 
 **Windows:**
 ```bash
 pip install -r requirements-py311-win64.txt   # Python 3.11
 pip install -r requirements-py312-win64.txt   # Python 3.12
+pip install -r requirements-py313-win64.txt   # Python 3.13
 ```
 
 **Linux:**
 ```bash
 pip install -r requirements-py311-linux.txt   # Python 3.11
 pip install -r requirements-py312-linux.txt   # Python 3.12
+pip install -r requirements-py313-linux.txt   # Python 3.13
 ```
 
-**macOS:** OpenSeesPy does not currently support macOS on Apple Silicon (M1/M2/M3). Running a Linux virtual machine is advised.
+**macOS (Apple Silicon):**
+```bash
+pip install -r requirements-py311-macos_arm64.txt   # Python 3.11
+pip install -r requirements-py312-macos_arm64.txt   # Python 3.12
+pip install -r requirements-py313-macos_arm64.txt   # Python 3.13
+```
 
 To check your Python version: `python --version`
 
