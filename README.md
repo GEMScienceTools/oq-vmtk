@@ -141,7 +141,7 @@ To deactivate later: `deactivate`
    ```bash
    pip install -r requirements-py312-linux.txt  --timeout=100
    ```
-   **For macOS Users:** 
+   **For macOS (Apple Silicon) Users: **
    ```bash
    pip install -r requirements-py312-macos_arm64.txt  --timeout=100 
    ```
@@ -150,14 +150,6 @@ To deactivate later: `deactivate`
    ```bash
    python --version
    ```
-   The requitements files are available from Python 3.11 to 3.13.
-
-**macOS (Apple Silicon):**
-```bash
-pip install -r requirements-py311-macos_arm64.txt   # Python 3.11
-pip install -r requirements-py312-macos_arm64.txt   # Python 3.12
-pip install -r requirements-py313-macos_arm64.txt   # Python 3.13
-```
 
 To check your Python version: `python --version`
 
