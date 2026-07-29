@@ -100,23 +100,26 @@ It is highly recommended to use a **virtual environment** to install this tool. 
 
 ### 3. Install Dependencies
    Install the appropriate requirements file based on your operating system and Python version.
+   In case you are using version Python 3.12.
 
    **For Windows Users:**
    ```bash
-   pip install -r requirements-py311-win64.txt  # Python 3.11
-   pip install -r requirements-py312-win64.txt  # Python 3.12
+   pip install -r requirements-py312-win64.txt   --timeout=100 
    ```
    **For Linux Users:**
    ```bash
-   pip install -r requirements-py311-linux.txt  # Python 3.11
-   pip install -r requirements-py312-linux.txt  # Python 3.12
+   pip install -r requirements-py312-linux.txt  --timeout=100
    ```
-   **For macOS Users:** OpenSeesPy does not currently support macOS versions running on arm64 processors, such as M1 and M2 chips. As a result, newer OpenSeesPy versions are not available for macOS. To use OpenSeesPy on a Mac, it is advised to run a virtual machine with Linux or Windows.
+   **For macOS Users:** 
+   ```bash
+   pip install -r requirements-py312-macos_arm64.txt  --timeout=100 
+   ```
 
    **Note:** to check your current python version, run the following command
    ```bash
    python --version
    ```
+   The requitements files are available from Python 3.11 to 3.13.
 
 <img src="imgs/requirements.gif" alt="Logo" >
 
