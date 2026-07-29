@@ -130,29 +130,26 @@ To deactivate later: `deactivate`
 <img src="imgs/virtual-env.gif" alt="Virtual environment setup">
 
 ### 3. Install Dependencies
+   Install the appropriate requirements file based on your operating system and Python version.
+   In case you are using version Python 3.12.
 
-Select the requirements file matching your OS and Python version (3.11, 3.12, and 3.13 are supported):
+   **For Windows Users:**
+   ```bash
+   pip install -r requirements-py312-win64.txt   --timeout=100 
+   ```
+   **For Linux Users:**
+   ```bash
+   pip install -r requirements-py312-linux.txt  --timeout=100
+   ```
+   **For macOS (Apple Silicon) Users: **
+   ```bash
+   pip install -r requirements-py312-macos_arm64.txt  --timeout=100 
+   ```
 
-**Windows:**
-```bash
-pip install -r requirements-py311-win64.txt   # Python 3.11
-pip install -r requirements-py312-win64.txt   # Python 3.12
-pip install -r requirements-py313-win64.txt   # Python 3.13
-```
-
-**Linux:**
-```bash
-pip install -r requirements-py311-linux.txt   # Python 3.11
-pip install -r requirements-py312-linux.txt   # Python 3.12
-pip install -r requirements-py313-linux.txt   # Python 3.13
-```
-
-**macOS (Apple Silicon):**
-```bash
-pip install -r requirements-py311-macos_arm64.txt   # Python 3.11
-pip install -r requirements-py312-macos_arm64.txt   # Python 3.12
-pip install -r requirements-py313-macos_arm64.txt   # Python 3.13
-```
+   **Note:** to check your current python version, run the following command
+   ```bash
+   python --version
+   ```
 
 To check your Python version: `python --version`
 
