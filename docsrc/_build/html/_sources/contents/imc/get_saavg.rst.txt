@@ -31,4 +31,18 @@ Average Spectral Acceleration
    than single-period Sa for structures that exhibit period elongation (e.g. during
    inelastic response).
 
+.. admonition:: Example
+   :class: note
+
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      im = imcalculator(acc, dt=0.005)
+
+      avg_sa = im.get_saavg(period=0.6)
+      print(f"AvgSa(T1=0.6s) = {avg_sa:.4f} g")
+
 

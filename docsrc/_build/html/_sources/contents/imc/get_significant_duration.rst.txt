@@ -33,4 +33,18 @@ Significant Duration
    time between the onset and end of strong shaking while excluding the low-energy
    tails of the record.
 
+.. admonition:: Example
+   :class: note
+
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      im = imcalculator(acc, dt=0.005)
+
+      t595 = im.get_significant_duration()
+      print(f"D5-95 = {t595:.3f} s")
+
 

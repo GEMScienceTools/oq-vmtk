@@ -40,6 +40,27 @@ def export_to_pkl(path, var):
         return pickle.dump(var, file)
 
 
+def get_num_modes(number_storeys):
+    """Return the recommended number of modes for modal analysis."""
+    return 1 if number_storeys == 1 else 3
+
+
+def quick_line_plot(x, y, xlabel, ylabel, color='#399283', lw=1, fontsize=16):
+    """Plot a single line with consistent journal-style formatting and display immediately."""
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.plot(x, y, color=color, lw=lw)
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.grid(visible=True, which='major')
+    ax.grid(visible=True, which='minor')
+    ax.set_xlim([0.0, max(x)])
+    ax.spines[['top', 'right']].set_visible(False)
+    plt.tight_layout()
+    plt.show()
+    plt.close(fig)
+
+
 def sorted_alphanumeric(data):
     """
     Function to sort data alphanumerically

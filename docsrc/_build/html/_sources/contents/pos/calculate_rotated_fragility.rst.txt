@@ -47,4 +47,21 @@ Fragility Function Rotation
    A value of :math:`p = 0.10` (10th percentile) is a common choice, rotating the
    median downward to produce a more conservative representation of expected damage.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      intensities = np.geomspace(0.05, 3.0, 50)
+      poes = pp.calculate_rotated_fragility(
+          theta=0.35,
+          sigma_record2record=0.45,
+          sigma_build2build=0.30,
+          sigma_ds=0.30,
+          intensities=intensities,
+          rotation_percentile=0.10,
+      )

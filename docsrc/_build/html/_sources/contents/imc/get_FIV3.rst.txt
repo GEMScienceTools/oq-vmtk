@@ -47,4 +47,16 @@ Filtered Incremental Velocity
    where :math:`\Delta v_{(1)} \geq \Delta v_{(2)} \geq \Delta v_{(3)}` are the
    three largest values in descending order.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      im = imcalculator(acc, dt=0.005)
+
+      fiv3 = im.get_FIV3(period=0.3)
+      print(f"FIV3(T=0.3s) = {fiv3:.4f} g")

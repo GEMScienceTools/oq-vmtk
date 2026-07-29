@@ -1,10 +1,8 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17524871.svg)](https://doi.org/10.5281/zenodo.17524871)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17524871-1082c3)](https://doi.org/10.5281/zenodo.17524871)
 [![Windows Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/windows_test.yaml)
 [![Linux Tests](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yml/badge.svg)](https://github.com/GEMScienceTools/oq-vmtk/actions/workflows/linux_test.yaml)
 
 <a id="readme-top"></a>
-
-<!-- PROJECT SHIELDS -->
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -12,91 +10,124 @@
 [![Issues][issues-shield]][issues-url]
 [![project_license][license-shield]][license-url]
 
-
-<!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/GEMScienceTools/vulnerability-toolkit">
-    <img src="imgs/oq_vmtk_logo.png" alt="Logo" >
+  <a href="https://github.com/GEMScienceTools/oq-vmtk">
+    <img src="imgs/oq_vmtk_logo.png" alt="OQ-VMTK Logo">
   </a>
 
   <h3 align="center">Vulnerability Modeller's ToolKit (OQ-VMTK)</h3>
 
   <p align="center">
-    This repository contains an open source library that provides modelling of multi-degree-of-freedom systems and assessment via nonlinear time-history analyses for regional vulnerability and risk calculations. The vulnerability toolkit is developed by the Global Earthquake Model (GEM) Foundation and its collaborators.
-    <br />
-    <a href="https://gemsciencetools.github.io/oq-vmtk/"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos">View Demos</a>
-    ·
-    <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-    ·
-    <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    An open-source Python toolkit for earthquake structural modelling, nonlinear analysis, and seismic vulnerability assessment — developed by the Global Earthquake Model (GEM) Foundation.
+    <br /><br />
+    <a href="https://gemsciencetools.github.io/oq-vmtk/"><strong>Documentation »</strong></a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos">Demos</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=bug&template=bug-report---.md">Report a Bug</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/GEMScienceTools/oq-vmtk/issues/new?labels=enhancement&template=feature-request---.md">Request a Feature</a>
   </p>
 </div>
 
+---
 
-# ✨ Key Features
+## Overview
 
-The OQ-VMTK is a powerful toolkit developed by scientists at the Global Earthquake Model (GEM) Foundation. Designed for earthquake engineers and vulnerability modellers, it provides a comprehensive platform powered by OpenSees for running representative (idealised) models, developing fragility and vulnerability assessments, and offering extensive flexibility in defining seismic demand, structural capacity, damage criteria, and damage-to-loss conversion.
+OQ-VMTK is a Python library for regional seismic vulnerability and risk modelling. It provides a self-contained workflow — from ground motion processing and structural model compilation through nonlinear analysis to fragility and vulnerability function derivation, powered by [OpenSeesPy](https://openseespydoc.readthedocs.io).
 
-## 🏗️ Single- and Multi-Degree-of-Freedom Systems Calibration and Modeling
-- Define structures with key attributes like storey count, first-mode transformation factors, and force-deformation relationships.
-- Effortlessly create and visualize single- (SDOF) and multi-degree-of-freedom (MDOF) stick-and-mass models using intuitive low-level parameters.
-- Calibrate multi-degree-of-freedom stick-and-mass models based on SDOF parameters.
+The toolkit is designed for earthquake engineers and model developers, who need a reproducible and standardised library of functions to integrate to their structural assessment workflows. 
 
-## 🔍 Comprehensive Analysis Suite
-### 📊 Linear & Nonlinear Analysis
-- **Modal Analysis:** Extract vibration periods and mode shapes with precision.
-- **Gravity Analysis:** Perform gravity analysis and ensure system stability before running advanced simulations.
-- **Nonlinear Static Analyses:** Perform static and cyclic pushover tests to assess the system's lateral load-resisting capacity, energy dissipation and other metrics.
-- **Nonlinear Time-History Analyses:** Simulate dynamic response of structures using ground motion records and extract peak response quantities such as peak storey drifts, peak floor displacements and accelerations.
+---
 
-### 🌍 Seismic Fragility & Vulnerability Assessment
-- **Fragility Analysis:** Conduct probabilistic seismic demand modeling to establish relationships between engineering demand parameters (EDPs) and intensity measures (IMs) using nonlinear time-history analyses (e.g., cloud analysis, multiple stripe analyses). Estimate damage exceedance probabilities while accounting for record-to-record variability and modeling uncertainty. Multiple state-of-practice approaches are supported, including lognormal CDFs, generalised linear models and ordinal models.
-- **Storey Loss Function Generation:** Develop storey-level loss functions based on a user-defined inventory of structural components, nonstructural components, and building contents.
-- **Vulnerability Analysis:** Derive vulnerability functions to evaluate both economic and human-centered decision variables. These functions integrate damage-to-loss ratios and/or storey loss functions, with explicit treatment of uncertainties associated with loss conditional on ground-shaking intensity.
+## Modules
 
-### 📈 Visualization & Plotting Tools
-- Generate insightful plots for:
-  - **Model Overview:** Nodes and elements in your OpenSees model.
-  - **Cloud Analysis Results:** Visualize probabilistic seismic demand models (i.e., IM-EDP data and fitted relationships).
-  - **Seismic Demand Profiles:** Visualize peak storey drifts and peak floor accelerations distributions along the height of idealised systems.
-  - **Fragility Functions:** Visualize probability-based structural performance.
-  - **Storey Loss Functions:** Visualize storey loss function simulations and models.
-  - **Vulnerability Functions:** Understand risk and loss estimates.
+| Module | Description |
+|--------|-------------|
+| `calibration` | Calibrates storey-based force–deformation relationships for MDOF stick-and-mass models from SDOF capacity curves. |
+| `modeller` | Compiles and runs SDOF and MDOF structural models in OpenSeesPy: modal analysis, gravity, static/cyclic pushover, and nonlinear time-history analysis (including incremental dynamic analyses). |
+| `imcalculator` | Reads ground motion record files and computes a wide range of intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias Intensity, CAV, D5–95, FIV3). |
+| `imselection` | Evaluates and ranks intensity measure candidates for seismic demand modelling using Efficiency, Proficiency, Practicality, and the Relative Sufficiency Measure (RSM). |
+| `postprocessor` | Derives probabilistic seismic demand models, fragility and vulnerability functions from nonlinear analysis results (Modified Cloud Analysis, Multiple Stripe Analysis, Incremental Dynamic Analysis). Supports lognormal CDFs, GLMs, ordinal CLMs, and MCMC methods. |
+| `slfgenerator` | Generates storey loss functions (SLFs) from damageable component inventory data (structural, nonstructural, and contents). |
+| `plotter` | Produces publication-quality figures for all stages of the workflow: model geometry, seismic demand profiles, fragility functions, vulnerability curves, SLFs, and more. |
+| `utilities` | Helper functions for I/O, data format conversion, and interoperability with OpenQuake Engine outputs. |
 
-# 🚀 Get Started
+---
 
-## 👩‍💻🧑‍💻 Installation
+## Key Features
 
-Follow these steps to install the `oq-vmtk` package and its dependencies. Note that this procedure implies the installation of the OpenQuake engine dependencies. This procedure was tested on Windows and Linux OS.
-It is highly recommended to use a **virtual environment** to install this tool. A virtual environment is an isolated Python environment that allows you to manage dependencies for this project separately from your system’s Python installation. This ensures that the required dependencies for the OpenQuake engine do not interfere with other Python projects or system packages, which could lead to version conflicts.
+### Structural Modelling
+- Compile idealised SDOF and MDOF stick-and-mass models directly in Python via OpenSeesPy.
+- Calibrate MDOF inter-storey properties from SDOF capacity curves to achieve consistency in fundamental period and modal participation.
+- Run modal analysis, static/cyclic pushover, gravity analysis, and nonlinear time-history analysis within a unified API.
+
+### Ground Motion Processing
+- Batch-process ground motion record files to extract scalar and spectral intensity measures.
+- Compute response spectra and a full suite of IMs (SA, AvgSA, PGA, PGV, PGD, AI, CAV, D5–95, FIV3).
+- Rank and select optimal IMs for seismic demand modelling using the Relative Sufficiency Measure.
+
+### Fragility Assessment
+- **Modified Cloud Analysis (MCA):** Fit probabilistic seismic demand models (log-linear regression) and derive fragility functions, with bootstrapped and Bayesian (MCMC) uncertainty quantification.
+- **Multiple Stripe Analysis (MSA):** Derive fragility functions from hazard-consistent ground motion suites via Maximum Likelihood Estimation.
+- **Incremental Dynamic Analysis (IDA):** Scale records to collapse using the Hunt, Trace and Fill algorithm and derive fragility functions by the Method of Moments.
+- Nine fragility fitting approaches including lognormal CDF variants, GLM (logit/probit), ordinal CLMs (constant and variable dispersion), and MCMC.
+
+### Vulnerability & Loss Assessment
+- Combine fragility functions with consequence models (damage-to-loss ratios) to derive mean vulnerability functions with explicit uncertainty treatment (Beta distribution, explicit and Silva 2019 COV methods).
+- Apply storey loss functions to derive component-level and system-level vulnerability models.
+- Compute Average Annual Damage Probability (AADP) and Average Annual Loss Ratio (AALR) by integrating with site hazard curves.
+
+---
+
+## Demo Notebooks
+
+The `demos/` directory contains thirteen self-contained Jupyter notebooks covering the full vulnerability workflow:
+
+| Demo | Description |
+|------|-------------|
+| `IntensityMeasureProcessing` | Ground motion record processing and intensity measure extraction |
+| `IntensityMeasureSelection` | IM selection using the Relative Sufficiency Measure (MCA and IDA) |
+| `ModelCompilation` | SDOF and MDOF model calibration and compilation |
+| `ModalAnalysis` | Modal analysis and dynamic property verification |
+| `PushoverAnalysis` | Monotonic and cyclic static pushover analysis |
+| `NonlinearTimeHistoryAnalysis` | Nonlinear time-history analysis and demand profile extraction |
+| `ModifiedCloudAnalysis` | End-to-end vulnerability assessment using Modified Cloud Analysis |
+| `MultipleStripeAnalysis` | End-to-end vulnerability assessment using Multiple Stripe Analysis |
+| `IncrementalDynamicAnalysis` | End-to-end vulnerability assessment using Incremental Dynamic Analysis |
+| `FragilityAnalysis` | Comparison of all supported fragility fitting methods |
+| `StoreyLossFunctionGeneration` | Generating storey loss functions from component inventory data |
+| `StoreyLossFunctionApplication` | Deriving system-level vulnerability models using storey loss functions |
+
+---
+
+## Installation
+
+It is strongly recommended to install OQ-VMTK inside a **virtual environment** to avoid dependency conflicts with the OpenQuake Engine requirements.
 
 ### 1. Clone the Repository
-   Open your terminal,  and run:
-   ```bash
-   cd <virtual_environment_directory>
-   git clone https://github.com/GEMScienceTools/oq-vmtk.git
-   cd oq-vmtk
-   ```
 
-### 2. Set Up a Virtual Environment (Recommended)
-   Create a virtual environment to manage dependencies:
-   ```bash
-   python -m venv .venv  # On Windows
-   python3 -m venv .venv  # On Linux
-   ```
+```bash
+git clone https://github.com/GEMScienceTools/oq-vmtk.git
+cd oq-vmtk
+```
 
-   Activate the virtual environment:
-   ```bash
-   .venv\Scripts\activate  # On Windows
-   source .venv/Scripts/activate  # On Linux
-   ```
+### 2. Create and Activate a Virtual Environment
 
-<img src="imgs/virtual-env.gif" alt="Logo" >
+```bash
+# Create
+python -m venv .venv          # Windows
+python3 -m venv .venv         # Linux / macOS
 
+# Activate
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Linux / macOS
+```
+
+To deactivate later: `deactivate`
+
+<img src="imgs/virtual-env.gif" alt="Virtual environment setup">
 
 ### 3. Install Dependencies
    Install the appropriate requirements file based on your operating system and Python version.
@@ -121,82 +152,138 @@ It is highly recommended to use a **virtual environment** to install this tool. 
    ```
    The requitements files are available from Python 3.11 to 3.13.
 
-<img src="imgs/requirements.gif" alt="Logo" >
+**macOS (Apple Silicon):**
+```bash
+pip install -r requirements-py311-macos_arm64.txt   # Python 3.11
+pip install -r requirements-py312-macos_arm64.txt   # Python 3.12
+pip install -r requirements-py313-macos_arm64.txt   # Python 3.13
+```
 
+To check your Python version: `python --version`
+
+<img src="imgs/requirements.gif" alt="Installing requirements">
 
 ### 4. Install the Package
-   Install the `oq-vmtk` package in editable mode:
-   ```bash
-   pip install -e .
-   ```
 
-<img src="imgs/packaging.gif" alt="Logo" >
+**Standard install (recommended):**
+```bash
+pip install .
+```
 
+**Editable install** (for contributors modifying the source):
+```bash
+pip install -e .
+```
 
-## 📼 Demos
+<img src="imgs/packaging.gif" alt="Package installation">
 
-The repository includes demo scripts that showcase the functionality of the vulnerability-modellers-toolkit (oq-vmtk). You can find them in the demos folder of the repository.
+### 5. Verify
 
-To run a demo, simply navigate to the demos directory and execute the relevant demo script in Jupyter Lab. Jupyter Lab is automatically installed with oq-vmtk.
+```bash
+python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
+```
 
-### 1. Activate the virtual environment:
+Expected output: `1.1.0`
 
-  ```bash
-  .venv\Scripts\activate  # On Windows
-  source .venv/Scripts/activate  # On Linux
-  ```
+---
 
-  **Note:** to deactivate virtual environment:
-  ```bash
-   deactivate
-  ```
+## Running the Demos
 
-### 2. Open Jupyter Lab from the terminal:
+Jupyter Lab is installed automatically with OQ-VMTK.
 
-  ```bash
-   jupyter-lab
-  ```
+```bash
+# Activate your virtual environment first, then:
+jupyter-lab
+```
 
-### 3. Navigate to the "demos" folder
-### 4. Run the examples
+Navigate to the `demos/` folder and open any notebook. Each demo is fully self-contained with input data included.
 
-# © License
+---
 
-This work is licensed under an AGPL v3 license (https://www.gnu.org/licenses/agpl-3.0.en.html)
+## Documentation
+
+Full API reference, module guides, and worked examples are available at:
+
+**[https://gemsciencetools.github.io/oq-vmtk](https://gemsciencetools.github.io/oq-vmtk)**
+
+---
+
+## License
+
+OQ-VMTK is released under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-# 📚 Documentation
+You are free to use, modify, and distribute this software under the terms of the AGPL v3. Any modifications made to the source code must also be released under the same licence. See the [LICENSE](./LICENSE.txt) file for the full licence text.
 
-For detailed documentation and user guidance on using the toolkit for vulnerability modeling, including installation instructions, key functionalities, and example workflows, please visit: [https://gemsciencetools.github.io/oq-vmtk](https://gemsciencetools.github.io/oq-vmtk/)
+---
 
-# 📑 References
+## Citation
 
-[TBD]
+If you use OQ-VMTK in academic or professional work, please cite both the software release and the companion paper.
 
-# 🤝 Contributions
+### Software
 
-You can follow the instructions indicated in the [contributing guidelines](./contribute_guidelines.md)
+The v1.1.0 release is archived on Zenodo:
 
-# 🌟 Contributors
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17524871-1082c3)](https://doi.org/10.5281/zenodo.17524871)
 
-Contributors are gratefully acknowledged.
+```bibtex
+@software{oq_vmtk_2025,
+  author    = {{GEM Foundation}},
+  title     = {{OpenQuake Vulnerability Modeller's Toolkit (oq-vmtk)}},
+  version   = {1.1.0},
+  year      = {2025},
+  doi       = {10.5281/zenodo.17524871},
+  url       = {https://github.com/GEMScienceTools/oq-vmtk}
+}
+```
 
-<a href="https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=GEMScienceTools/vulnerability-toolkit" alt="contrib.rocks image" />
+A `CITATION.cff` file is provided at the repository root; GitHub displays a **Cite this repository** widget automatically.
+
+### Companion Paper
+
+> Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
+
+```bibtex
+@article{nafeh2026vmtk,
+  author  = {Nafeh, Al Mouayed Bellah and Aljawhari, Karim and Ettorre, Antonio and Silva, Vitor and Crowley, Helen},
+  title   = {The {OpenQuake} {Vulnerability} {Modellers}' {Toolkit}: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications},
+  journal = {(In Press)},
+  year    = {2026}
+}
+```
+
+---
+
+## References
+
+- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read the [contributing guidelines](./contribute_guidelines.md) before opening a pull request.
+
+---
+
+## Contributors
+
+<a href="https://github.com/GEMScienceTools/oq-vmtk/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=GEMScienceTools/oq-vmtk" alt="Contributors">
 </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
-[contributors-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
-[forks-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/network/members
-[stars-shield]: https://img.shields.io/github/stars/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
-[stars-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/stargazers
-[issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
-[issues-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/issues
-[license-shield]: https://img.shields.io/github/license/GEMScienceTools/vulnerability-toolkit.svg?style=for-the-badge
-[license-url]: https://github.com/GEMScienceTools/vulnerability-toolkit/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/GEMScienceTools/oq-vmtk?style=for-the-badge
+[contributors-url]: https://github.com/GEMScienceTools/oq-vmtk/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/GEMScienceTools/oq-vmtk?style=for-the-badge
+[forks-url]: https://github.com/GEMScienceTools/oq-vmtk/network/members
+[stars-shield]: https://img.shields.io/github/stars/GEMScienceTools/oq-vmtk?style=for-the-badge
+[stars-url]: https://github.com/GEMScienceTools/oq-vmtk/stargazers
+[issues-shield]: https://img.shields.io/github/issues/GEMScienceTools/oq-vmtk?style=for-the-badge
+[issues-url]: https://github.com/GEMScienceTools/oq-vmtk/issues
+[license-shield]: https://img.shields.io/github/license/GEMScienceTools/oq-vmtk?style=for-the-badge
+[license-url]: https://github.com/GEMScienceTools/oq-vmtk/blob/main/LICENSE.txt

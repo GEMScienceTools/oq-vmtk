@@ -14,8 +14,8 @@ information IM₂ provides relative to IM₁.  A positive RSM(IM₂ vs IM₁) me
 IM₂ is the more sufficient intensity measure.
 
 Two nonlinear dynamic analysis procedures (NDAPs) are supported:
-    - MCA  — Modified Cloud Analysis (``postprocessor.do_modified_cloud_analysis``)
-    - IDA  — Incremental Dynamic Analysis (``postprocessor.do_incremental_dynamic_analysis``)
+    - MCA  — Modified Cloud Analysis (``postprocessor.process_mca_results``)
+    - IDA  — Incremental Dynamic Analysis (``postprocessor.process_ida_results``)
 """
 
 import warnings
@@ -110,7 +110,7 @@ class imselection:
         Parameters
         ----------
         ida_dict : dict
-            Output of ``postprocessor.do_incremental_dynamic_analysis``.
+            Output of ``postprocessor.process_ida_results``.
         demand_values : array_like
             EDP level for each record, shape ``(n_records,)``.
 
@@ -165,14 +165,14 @@ class imselection:
         Parameters
         ----------
         cloud_dict : dict
-            Output of ``postprocessor.do_modified_cloud_analysis``.
+            Output of ``postprocessor.process_mca_results``.
         label : str
             Name used in error messages.
         """
         if 'regression' not in cloud_dict:
             raise ValueError(
                 f"{label} is missing the 'regression' key. "
-                "Run do_modified_cloud_analysis first."
+                "Run process_mca_results first."
             )
         reg = cloud_dict['regression']
         required = ('b1', 'b0', 'sigma', 'alpha0', 'alpha1')
@@ -198,7 +198,7 @@ class imselection:
         Parameters
         ----------
         cloud_dict : dict
-            Output of ``postprocessor.do_modified_cloud_analysis``.
+            Output of ``postprocessor.process_mca_results``.
 
         Returns
         -------
@@ -221,7 +221,7 @@ class imselection:
         Parameters
         ----------
         ida_dict : dict
-            Output of ``postprocessor.do_incremental_dynamic_analysis``.
+            Output of ``postprocessor.process_ida_results``.
         ds_index : int, optional
             Damage-state index (0 = first / least severe).  Default ``0``.
 
@@ -239,6 +239,62 @@ class imselection:
                 f"(fragility has {len(sigmas)} damage states)."
             )
         return {'beta_D_given_IM': float(sigmas[ds_index]), 'method': 'IDA'}
+
+    # -----------------------------------------------------------------------
+    # Practicality
+    # -----------------------------------------------------------------------
+
+    def compute_practicality_mca(self, cloud_dict):
+        """
+        Practicality measure from a Modified Cloud Analysis result.
+
+        Practicality = slope *b* from the log-linear regression
+        ``log(EDP) = b₀ + b · log(IM)``.  A higher slope indicates a stronger
+        IM–EDP correlation and therefore a more practical intensity measure.
+
+        Parameters
+        ----------
+        cloud_dict : dict
+            Output of ``postprocessor.process_mca_results``.
+
+        Returns
+        -------
+        dict with keys:
+
+        * ``'b_slope'`` — regression slope *b* (higher is better)
+        * ``'method'``  — ``'MCA'``
+        """
+        self._validate_cloud_dict(cloud_dict, 'cloud_dict')
+        return {'b_slope': float(cloud_dict['regression']['b1']), 'method': 'MCA'}
+
+    def compute_practicality_ida(self, ida_dict):
+        """
+        Practicality measure from an Incremental Dynamic Analysis result.
+
+        Estimated as the OLS slope of ``log(EDP)`` on ``log(IM)`` along the
+        median IDA curve, mirroring the MCA log-linear regression convention.
+        A higher slope indicates a stronger IM–EDP relationship.
+
+        Parameters
+        ----------
+        ida_dict : dict
+            Output of ``postprocessor.process_ida_results``.
+
+        Returns
+        -------
+        dict with keys:
+
+        * ``'b_slope'`` — log-log slope (higher is better); NaN if the median
+          curve has fewer than 2 positive-valued points
+        * ``'method'``  — ``'IDA'``
+        """
+        edp_axis  = np.asarray(ida_dict['stats']['fitted_edps'])
+        median_im = np.asarray(ida_dict['stats']['median_im'])
+        valid = (edp_axis > _IM_FLOOR) & (median_im > _IM_FLOOR)
+        if valid.sum() < 2:
+            return {'b_slope': float(np.nan), 'method': 'IDA'}
+        slope, _ = np.polyfit(np.log(median_im[valid]), np.log(edp_axis[valid]), 1)
+        return {'b_slope': float(slope), 'method': 'IDA'}
 
     # -----------------------------------------------------------------------
     # Proficiency
@@ -259,7 +315,7 @@ class imselection:
         Parameters
         ----------
         cloud_dict : dict
-            Output of ``postprocessor.do_modified_cloud_analysis``.
+            Output of ``postprocessor.process_mca_results``.
         ds_index : int, optional
             Damage-state index.  Default ``0``.
 
@@ -334,7 +390,7 @@ class imselection:
         Parameters
         ----------
         ida_dict : dict
-            Output of ``postprocessor.do_incremental_dynamic_analysis``.
+            Output of ``postprocessor.process_ida_results``.
         ds_index : int, optional
             Damage-state index.  Default ``0``.
 
@@ -541,9 +597,17 @@ class imselection:
             )
         n_records = n1
 
-        # Use IM1's max demand per record as the common demand level
+        # Use IM1's max demand per record as the common demand level, clipped
+        # to the fitted EDP range.  Raw IDA curves can reach collapse EDPs well
+        # beyond the fitted axis (edp_range[-1]); without clipping every record
+        # would fail the range check in _extract_ida_stats_at_demands.
         raw1 = ida_dict_im1['ida_inputs']['raw_curves']
-        demand_values = np.array([raw1[k]['edp'][-1] for k in range(n_records)])
+        edp_axis = np.asarray(ida_dict_im1['stats']['fitted_edps'])
+        demand_values = np.clip(
+            np.array([raw1[k]['edp'][-1] for k in range(n_records)]),
+            edp_axis[0],
+            edp_axis[-1],
+        )
 
         # Ensemble stats + per-record IM at the demand level
         eta1, beta1, im1_per_rec, valid1 = self._extract_ida_stats_at_demands(
@@ -710,7 +774,8 @@ class imselection:
     def compare_ims(self, im_results_dict, analysis_type='MCA', metric='all',
                     reference_im_key=None, damage_threshold_index=0):
         """
-        Compare N ≥ 2 intensity measures by efficiency, proficiency, and RSM.
+        Compare N ≥ 2 intensity measures by efficiency, proficiency,
+        practicality, and RSM.
 
         Parameters
         ----------
@@ -719,8 +784,8 @@ class imselection:
             ``{im_name: ida_dict}`` (for IDA).
         analysis_type : {'MCA', 'IDA'}
             Which NDAP was used to generate the results.
-        metric : {'all', 'efficiency', 'proficiency', 'rsm'}
-            Which metrics to compute.  ``'all'`` computes all three.
+        metric : {'all', 'efficiency', 'proficiency', 'practicality', 'rsm'}
+            Which metrics to compute.  ``'all'`` computes all four.
         reference_im_key : str or None
             IM name to use as IM₁ in RSM pairwise comparisons.  If ``None``,
             the first key in *im_results_dict* is used.
@@ -731,13 +796,13 @@ class imselection:
         -------
         dict with keys:
 
-        * ``'ranking'``        — ``pd.DataFrame`` with columns im_name,
-          efficiency, proficiency, rsm_vs_reference, rank_efficiency,
-          rank_proficiency, rank_rsm
-        * ``'rsm_matrix'``     — ``dict[str, dict[str, float]]`` where
+        * ``'ranking'``          — ``pd.DataFrame`` with columns im_name,
+          efficiency, proficiency, practicality, rsm_vs_reference,
+          rank_efficiency, rank_proficiency, rank_practicality, rank_rsm
+        * ``'rsm_matrix'``       — ``dict[str, dict[str, float]]`` where
           ``rsm_matrix[im_i][im_j]`` = RSM(IM_j vs IM_i)
-        * ``'metric'``         — the *metric* argument used
-        * ``'analysis_type'``  — the *analysis_type* argument used
+        * ``'metric'``           — the *metric* argument used
+        * ``'analysis_type'``    — the *analysis_type* argument used
         * ``'reference_im_key'`` — the IM used as IM₁ for RSM
 
         Raises
@@ -763,19 +828,19 @@ class imselection:
                 "im_results_dict."
             )
 
-        compute_metric = metric in ('all', 'metric')
-        do_eff = metric in ('all', 'efficiency')
+        do_eff  = metric in ('all', 'efficiency')
         do_prof = metric in ('all', 'proficiency')
-        do_rsm = metric in ('all', 'rsm')
-        _ = compute_metric  # suppress unused
+        do_prac = metric in ('all', 'practicality')
+        do_rsm  = metric in ('all', 'rsm')
 
         rows = []
         rsm_matrix = {n: {} for n in im_names}
 
         for im_name in im_names:
             res = im_results_dict[im_name]
-            eff_val = float(np.nan)
+            eff_val  = float(np.nan)
             prof_val = float(np.nan)
+            prac_val = float(np.nan)
 
             if do_eff:
                 if analysis_type == 'MCA':
@@ -795,10 +860,17 @@ class imselection:
                         res, ds_index=damage_threshold_index
                     )['beta_IM_given_DCRLS1']
 
+            if do_prac:
+                if analysis_type == 'MCA':
+                    prac_val = self.compute_practicality_mca(res)['b_slope']
+                else:
+                    prac_val = self.compute_practicality_ida(res)['b_slope']
+
             rows.append({
-                'im_name': im_name,
-                'efficiency': eff_val,
-                'proficiency': prof_val,
+                'im_name':      im_name,
+                'efficiency':   eff_val,
+                'proficiency':  prof_val,
+                'practicality': prac_val,
             })
 
         # RSM matrix
@@ -846,6 +918,13 @@ class imselection:
             )
         else:
             df['rank_proficiency'] = np.nan
+
+        if do_prac:
+            df['rank_practicality'] = (
+                df['practicality'].rank(method='min', ascending=False).astype(int)
+            )
+        else:
+            df['rank_practicality'] = np.nan
 
         if do_rsm:
             df['rank_rsm'] = (

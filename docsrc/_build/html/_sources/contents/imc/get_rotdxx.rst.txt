@@ -61,4 +61,17 @@ Orientation-Independent Spectral Acceleration (RotDxx)
    Common choices are **RotD50** (median, used as reference IM in ASCE 7-22)
    and **RotD100** (maximum, the largest possible single-component response).
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc1 = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      acc2 = acc1 * 0.85   # synthetic orthogonal component
+      im = imcalculator(acc1, dt=0.005)
+
+      rotd50 = im.get_rotdxx(period=1.0, acc2=acc2, percentile=50)
+      print(f"RotD50(T=1.0s) = {rotd50:.4f} g")

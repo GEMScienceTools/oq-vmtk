@@ -72,4 +72,45 @@ Modified Cloud Analysis Postprocessing
 
    where :math:`P(\text{NC} \mid \text{IM}) = 1 - P(C \mid \text{IM})`.
 
+.. admonition:: Bootstrap vs. Classical (Bayesian MCMC) Estimation
+
+   The ``cloud_method`` parameter controls how the 5-parameter model
+   :math:`\boldsymbol{\chi} = [\ln a,\, b,\, \beta_{\text{r2r}},\, \alpha_0,\, \alpha_1]`
+   is estimated.
+
+   **Bootstrap** (``cloud_method='bootstrap'``, default): Ordinary Least Squares
+   regression is repeated ``n_bootstrap`` times on resampled datasets. The fragility
+   curves and their uncertainty band are derived from the percentile spread of bootstrap
+   realisations.
+
+   **Classical / Bayesian MCMC** (``cloud_method='classical'``): The joint posterior of
+   :math:`\boldsymbol{\chi}` is sampled with a Metropolis–Hastings MCMC chain
+   (Jalayer et al., 2017). The *robust* fragility (Eq. 10 in the reference) averages
+   the lognormal CDF over the posterior, and the :math:`\pm k \cdot \sigma` confidence
+   band (Eq. 11) bounds the predictive spread. The ``n_mcmc``, ``n_mcmc_burnin``, and
+   ``confidence_k`` parameters control the chain length and band width.
+
+   **Reference**: Jalayer F, Ebrahimian H, Miano A, Manfredi G, Sezen H. (2017).
+   "Analytical fragility assessment using unscaled ground motion records."
+   *Earthquake Engineering and Structural Dynamics*, 46: 2639–2663.
+   https://doi.org/10.1002/eqe.2922
+
+.. admonition:: Example
+   :class: note
+
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      # imls, edps: 1-D arrays of IM levels and EDP responses from NTHA
+      cloud_dict = pp.process_mca_results(
+          imls=imls,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          lower_limit=0.001,
+          censored_limit=0.10,
+      )
+      print(cloud_dict['fragility']['medians'])
 

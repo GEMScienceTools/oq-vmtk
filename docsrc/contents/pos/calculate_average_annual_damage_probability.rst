@@ -41,4 +41,21 @@ Average Annual Damage Probabilities
    IM interval and :math:`\Delta\lambda_j = |\lambda(x_j) - \lambda(x_{j+1})|` is
    the corresponding rate of occurrence.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      # fragility_medians, fragility_betas: arrays from process_mca_results()
+      # hazard_imls, hazard_poes: hazard curve arrays
+      aadp = pp.calculate_average_annual_damage_probability(
+          fragility_medians=fragility_medians,
+          fragility_betas=fragility_betas,
+          hazard_imls=hazard_imls,
+          hazard_poes=hazard_poes,
+      )
+      print(aadp)

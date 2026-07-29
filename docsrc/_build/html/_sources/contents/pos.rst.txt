@@ -4,8 +4,8 @@ Postprocessing
 The ``postprocessor`` class derives fragility and vulnerability models from
 nonlinear time-history analysis (NTHA) outputs. Supported workflows include
 Modified Cloud Analysis (MCA), Multiple Stripe Analysis (MSA), and Incremental
-Dynamic Analysis (IDA). Fragility fitting options are lognormal, probit, logit,
-and ordinal models. Vulnerability functions and average annual loss (AAL) are
+Dynamic Analysis (IDA). Fragility fitting options are lognormal (with bootstrap or classical Bayesian
+MCMC estimation), probit, logit, and ordinal models. Vulnerability functions and average annual loss (AAL) are
 also computed.
 
 .. toctree::
@@ -61,3 +61,7 @@ References
 
 11. Cornell, C.A. and Krawinkler, H. (2000). "Progress and challenges in seismic performance
     assessment." *PEER Center News*, 3(2), 1–3.
+
+12. Jalayer, F., Ebrahimian, H., Miano, A., Manfredi, G., and Sezen, H. (2017). "Analytical
+    fragility assessment using unscaled ground motion records." *Earthquake Engineering and
+    Structural Dynamics*, 46: 2639–2663. https://doi.org/10.1002/eqe.2922

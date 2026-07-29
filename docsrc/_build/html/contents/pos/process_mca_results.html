@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>7.6. Modified Cloud Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
 
@@ -15,11 +15,11 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -74,7 +74,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -106,13 +107,24 @@
 <h1><span class="section-number">7.6. </span>Modified Cloud Analysis Postprocessing<a class="headerlink" href="#modified-cloud-analysis-postprocessing" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.process_mca_results">
-<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_mca_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">censored_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.geomspace(0.05,</span> <span class="pre">10,</span> <span class="pre">50)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lognormal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_mca_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_mca_results" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_mca_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">censored_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.geomspace(0.05,</span> <span class="pre">10,</span> <span class="pre">50)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lognormal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cloud_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bootstrap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mcmc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mcmc_burnin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_mca_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_mca_results" title="Link to this definition"></a></dt>
 <dd><p>Perform a Modified Cloud Analysis (MCA) to derive seismic
 fragility functions. This method extends classical cloud analysis
 by incorporating logistic regression to account for structural
-collapse cases and using bootstrapping to ensure statistical
-stability. It supports lognormal, ordinal, and GLM-based
+collapse cases. It supports lognormal, ordinal, and GLM-based
 fragility fitting.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">fragility_method='lognormal'</span></code>, two <code class="docutils literal notranslate"><span class="pre">cloud_method</span></code>
+options are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'bootstrap'</span></code> (default): uses non-parametric bootstrapping
+to estimate the mean fragility and parameter uncertainty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'classical'</span></code>: implements the Bayesian Robust Fragility
+procedure of Jalayer et al. (2017), sampling the 5-parameter
+vector chi = [ln a, b, beta, alpha0, alpha1] from its
+posterior distribution via MCMC (Metropolis-Hastings), and
+computing the Robust Fragility as the posterior expected value
+of the fragility model together with confidence bands.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -133,24 +145,38 @@ in damage-state thresholds. Default value is 0.30.</p></li>
 fragility functions. Default is a geometric space from
 0.05 to 10.</p></li>
 <li><p><strong>n_bootstrap</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of bootstrap samples to draw for statistical
-stability. Default is 200.</p></li>
-<li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Seed for reproducibility of the bootstrap sampling.
+stability (used only when <code class="docutils literal notranslate"><span class="pre">cloud_method='bootstrap'</span></code>).
+Default is 200.</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Seed for reproducibility of the bootstrap sampling or MCMC.
 Default is None.</p></li>
-<li><p><strong>fragility_rotation</strong> (<em>float</em><em>, </em><em>optional</em>) – Parameter for rotating fragility functions around a specific
-percentile to adjust for target reliability. Default is 0.1.</p></li>
-<li><p><strong>fragility_method</strong> (<em>{'lognormal'</em><em>, </em><em>'ordinal'</em><em>, </em><em>'probit'</em><em>, </em><em>'logit'}</em><em>,</em>) – optional. The methodology used to fit the fragility functions.
-Default is ‘lognormal’.</p></li>
+<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to rotate the fragility curve around a specific
+percentile to adjust for target reliability. Default is
+False.</p></li>
+<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – The target percentile for fragility function rotation.
+Default is 0.10.</p></li>
+<li><p><strong>fragility_method</strong> (<em>{'lognormal'</em><em>, </em><em>'ordinal'</em><em>, </em><em>'probit'</em><em>, </em><em>'logit'}</em><em>, </em><em>optional</em>) – The methodology used to fit the fragility functions.
+Default is <code class="docutils literal notranslate"><span class="pre">'lognormal'</span></code>.</p></li>
+<li><p><strong>cloud_method</strong> (<em>{'bootstrap'</em><em>, </em><em>'classical'}</em><em>, </em><em>optional</em>) – When <code class="docutils literal notranslate"><span class="pre">fragility_method='lognormal'</span></code>, selects the uncertainty
+quantification approach. <code class="docutils literal notranslate"><span class="pre">'bootstrap'</span></code> uses non-parametric
+bootstrapping (default). <code class="docutils literal notranslate"><span class="pre">'classical'</span></code> uses Bayesian MCMC
+(Metropolis-Hastings) on the full 5-parameter model
+chi = [ln a, b, beta, alpha0, alpha1] following Jalayer et al.
+(2017), computing the Robust Fragility as the posterior expected
+value and deriving confidence bands from the posterior variance.</p></li>
+<li><p><strong>n_mcmc</strong> (<em>int</em><em>, </em><em>optional</em>) – Total number of MCMC samples (including burn-in) used
+when <code class="docutils literal notranslate"><span class="pre">cloud_method='classical'</span></code>. Default is 5000.</p></li>
+<li><p><strong>n_mcmc_burnin</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of initial MCMC samples discarded as burn-in.
+Default is 1000.</p></li>
+<li><p><strong>confidence_k</strong> (<em>float</em><em>, </em><em>optional</em>) – Half-width of the robust confidence band in units of the
+posterior standard deviation. Default is 2.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>cloud_dict</strong> – A nested dictionary with keys: <code class="docutils literal notranslate"><span class="pre">'cloud</span> <span class="pre">inputs'</span></code> (imls, edps,
-lower_limit, upper_limit, damage_thresholds); <code class="docutils literal notranslate"><span class="pre">'fragility'</span></code>
-(fragility_method, intensities, poes, medians,
-sigma_record2record, sigma_build2build, sigma_ds, betas_total);
-<code class="docutils literal notranslate"><span class="pre">'regression'</span></code> (b1, b0, sigma, fitted_x, fitted_y — lognormal
-only); <code class="docutils literal notranslate"><span class="pre">'bootstraps'</span></code> (b1, a, sigma_rr, alpha0, alpha1,
-poes_all of shape n_bootstrap x n_IM x n_DS+1 — lognormal only);
-<code class="docutils literal notranslate"><span class="pre">'raw_data'</span></code> (im_nc, edp_nc, im_c — lognormal only).</p>
+<dd class="field-even"><p><strong>cloud_dict</strong> – Nested result dictionary. Always contains keys
+<code class="docutils literal notranslate"><span class="pre">'cloud</span> <span class="pre">inputs'</span></code>, <code class="docutils literal notranslate"><span class="pre">'fragility'</span></code>, <code class="docutils literal notranslate"><span class="pre">'regression'</span></code>.
+When <code class="docutils literal notranslate"><span class="pre">fragility_method='lognormal'</span></code>, also contains
+<code class="docutils literal notranslate"><span class="pre">'raw_data'</span></code> plus either <code class="docutils literal notranslate"><span class="pre">'bootstraps'</span></code> or <code class="docutils literal notranslate"><span class="pre">'mcmc'</span></code>
+depending on <code class="docutils literal notranslate"><span class="pre">cloud_method</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
@@ -158,17 +184,40 @@ poes_all of shape n_bootstrap x n_IM x n_DS+1 — lognormal only);
 </dl>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>The ‘lognormal’ method implements a dual-regression approach:
-1.  <strong>Linear Regression</strong>: Performed in log-log space on</p>
+<p>The ‘lognormal’ method uses a dual-regression approach:
+linear regression in log-log space on non-collapse data,
+logistic regression to model P(C|IM), and combines them as
+P(DS|IM) = P(DS|NC,IM)*P(NC|IM) + P(C|IM).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">'classical'</span></code> cloud method follows the 5-parameter
+fragility model from Jalayer et al. (2017), Eq. 7:</p>
 <blockquote>
-<div><p>non-collapse data (log(EDP) = log(a) + b * log(IM)).</p>
+<div><p>P(DCR&gt;1|Sa,chi) = Phi(ln(eta)/beta) * P(NC|Sa) + P(C|Sa)</p>
 </div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p><strong>Logistic Regression</strong>: Used to predict P(C|IM).</p></li>
-<li><p><strong>Total Fragility</strong>: P(DS|IM) = P(DS|NC,IM)*P(NC|IM) +
-P(C|IM).</p></li>
-</ol>
+<p>where chi = [ln a, b, beta, alpha0, alpha1]. The posterior
+joint distribution f(chi|D) is sampled via MCMC using the
+likelihood from Eq. A1.2 (Jalayer et al. 2017). The Robust
+Fragility (Eq. 10) is the posterior mean of the fragility
+model over the sampled chi vectors, and the confidence bands
+(Eq. 11) are derived from the posterior variance.</p>
 </div>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Jalayer, F., Ebrahimian, H., Miano, A., Manfredi, G., and
+Sezen, H. (2017). Analytical fragility assessment using
+unscaled ground motion records. Earthquake Engng Struct.
+Dyn., 46, 2639-2663. <a class="reference external" href="https://doi.org/10.1002/eqe.2922">https://doi.org/10.1002/eqe.2922</a></p></li>
+<li><p>Jalayer, F., Elefante, L., De Risi, R., and Manfredi, G.
+(2014). Cloud Analysis revisited: Efficient fragility
+calculation and uncertainty propagation using simple linear
+regression. Proceedings of the 10th NCEE, Anchorage, AK.</p></li>
+<li><p>Jalayer, F., De Risi, R., and Manfredi, G. (2015). Bayesian
+Cloud Analysis: efficient structural fragility assessment
+using linear regression. Bulletin of Earthquake Engineering,
+13(4), 1183-1203.</p></li>
+<li><p>Miano, A., Jalayer, F., and Prota, A. (2019). Considering
+structural modelling uncertainties using Bayesian cloud
+analysis. COMPDYN 2019.</p></li>
+</ol>
 </dd></dl>
 
 <div class="admonition-theoretical-background admonition">
@@ -214,6 +263,44 @@ non-collapse fragility with the collapse probability via the total probability t
 P(\text{DS} \geq ds_i \mid \text{NC}, \text{IM}) \cdot P(\text{NC} \mid \text{IM})
 + P(C \mid \text{IM})\]</div>
 <p>where <span class="math notranslate nohighlight">\(P(\text{NC} \mid \text{IM}) = 1 - P(C \mid \text{IM})\)</span>.</p>
+</div>
+<div class="admonition-bootstrap-vs-classical-bayesian-mcmc-estimation admonition">
+<p class="admonition-title">Bootstrap vs. Classical (Bayesian MCMC) Estimation</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cloud_method</span></code> parameter controls how the 5-parameter model
+<span class="math notranslate nohighlight">\(\boldsymbol{\chi} = [\ln a,\, b,\, \beta_{\text{r2r}},\, \alpha_0,\, \alpha_1]\)</span>
+is estimated.</p>
+<p><strong>Bootstrap</strong> (<code class="docutils literal notranslate"><span class="pre">cloud_method='bootstrap'</span></code>, default): Ordinary Least Squares
+regression is repeated <code class="docutils literal notranslate"><span class="pre">n_bootstrap</span></code> times on resampled datasets. The fragility
+curves and their uncertainty band are derived from the percentile spread of bootstrap
+realisations.</p>
+<p><strong>Classical / Bayesian MCMC</strong> (<code class="docutils literal notranslate"><span class="pre">cloud_method='classical'</span></code>): The joint posterior of
+<span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span> is sampled with a Metropolis–Hastings MCMC chain
+(Jalayer et al., 2017). The <em>robust</em> fragility (Eq. 10 in the reference) averages
+the lognormal CDF over the posterior, and the <span class="math notranslate nohighlight">\(\pm k \cdot \sigma\)</span> confidence
+band (Eq. 11) bounds the predictive spread. The <code class="docutils literal notranslate"><span class="pre">n_mcmc</span></code>, <code class="docutils literal notranslate"><span class="pre">n_mcmc_burnin</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">confidence_k</span></code> parameters control the chain length and band width.</p>
+<p><strong>Reference</strong>: Jalayer F, Ebrahimian H, Miano A, Manfredi G, Sezen H. (2017).
+“Analytical fragility assessment using unscaled ground motion records.”
+<em>Earthquake Engineering and Structural Dynamics</em>, 46: 2639–2663.
+<a class="reference external" href="https://doi.org/10.1002/eqe.2922">https://doi.org/10.1002/eqe.2922</a></p>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.postprocessor</span><span class="w"> </span><span class="kn">import</span> <span class="n">postprocessor</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">postprocessor</span><span class="p">()</span>
+<span class="c1"># imls, edps: 1-D arrays of IM levels and EDP responses from NTHA</span>
+<span class="n">cloud_dict</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">process_mca_results</span><span class="p">(</span>
+    <span class="n">imls</span><span class="o">=</span><span class="n">imls</span><span class="p">,</span>
+    <span class="n">edps</span><span class="o">=</span><span class="n">edps</span><span class="p">,</span>
+    <span class="n">damage_thresholds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.040</span><span class="p">],</span>
+    <span class="n">lower_limit</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+    <span class="n">censored_limit</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cloud_dict</span><span class="p">[</span><span class="s1">&#39;fragility&#39;</span><span class="p">][</span><span class="s1">&#39;medians&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 </div>
 </section>
 

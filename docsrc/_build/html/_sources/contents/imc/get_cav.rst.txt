@@ -35,4 +35,16 @@ Cumulative Absolute Velocity
    Unlike peak ground motion parameters, CAV accounts for the duration of shaking,
    making it a more informative measure for cumulative damage assessment.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      im = imcalculator(acc, dt=0.005)
+
+      cav = im.get_cav()
+      print(f"CAV = {cav:.3f} m/s")

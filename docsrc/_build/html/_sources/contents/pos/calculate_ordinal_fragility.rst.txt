@@ -45,4 +45,19 @@ Ordinal Fragility Functions
    The exceedance fragility curves :math:`P(D \geq i \mid \text{IM})` are obtained
    directly from the fitted cumulative model.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      intensities = np.geomspace(0.05, 3.0, 50)
+      # imls: 1-D array of IM levels; damage_states: integer array (0, 1, 2, …)
+      poes = pp.calculate_ordinal_fragility(
+          imls=imls,
+          damage_states=damage_states,
+          intensities=intensities,
+      )

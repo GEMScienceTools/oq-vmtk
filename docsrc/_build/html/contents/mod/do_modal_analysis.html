@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>6.5. Modal Analysis &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
 
@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -68,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../pos.html">7. Postprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -148,6 +149,15 @@ are normalized by the last node’s displacement.</p></li>
 </dl>
 </dd></dl>
 
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">compile_model</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">do_gravity_analysis</span><span class="p">()</span>
+<span class="n">periods</span><span class="p">,</span> <span class="n">mode_shapes</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">do_modal_analysis</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;T1 = </span><span class="si">{</span><span class="n">periods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </section>
 
 

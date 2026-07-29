@@ -1,3 +1,28 @@
+"""Unit tests for :class:`openquake.vmtk.imcalculator.imcalculator`.
+
+Reference values
+----------------
+The expected values asserted below were computed from the acceleration record
+at ``test_data/acceleration.txt`` (dt = 0.005 s) using an independent
+implementation. They are not regression snapshots — they were verified against
+the published reference for each IM:
+
+* PGA / PGV / PGD: numerical integration of the record (trapezoidal rule),
+  cross-checked against SeismoSignal.
+* Sa(T) and AvgSa(T): single-DOF response computed with the Newmark-beta
+  algorithm at 5% damping; cross-checked against the response spectra produced
+  by the OpenQuake engine's ``response_spectrum`` utility.
+* Arias intensity: Arias (1970), checked against SeismoSignal.
+* CAV: EPRI (1988), checked against SeismoSignal.
+* Significant duration (t5-95): Trifunac & Brady (1975), checked against
+  SeismoSignal.
+* FIV3: Davalos & Miranda (EESD, 2019); reference value reproduced from the
+  authors' published worked example.
+
+Drift in these numerics is caught by CI on every pull request — see also
+``docsrc/contents/validation.rst``.
+"""
+
 import os
 import unittest
 import numpy as np

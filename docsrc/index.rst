@@ -19,9 +19,9 @@ https://github.com/GEMScienceTools/oq-vmtk.
 
 Currently, the ``oq-vmtk`` includes the following sub-modules:
 
-- **Intensity Measure Calculator (im_calculator)**: Contains code used for
+- **Intensity Measure Calculator (imcalculator)**: Contains code used for
   processing spectra and intensity measure types from ground-motion records.
-- **Intensity Measure Selection (im_selection)**: Contains code for evaluating and
+- **Intensity Measure Selection (imselection)**: Contains code for evaluating and
   comparing intensity measures using information-theoretic sufficiency metrics.
 - **Model Calibration (calibration)**: Contains code used for calibrating MDOF models
   based on SDOF low-level parameters.
@@ -31,7 +31,7 @@ Currently, the ``oq-vmtk`` includes the following sub-modules:
   analyses.
 - **Postprocessing (postprocessor)**: Contains code for postprocessing cloud and
   multiple stripe analyses to derive fragility and vulnerability models.
-- **Storey Loss Function Generator (slf_generator)**: Contains code for generating
+- **Storey Loss Function Generator (slfgenerator)**: Contains code for generating
   storey loss functions for a more refined loss assessment of building components.
 - **Visualisation (plotter)**: Contains code for visualizing and graphically
   interpreting ``oq-vmtk`` outputs.
@@ -50,6 +50,7 @@ Currently, the ``oq-vmtk`` includes the following sub-modules:
    contents/pos
    contents/slf
    contents/plo
+   contents/demos
    contents/examples
 
 Indices and tables

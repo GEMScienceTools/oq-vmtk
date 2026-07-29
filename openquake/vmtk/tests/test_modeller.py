@@ -2,6 +2,10 @@ import os
 import shutil
 import unittest
 import numpy as np
+import pytest
+
+pytest.importorskip("openseespy.opensees",
+                    reason="openseespy not installed — modeller tests skipped")
 
 from openquake.vmtk.modeller import modeller
 
@@ -254,7 +258,11 @@ class TestModellerMethods(unittest.TestCase):
     def test_modal_analysis_mode_shape(self):
         T, phi = self.model.do_modal_analysis(num_modes=3)
         # phi[0] is (n_nodes x 3); skip base node (row 0), take x-direction (col 0)
-        np.testing.assert_array_almost_equal(phi[0][1:, 0], self.PHI, decimal=4)
+        raw = phi[0][1:, 0]
+        # Normalise by the maximum absolute component — OpenSees does not
+        # guarantee a consistent eigenvector scale across platforms/versions.
+        normalised = raw / np.abs(raw).max()
+        np.testing.assert_array_almost_equal(normalised, self.PHI, decimal=4)
 
     def test_spo_analysis(self):
         self.model.do_spo_analysis(0.01, 5, 1, self.PHI, pFlag=False)
@@ -308,7 +316,7 @@ class TestModellerMethods(unittest.TestCase):
 
     def test_incremental_dynamic_analysis_returns(self):
         self.model.do_modal_analysis(num_modes=3)
-        ida_data, ordered_sfs = self.model.do_incremental_dynamic_analysis(
+        ida_data, ordered_sfs = self.model.do_ida_analysis(
             self.fnames,
             self.dt_gm,
             t_max=self.t_max,
@@ -324,7 +332,7 @@ class TestModellerMethods(unittest.TestCase):
 
     def test_incremental_dynamic_analysis_data_keys(self):
         self.model.do_modal_analysis(num_modes=3)
-        ida_data, ordered_sfs = self.model.do_incremental_dynamic_analysis(
+        ida_data, ordered_sfs = self.model.do_ida_analysis(
             self.fnames,
             self.dt_gm,
             t_max=self.t_max,

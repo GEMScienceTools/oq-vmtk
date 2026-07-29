@@ -95,3 +95,44 @@ Modified Cloud Analysis Postprocessing
    *Earthquake Engineering and Structural Dynamics*, 46: 2639–2663.
    https://doi.org/10.1002/eqe.2922
 
+.. admonition:: Example
+   :class: note
+
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      # imls, edps: 1-D arrays of IM levels and EDP responses from NTHA
+      cloud_dict = pp.process_mca_results(
+          imls=imls,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          lower_limit=0.001,
+          censored_limit=0.10,
+      )
+      print(cloud_dict['fragility']['medians'])
+
+      # Ordinal CLM — constant dispersion (fully-ordered special case)
+      cloud_ord_const = pp.process_mca_results(
+          imls=imls,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          lower_limit=0.001,
+          censored_limit=0.10,
+          fragility_method='ordinal',
+          dispersion_type='constant',   # default
+      )
+
+      # Ordinal CLM — variable dispersion (general hierarchical case)
+      cloud_ord_var = pp.process_mca_results(
+          imls=imls,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          lower_limit=0.001,
+          censored_limit=0.10,
+          fragility_method='ordinal',
+          dispersion_type='variable',   # per-DS dispersions
+      )
+

@@ -1,7 +1,48 @@
 SLF Generation
 ==============
 
-.. automethod:: openquake.vmtk.slf_generator.slf_generator.generate
+.. automethod:: openquake.vmtk.slfgenerator.slfgenerator.generate
+
+Self-contained example
+----------------------
+
+The snippet below is fully runnable from the repository root after
+``pip install .`` — it uses the inventory CSVs shipped with the demo
+notebook.
+
+.. code-block:: python
+
+   import numpy as np
+   import pandas as pd
+   from openquake.vmtk.slfgenerator import slfgenerator
+   from openquake.vmtk.plotter import plotter
+
+   # 1. Load a drift-sensitive component inventory
+   inventory = pd.read_csv(
+       "demos/StoreyLossFunctionGeneration/in/inventory_psd.csv"
+   )
+
+   # 2. Configure the generator
+   model = slfgenerator(
+       component_data=inventory,
+       edp="PSD",
+       edp_range=np.linspace(0.001, 0.10, 100),
+       grouping_flag=True,
+       conversion=1.0,
+       realizations=500,
+       replacement_cost=1.0,
+       regression=None,
+   )
+
+   # 3. Generate and plot the SLF
+   slf, cache = model.generate()
+   plotter().plot_slf_model(
+       slf, cache,
+       edp_label="Interstorey Drift Ratio [-]",
+       loss_label="Drift-Sensitive NSC Storey Loss",
+       xlims=[0, 0.05],
+       title="Drift-Sensitive SLF",
+   )
 
 .. admonition:: Theoretical Background
 

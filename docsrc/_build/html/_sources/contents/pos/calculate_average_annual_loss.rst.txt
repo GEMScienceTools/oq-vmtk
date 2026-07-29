@@ -43,4 +43,20 @@ Average Annual Loss
    :math:`T_{\max}` is the maximum return period) are excluded to avoid numerical
    instability from very rare events.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      # vulnerability: array of mean loss ratios at each IM level
+      # hazard_imls, hazard_poes: hazard curve arrays
+      aal = pp.calculate_average_annual_loss(
+          vulnerability=vulnerability,
+          hazard_imls=hazard_imls,
+          hazard_poes=hazard_poes,
+      )
+      print(f"AAL = {aal:.4f}")

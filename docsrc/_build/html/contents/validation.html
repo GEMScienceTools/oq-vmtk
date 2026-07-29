@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation and Quality Assurance &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Validation and Quality Assurance</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/validation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="validation-and-quality-assurance">
+<h1>Validation and Quality Assurance<a class="headerlink" href="#validation-and-quality-assurance" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> follows the same testing philosophy as the OpenQuake engine:
+<strong>every module ships with unit tests whose expected values are obtained from an
+independent implementation or a published reference</strong>. The tests live in
+<a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/openquake/vmtk/tests">openquake/vmtk/tests/</a>
+and are executed on every pull request via the GitHub Actions matrix
+(Linux, Windows, macOS arm64; Python 3.11, 3.12, 3.13).</p>
+<section id="continuous-integration">
+<h2>Continuous Integration<a class="headerlink" href="#continuous-integration" title="Link to this heading"></a></h2>
+<p>Three workflows guard the repository:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">linux_test.yml</span></code> — installs the OpenQuake engine, the pinned requirements
+file, and <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code> itself; runs the full <code class="docutils literal notranslate"><span class="pre">pytest</span></code> suite; rebuilds the
+Sphinx documentation and deploys to GitHub Pages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">windows_test.yml</span></code> — equivalent installation and test run on Windows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macos_arm_test.yml</span></code> — equivalent installation and test run on macOS arm64.</p></li>
+</ul>
+<p>A failing test on any platform blocks merging.</p>
+</section>
+<section id="reference-value-tests">
+<h2>Reference-value Tests<a class="headerlink" href="#reference-value-tests" title="Link to this heading"></a></h2>
+<section id="intensity-measure-calculator">
+<h3>Intensity Measure Calculator<a class="headerlink" href="#intensity-measure-calculator" title="Link to this heading"></a></h3>
+<p>The acceleration record bundled at
+<code class="docutils literal notranslate"><span class="pre">openquake/vmtk/tests/test_data/acceleration.txt</span></code> is used to verify every IM
+returned by <code class="xref py py-class docutils literal notranslate"><span class="pre">openquake.vmtk.imcalculator.imcalculator</span></code> against
+independently computed reference values. The reference values are stored as
+class-level attributes at the top of <code class="docutils literal notranslate"><span class="pre">test_imcalculator.py</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 25.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Intensity measure</p></th>
+<th class="head"><p>Reference value</p></th>
+<th class="head"><p>Computed by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PGA</p></td>
+<td><p>0.54557 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_amplitude_ims</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>PGV</p></td>
+<td><p>0.42661 m/s</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_amplitude_ims</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>PGD</p></td>
+<td><p>0.03304 m</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_amplitude_ims</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Sa(T=0.3\,\mathrm{s})\)</span></p></td>
+<td><p>1.30976 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_sa</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Sa(T=0.6\,\mathrm{s})\)</span></p></td>
+<td><p>0.78053 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_sa</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Sa(T=1.0\,\mathrm{s})\)</span></p></td>
+<td><p>0.31042 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_sa</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(AvgSa(T=0.3\,\mathrm{s})\)</span></p></td>
+<td><p>1.20747 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_saavg</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(AvgSa(T=0.6\,\mathrm{s})\)</span></p></td>
+<td><p>0.81096 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_saavg</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(AvgSa(T=1.0\,\mathrm{s})\)</span></p></td>
+<td><p>0.43578 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_saavg</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>User-defined <span class="math notranslate nohighlight">\(AvgSa\)</span> (T = 0.1–1.0 s)</p></td>
+<td><p>0.76748 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_saavg_user_defined</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Arias Intensity</p></td>
+<td><p>1.99202 m/s</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_arias_intensity</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>CAV</p></td>
+<td><p>10.03464 m/s</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_cav</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(t_{5\!-\!95}\)</span> significant duration</p></td>
+<td><p>7.695 s</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_significant_duration</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>FIV3 (T = 0.3 s, α = 1.0, β = 0.7)</p></td>
+<td><p>0.07390 g</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">imcalculator.get_FIV3</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Each value is asserted to four decimal places (three for AI, CAV, and
+significant duration) inside <code class="docutils literal notranslate"><span class="pre">test_imcalculator.py</span></code>. Any drift in the
+underlying numerics is caught immediately by CI.</p>
+</section>
+<section id="storey-loss-function-generator">
+<h3>Storey Loss Function Generator<a class="headerlink" href="#storey-loss-function-generator" title="Link to this heading"></a></h3>
+<p>The SLF generator is validated using the FEMA P-58 component inventory shipped
+under <code class="docutils literal notranslate"><span class="pre">demos/StoreyLossFunctionGeneration/in/</span></code> and a reduced fixture in
+<code class="docutils literal notranslate"><span class="pre">openquake/vmtk/tests/test_data/slf_inventory.csv</span></code>. The unit tests cover:</p>
+<ul class="simple">
+<li><p>input validation (missing columns, wrong EDP type, invalid component IDs);</p></li>
+<li><p>reproducibility of Monte-Carlo realisations under a fixed random seed;</p></li>
+<li><p>shape and monotonicity of the regressed SLFs across the four supported
+functional forms (Weibull, Papadopoulos, Generalised Pareto, Lognormal).</p></li>
+</ul>
+<p>The SLF implementation itself is benchmarked against the original
+Python-based generator described by Shahnazaryan, O’Reilly and Monteiro
+(<a class="reference external" href="https://doi.org/10.7712/120121.8659.18567">COMPDYN 2021</a>,
+<a class="reference external" href="https://doi.org/10.1177/87552930211023523">Earthquake Spectra 2021</a>).</p>
+</section>
+<section id="modeller-calibration-postprocessor-plotter">
+<h3>Modeller, Calibration, Postprocessor, Plotter<a class="headerlink" href="#modeller-calibration-postprocessor-plotter" title="Link to this heading"></a></h3>
+<p>Each module has a dedicated <code class="docutils literal notranslate"><span class="pre">test_&lt;module&gt;.py</span></code> file in
+<code class="docutils literal notranslate"><span class="pre">openquake/vmtk/tests/</span></code>. The modeller and calibration tests verify the
+period and mode shapes produced for canonical SDOF and MDOF reference
+configurations against textbook closed-form solutions. The postprocessor tests
+verify the lognormal, GLM, and ordinal fragility fits against synthetic
+datasets with analytically known parameters.</p>
+</section>
+</section>
+<section id="reproducing-results-locally">
+<h2>Reproducing Results Locally<a class="headerlink" href="#reproducing-results-locally" title="Link to this heading"></a></h2>
+<p>From the project root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>-v<span class="w"> </span>openquake/vmtk/tests/
+</pre></div>
+</div>
+<p>Runtime is approximately 1–2 minutes on a modern laptop. To run a single
+module’s tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>-v<span class="w"> </span>openquake/vmtk/tests/test_imcalculator.py
+</pre></div>
+</div>
+</section>
+<section id="contributing-new-tests">
+<h2>Contributing New Tests<a class="headerlink" href="#contributing-new-tests" title="Link to this heading"></a></h2>
+<p>When adding a new feature, contributors are expected to ship at least one unit
+test whose expected values are computed independently — either from a
+published reference, an independent code, or an analytical solution. Pull
+requests that add new functions without such tests will be requested to add
+them before merge. See
+<a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk/blob/main/contribute_guidelines.md">contribute_guidelines.md</a>
+for the full contribution policy.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Modified Cloud Analysis Demo
+
+This Jupyter Notebook presents an example of nonlinear time-history analysis (NLTHA), focusing on modified cloud analysis of a multi-degree-of-freedom (MDOF) stick model. First, engineering demand parameters (EDPs), such as peak storey drifts and peak floor accelerations, are extracted. Then, a probabilistic seismic demand model (PSDM) is fitted to the intensity measure (IM) and EDP data (i.e., cloud) using linear regression in log–log space and a logistic regression that handles the collapse/dynamic instability cases. From this model, and combining non-collapse and collapse cases using total probability theorem, fragility functions are derived for arbitrary demand-based damage states. 
+
+NOTE: Throughout the notebook, a demonstration of managing I/O in OQ-VMTK is presented. This is particularly valuable because it ensures that OQ-VMTK’s modules receive input data in a consistent, ready-to-use format. Users are encouraged to follow this procedure for efficient data processing and analysis.

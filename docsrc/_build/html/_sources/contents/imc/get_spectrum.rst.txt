@@ -46,3 +46,17 @@ Response Spectrum
 
    where :math:`S_d`, :math:`S_v`, and :math:`S_a` are the spectral displacement,
    pseudo-velocity, and pseudo-acceleration respectively.
+
+.. admonition:: Example
+   :class: note
+
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      im = imcalculator(acc, dt=0.005)
+
+      periods, sd, sv, sa = im.get_spectrum()
+      print(f"Peak Sa = {max(sa):.3f} g at T = {periods[sa.argmax()]:.2f} s")

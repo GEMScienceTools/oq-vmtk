@@ -36,4 +36,16 @@ Arias Intensity
    commonly used to define the start and end of the strong-motion phase
    (e.g. the 5%–95% significant duration).
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.imcalculator import imcalculator
+
+      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
+      im = imcalculator(acc, dt=0.005)
+
+      ai = im.get_arias_intensity()
+      print(f"Arias Intensity = {ai:.3f} m/s")

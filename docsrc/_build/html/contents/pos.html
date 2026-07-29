@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>7. Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=749cc255" />
 
@@ -15,11 +15,9 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -71,7 +69,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -103,8 +102,8 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">postprocessor</span></code> class derives fragility and vulnerability models from
 nonlinear time-history analysis (NTHA) outputs. Supported workflows include
 Modified Cloud Analysis (MCA), Multiple Stripe Analysis (MSA), and Incremental
-Dynamic Analysis (IDA). Fragility fitting options are lognormal, probit, logit,
-and ordinal models. Vulnerability functions and average annual loss (AAL) are
+Dynamic Analysis (IDA). Fragility fitting options are lognormal (with bootstrap or classical Bayesian
+MCMC estimation), probit, logit, and ordinal models. Vulnerability functions and average annual loss (AAL) are
 also computed.</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -183,6 +182,9 @@ and Structural Dynamics</em>, 31(3), 491–514.</p></li>
 Institute, MNO-10, Oakland, CA.</p></li>
 <li><p>Cornell, C.A. and Krawinkler, H. (2000). “Progress and challenges in seismic performance
 assessment.” <em>PEER Center News</em>, 3(2), 1–3.</p></li>
+<li><p>Jalayer, F., Ebrahimian, H., Miano, A., Manfredi, G., and Sezen, H. (2017). “Analytical
+fragility assessment using unscaled ground motion records.” <em>Earthquake Engineering and
+Structural Dynamics</em>, 46: 2639–2663. <a class="reference external" href="https://doi.org/10.1002/eqe.2922">https://doi.org/10.1002/eqe.2922</a></p></li>
 </ol>
 </section>
 </section>

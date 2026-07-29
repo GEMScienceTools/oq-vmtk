@@ -1,7 +1,5 @@
-# Pushover Analysis Demo
+# Fragility Analysis Demo
 
-This Jupyter Notebook demonstrates an example application of monotonic static pushover and cyclic pushover analyses on a multi-degree-of-freedom (MDOF) stick model where global and local response quantities such as base shear, storey displacements and interstorey drifts are extracted.
+This Jupyter Notebook demonstrates the different fragility function functionalities available in OQ-VMTK and illustrates the effect of each of these methods on subsequent downstream applications including loss modelling and risk metrics calculation. All fragility fitting methods are applied to the same pre-computed Modified Cloud Analysis dataset using the `postprocessor` module, covering lognormal cumulative distribution function variants, generalised linear models (GLM logit and probit), and ordinal cumulative link models (CLM).
 
-The MDOF stick model is compiled in OpenSees using the `modeller` module, defining nodes, masses, elements, and storey-based force-deformation relationships in nonlinear springs (i.e., zero-length elements).
-
-The storey-based force-deformation relationships are calibrated using a target capacity curve defined for an equivalent Single-Degree-of-Freedom (SDOF) system expressed in terms of spectral acceleration and displacement and using the `calibration` module of OQ-VMTK. The SDOF capacity is converted into an MDOF target by distributing strength and stiffness across the stories based on a modal shape, typically the first mode.
+NOTE: Throughout the notebook, a demonstration of managing I/O in OQ-VMTK is presented. This is particularly valuable because it ensures that OQ-VMTK’s modules receive input data in a consistent, ready-to-use format. Users are encouraged to follow this procedure for efficient data processing and analysis.

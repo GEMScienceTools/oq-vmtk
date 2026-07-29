@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>openquake.vmtk.calibration &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
 
@@ -14,8 +14,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -52,7 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -80,10 +81,10 @@
            <div itemprop="articleBody">
              
   <h1>Source code for openquake.vmtk.calibration</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">eigh</span>
-<span class="kn">from</span> <span class="nn">openquake.vmtk.modeller</span> <span class="kn">import</span> <span class="n">modeller</span> <span class="k">as</span> <span class="n">_modeller</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">eigh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.modeller</span><span class="w"> </span><span class="kn">import</span> <span class="n">modeller</span> <span class="k">as</span> <span class="n">_modeller</span>
 
 <span class="c1"># Gravitational acceleration constant (m/s²)</span>
 <span class="n">_G</span> <span class="o">=</span> <span class="mf">9.81</span>
@@ -93,7 +94,7 @@
 <span class="n">_MID_RISE_MAX</span> <span class="o">=</span> <span class="mi">9</span>   <span class="c1"># 4–9 storeys</span>
 
 
-<span class="k">class</span> <span class="nc">calibration</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">calibration</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calibrate MDOF storey force-deformation relationships from</span>
 <span class="sd">    SDOF spectral capacity parameters.</span>
@@ -223,7 +224,7 @@
 
 <div class="viewcode-block" id="calibration.__init__">
 <a class="viewcode-back" href="../../../contents/cal/init.html#openquake.vmtk.calibration.calibration.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">nst</span><span class="p">,</span>
         <span class="n">sdof_capacity</span><span class="p">,</span>
@@ -477,7 +478,7 @@
     <span class="c1">#                       INTERNAL HELPERS                          #</span>
     <span class="c1">##################################################################</span>
 
-    <span class="k">def</span> <span class="nf">_classify_building</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_classify_building</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Classify the building by its number of storeys.</span>
 
@@ -495,7 +496,7 @@
             <span class="k">return</span> <span class="s2">&quot;high-rise&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_storey_stiffness_profile</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">group_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_storey_stiffness_profile</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">group_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute a relative inter-storey stiffness profile.</span>
 
@@ -535,7 +536,7 @@
     <span class="c1">#                      MATRIX ASSEMBLY                           #</span>
     <span class="c1">##################################################################</span>
 
-    <span class="k">def</span> <span class="nf">build_mass_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_mass_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a diagonal mass matrix normalised to a total</span>
 <span class="sd">        of 1.0.</span>
@@ -582,7 +583,7 @@
         <span class="n">masses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">m_floor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">roof_mass_factor</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">build_stiffness_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stiffness_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_stiffness_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stiffness_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a tri-diagonal lateral stiffness matrix.</span>
 
@@ -633,7 +634,7 @@
     <span class="c1">##################################################################</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">compute_modal_properties</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">num_modes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_modal_properties</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">num_modes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute modal properties from mass and stiffness</span>
 <span class="sd">        matrices.</span>
@@ -752,7 +753,7 @@
     <span class="c1">##################################################################</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">compute_storey_distribution_ratios</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">M</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_storey_distribution_ratios</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">M</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute shear and drift distribution ratios from the</span>
 <span class="sd">        first mode shape.</span>
@@ -812,7 +813,7 @@
         <span class="k">return</span> <span class="n">shear_ratios</span><span class="p">,</span> <span class="n">drift_ratios</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">transform_sdof_to_mdof</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_sdof_to_mdof</span><span class="p">(</span>
         <span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">M_eff</span><span class="p">,</span>
         <span class="n">shear_ratios</span><span class="p">,</span> <span class="n">drift_ratios</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -893,7 +894,7 @@
     <span class="c1">##################################################################</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">validate_capacity_curve</span><span class="p">(</span><span class="n">drifts</span><span class="p">,</span> <span class="n">forces</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_capacity_curve</span><span class="p">(</span><span class="n">drifts</span><span class="p">,</span> <span class="n">forces</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Ensure monotonic displacement and positive values.</span>
 
@@ -932,7 +933,7 @@
 
 <div class="viewcode-block" id="calibration.calibrate_model">
 <a class="viewcode-back" href="../../../contents/cal/calibrate_model.html#openquake.vmtk.calibration.calibration.calibrate_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">calibrate_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calibrate_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the full SDOF-to-MDOF calibration pipeline.</span>
 
@@ -1232,7 +1233,7 @@
     <span class="c1">##################################################################</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">mdof_to_sdof</span><span class="p">(</span><span class="n">base_shear</span><span class="p">,</span> <span class="n">roof_disp</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mdof_to_sdof</span><span class="p">(</span><span class="n">base_shear</span><span class="p">,</span> <span class="n">roof_disp</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span>
                      <span class="n">M_eff</span><span class="p">,</span> <span class="n">phi_roof</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert MDOF pushover results to SDOF coordinates.</span>
@@ -1268,7 +1269,7 @@
         <span class="k">return</span> <span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">sdof_to_mdof_global</span><span class="p">(</span><span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">M_eff</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sdof_to_mdof_global</span><span class="p">(</span><span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">M_eff</span><span class="p">,</span>
                             <span class="n">phi_roof</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert SDOF capacity to MDOF global response.</span>
@@ -1304,7 +1305,7 @@
         <span class="k">return</span> <span class="n">V_base</span><span class="p">,</span> <span class="n">u_roof</span>
 
 
-<span class="k">def</span> <span class="nf">calibrate_model</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">is_sos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calibrate_model</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">is_sos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">storey_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience wrapper around :class:`calibration`.</span>

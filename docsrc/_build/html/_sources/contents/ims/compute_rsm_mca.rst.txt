@@ -1,7 +1,7 @@
 Relative Score Method — Modified Cloud Analysis
 ===============================================
 
-.. automethod:: openquake.vmtk.im_selection.imselection.compute_rsm_mca
+.. automethod:: openquake.vmtk.imselection.imselection.compute_rsm_mca
 
 .. admonition:: Theoretical Background
 
@@ -39,4 +39,14 @@ Relative Score Method — Modified Cloud Analysis
    For MCA, the conditional demand distributions are derived from the cloud regression
    residuals evaluated at each record's demand and IM level.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      from openquake.vmtk.imselection import imselection
+
+      ims = imselection()
+      # Compare cloud_dict2 (IM2) against cloud_dict1 (IM1)
+      result = ims.compute_rsm_mca(cloud_dict1, cloud_dict2)
+      print(f"RSM(IM2 vs IM1) = {result['rsm']:.4f} bits")

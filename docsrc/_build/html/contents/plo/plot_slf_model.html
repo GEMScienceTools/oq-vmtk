@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>9.11. Storey Loss Functions &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
 
@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -72,7 +72,8 @@
 <li class="toctree-l2"><a class="reference internal" href="plot_vulnerability_function.html">9.12. Vulnerability Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -120,55 +121,45 @@ by plotting the following:
 <p>The figure uses <code class="docutils literal notranslate"><span class="pre">self.figsize</span></code> with <code class="docutils literal notranslate"><span class="pre">constrained_layout</span></code> and is
 saved without <code class="docutils literal notranslate"><span class="pre">bbox_inches='tight'</span></code> so that every output image has
 identical, deterministic pixel dimensions.</p>
-<section id="parameters">
-<h2><span class="section-number">9.11. </span>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
-<dl class="simple">
-<dt>out<span class="classifier">dict</span></dt><dd><dl class="simple">
-<dt>A dictionary containing the results of the model. It should include keys for:</dt><dd><ul class="simple">
-<li><p>‘edp_range’: A range of Engineering Demand Parameters (EDP) used in the analysis.</p></li>
-<li><p>‘slf’: The fitted Storey Loss Function curve.</p></li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out</strong> (<em>dict</em>) – Results dictionary with keys <code class="docutils literal notranslate"><span class="pre">'edp_range'</span></code> and <code class="docutils literal notranslate"><span class="pre">'slf'</span></code>
+(the fitted Storey Loss Function curve).</p></li>
+<li><p><strong>cache</strong> (<em>dict</em>) – Cached simulation data with keys <code class="docutils literal notranslate"><span class="pre">'total_loss_storey'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'empirical_16th'</span></code>, <code class="docutils literal notranslate"><span class="pre">'empirical_84th'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'empirical_median'</span></code>.</p></li>
+<li><p><strong>edp_label</strong> (<em>str</em>) – Label for the x-axis (Engineering Demand Parameter).</p></li>
+<li><p><strong>loss_label</strong> (<em>str</em>) – Label for the y-axis (Storey Loss Ratio).</p></li>
+<li><p><strong>xlims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) limits for the X-axis (EDP axis).</p></li>
+<li><p><strong>ylims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) limits for the Y-axis (Loss axis).</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Custom plot title.</p></li>
+<li><p><strong>pFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> the plot is displayed or saved. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>export_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Full path including filename to save the plot. Directories are created
+if missing.</p></li>
 </ul>
 </dd>
-</dl>
-</dd>
-<dt>cache<span class="classifier">dict</span></dt><dd><dl class="simple">
-<dt>A dictionary containing cached data, including:</dt><dd><ul class="simple">
-<li><p>‘total_loss_storey’: A list of total storey losses for each realization.</p></li>
-<li><p>‘empirical_16th’, ‘empirical_84th’: Empirical data representing the 16th and
-84th percentiles.</p></li>
-<li><p>‘empirical_median’: Empirical median values of the storey loss for the
-simulations.</p></li>
-</ul>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
-</dd>
-<dt>edp_label<span class="classifier">str</span></dt><dd><p>The label for the x-axis, typically representing the Engineering Demand Parameter
-(EDP) range.</p>
-</dd>
-<dt>loss_label<span class="classifier">str</span></dt><dd><p>The label for the y-axis, typically representing the Storey Loss Ratio range.</p>
-</dd>
-<dt>xlims<span class="classifier">tuple of float</span></dt><dd><p>(min, max) limits for the X-axis (EDP axis).</p>
-</dd>
-<dt>ylims<span class="classifier">tuple of float</span></dt><dd><p>(min, max) limits for the Y-axis (Loss axis).</p>
-</dd>
-<dt>title<span class="classifier">str, optional</span></dt><dd><p>Custom plot title.</p>
-</dd>
-<dt>pFlag<span class="classifier">bool, optional, default=True</span></dt><dd><p>If True, the plot is processed (saved/shown).</p>
-</dd>
-<dt>export_path<span class="classifier">str, optional</span></dt><dd><p>Full path including filename to save the plot. Creates directories if missing.</p>
-</dd>
-</dl>
-</section>
-<section id="returns">
-<h2><span class="section-number">9.11. </span>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
-<dl class="simple">
-<dt>None</dt><dd><p>This function saves the generated plot for each key in the <cite>cache</cite> dictionary to the
-specified directory.</p>
-</dd>
-</dl>
-</section>
 </dd></dl>
 
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotter</span>
+
+<span class="n">pl</span> <span class="o">=</span> <span class="n">plotter</span><span class="p">()</span>
+<span class="c1"># slf, cache from slfgenerator.generate()</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">plot_slf_model</span><span class="p">(</span>
+    <span class="n">slf</span><span class="o">=</span><span class="n">slf</span><span class="p">,</span>
+    <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+    <span class="n">edp_label</span><span class="o">=</span><span class="s2">&quot;Interstorey Drift Ratio [-]&quot;</span><span class="p">,</span>
+    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Storey Loss Ratio [-]&quot;</span><span class="p">,</span>
+    <span class="n">export_path</span><span class="o">=</span><span class="s2">&quot;slf_model.png&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </section>
 
 

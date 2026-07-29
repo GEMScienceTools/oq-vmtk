@@ -1,7 +1,7 @@
 Efficiency — Modified Cloud Analysis
 ====================================
 
-.. automethod:: openquake.vmtk.im_selection.imselection.compute_efficiency_mca
+.. automethod:: openquake.vmtk.imselection.imselection.compute_efficiency_mca
 
 .. admonition:: Theoretical Background
 
@@ -29,4 +29,14 @@ Efficiency — Modified Cloud Analysis
    A smaller :math:`\beta_{D|IM}` indicates that IM explains more of the
    record-to-record variability in demand — i.e. the IM is more efficient.
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      from openquake.vmtk.imselection import imselection
+
+      ims = imselection()
+      # cloud_dict is the output of postprocessor.process_mca_results()
+      result = ims.compute_efficiency_mca(cloud_dict)
+      print(f"Efficiency (beta_D|IM) = {result['efficiency']:.4f}")

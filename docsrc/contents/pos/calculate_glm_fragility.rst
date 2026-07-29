@@ -48,4 +48,20 @@ GLM Fragility Functions
 
       \beta_{\text{total}} = \sqrt{\beta_{\text{r2r}}^2 + \beta_{\text{b2b}}^2 + \beta_{\text{DS}}^2}
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      import numpy as np
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      intensities = np.geomspace(0.05, 3.0, 50)
+      # imls: 1-D array of IM levels; ds_flags: 1-D binary array (0/1) per record
+      poes = pp.calculate_glm_fragility(
+          imls=imls,
+          ds_flags=ds_flags,
+          intensities=intensities,
+          method="logit",
+      )

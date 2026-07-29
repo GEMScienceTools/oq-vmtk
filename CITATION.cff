@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite both the archived release
+  (Zenodo DOI below) and the project as a whole.
+title: "OpenQuake Vulnerability Modeller's Toolkit (oq-vmtk)"
+abstract: >-
+  An open-source library for modelling single- and multi-degree-of-freedom
+  systems and assessing them via nonlinear time-history analyses for regional
+  vulnerability and risk calculations. Developed by the Global Earthquake Model
+  (GEM) Foundation.
+type: software
+authors:
+  - name: "GEM Foundation"
+    email: risk@globalquakemodel.org
+    website: "https://www.globalquakemodel.org"
+license: AGPL-3.0-only
+repository-code: "https://github.com/GEMScienceTools/oq-vmtk"
+url: "https://gemsciencetools.github.io/oq-vmtk/"
+version: "1.1.0"
+date-released: "2026-05-12"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.17524871
+    description: Zenodo archive of the v1.0.0 release
+keywords:
+  - earthquake-engineering
+  - seismic-risk
+  - fragility
+  - vulnerability
+  - openquake
+  - opensees

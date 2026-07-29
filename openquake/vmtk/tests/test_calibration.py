@@ -1,5 +1,9 @@
 import unittest
 import numpy as np
+import pytest
+
+pytest.importorskip("openseespy.opensees",
+                    reason="openseespy not installed — calibration tests skipped")
 
 from openquake.vmtk.calibration import calibration
 

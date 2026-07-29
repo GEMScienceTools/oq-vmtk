@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>openquake.vmtk.imcalculator &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
 
@@ -14,7 +14,7 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -52,7 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -80,8 +81,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for openquake.vmtk.imcalculator</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">integrate</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">integrate</span>
 
 <span class="c1"># Gravitational acceleration constant (m/s²)</span>
 <span class="n">_G</span> <span class="o">=</span> <span class="mf">9.81</span>
@@ -90,7 +91,7 @@
 <span class="n">_VALID_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;m/s2&quot;</span><span class="p">,</span> <span class="s2">&quot;m/s^2&quot;</span><span class="p">}</span>
 
 
-<span class="k">class</span> <span class="nc">imcalculator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">imcalculator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute various intensity measures (IMs) from a ground-motion record.</span>
 
@@ -162,7 +163,7 @@
 
 <div class="viewcode-block" id="imcalculator.__init__">
 <a class="viewcode-back" href="../../../contents/imc/init.html#openquake.vmtk.imcalculator.imcalculator.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">damping</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">damping</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initializes the imcalculator with the input ground-motion</span>
 <span class="sd">        record.</span>
@@ -215,7 +216,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">acc_m_s2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">acc_m_s2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Acceleration time series in m/s².</span>
 
@@ -229,7 +230,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_spectrum">
 <a class="viewcode-back" href="../../../contents/imc/get_spectrum.html#openquake.vmtk.imcalculator.imcalculator.get_spectrum">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_spectrum</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_spectrum</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">periods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
         <span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
@@ -341,7 +342,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_sa">
 <a class="viewcode-back" href="../../../contents/imc/get_sa.html#openquake.vmtk.imcalculator.imcalculator.get_sa">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_sa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes spectral acceleration at a given period by</span>
 <span class="sd">        interpolating the full response spectrum.</span>
@@ -365,7 +366,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_saavg">
 <a class="viewcode-back" href="../../../contents/imc/get_saavg.html#openquake.vmtk.imcalculator.imcalculator.get_saavg">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_saavg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_saavg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the geometric mean of spectral accelerations over a</span>
 <span class="sd">        range of periods centred on a conditioning period.</span>
@@ -402,7 +403,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_saavg_user_defined">
 <a class="viewcode-back" href="../../../contents/imc/get_saavg_user_defined.html#openquake.vmtk.imcalculator.imcalculator.get_saavg_user_defined">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_saavg_user_defined</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">periods_list</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_saavg_user_defined</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">periods_list</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the geometric mean of spectral accelerations for a</span>
 <span class="sd">        user-defined list of periods.</span>
@@ -434,7 +435,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_velocity_displacement_history">
 <a class="viewcode-back" href="../../../contents/imc/get_velocity_displacement_history.html#openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_velocity_displacement_history</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_velocity_displacement_history</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes velocity and displacement time histories with</span>
 <span class="sd">        baseline drift correction.</span>
@@ -493,7 +494,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_amplitude_ims">
 <a class="viewcode-back" href="../../../contents/imc/get_amplitude_ims.html#openquake.vmtk.imcalculator.imcalculator.get_amplitude_ims">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_amplitude_ims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_amplitude_ims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes amplitude-based intensity measures.</span>
 
@@ -536,7 +537,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_arias_intensity">
 <a class="viewcode-back" href="../../../contents/imc/get_arias_intensity.html#openquake.vmtk.imcalculator.imcalculator.get_arias_intensity">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_arias_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_arias_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the Arias Intensity of the ground-motion record.</span>
 
@@ -566,13 +567,13 @@
 
 <div class="viewcode-block" id="imcalculator.get_cav">
 <a class="viewcode-back" href="../../../contents/imc/get_cav.html#openquake.vmtk.imcalculator.imcalculator.get_cav">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_cav</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cav</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the Cumulative Absolute Velocity (CAV).</span>
 
 <span class="sd">        CAV is defined as:</span>
 
-<span class="sd">            CAV = integral(|a(t)| dt)</span>
+<span class="sd">            CAV = integral( abs(a(t)) dt )</span>
 
 <span class="sd">        where a(t) is the ground acceleration in m/s².</span>
 
@@ -594,7 +595,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_significant_duration">
 <a class="viewcode-back" href="../../../contents/imc/get_significant_duration.html#openquake.vmtk.imcalculator.imcalculator.get_significant_duration">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_significant_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_significant_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the significant duration of the ground-motion record.</span>
 
@@ -640,7 +641,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_FIV3">
 <a class="viewcode-back" href="../../../contents/imc/get_FIV3.html#openquake.vmtk.imcalculator.imcalculator.get_FIV3">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_FIV3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_FIV3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the filtered incremental velocity (FIV3) intensity</span>
 <span class="sd">        measure for a given ground-motion record.</span>
@@ -761,7 +762,7 @@
 
 <div class="viewcode-block" id="imcalculator.get_rotdxx">
 <a class="viewcode-back" href="../../../contents/imc/get_rotdxx.html#openquake.vmtk.imcalculator.imcalculator.get_rotdxx">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_rotdxx</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_rotdxx</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">acc2</span><span class="p">,</span>
         <span class="n">percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
@@ -868,7 +869,7 @@
         <span class="n">A</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta_nb</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span>
         <span class="n">B</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma_nb</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta_nb</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_newmark_u</span><span class="p">(</span><span class="n">acc_g</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_newmark_u</span><span class="p">(</span><span class="n">acc_g</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Return displacement history (n_periods, n_time) for acc_g.&quot;&quot;&quot;</span>
             <span class="n">acc_ms2</span> <span class="o">=</span> <span class="n">acc_g</span> <span class="o">*</span> <span class="n">_G</span>
             <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="n">ms</span> <span class="o">*</span> <span class="n">acc_ms2</span>

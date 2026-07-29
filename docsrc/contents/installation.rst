@@ -28,35 +28,23 @@ Create a virtual environment to manage dependencies:
 
 .. code-block:: bash
 
-   python -m venv .venv  # On Windows
-   python3 -m venv .venv  # On Linux
+   python -m venv .venv   # On Windows
+   python3 -m venv .venv  # On Linux / macOS
 
 Activate the virtual environment:
 
 .. code-block:: bash
 
-   .venv\Scripts\activate       # On Windows
-   source .venv/Scripts/activate  # On Linux
+   .venv\Scripts\activate        # On Windows
+   source .venv/bin/activate     # On macOS
+   source .venv/Scripts/activate # On Linux
 
 Install Dependencies
 --------------------
 
 Install the appropriate requirements file based on your operating system and
-Python version.
-
-**For Windows users:**
-
-.. code-block:: bash
-
-   pip install -r requirements-py311-win64.txt  # Python 3.11
-   pip install -r requirements-py312-win64.txt  # Python 3.12
-
-**For Linux users:**
-
-.. code-block:: bash
-
-   pip install -r requirements-py311-linux.txt  # Python 3.11
-   pip install -r requirements-py312-linux.txt  # Python 3.12
+Python version. Pinned-dependency files are provided for Python 3.11, 3.12 and
+3.13 on Linux, Windows, and macOS (arm64).
 
 To check your current Python version, run:
 
@@ -64,18 +52,44 @@ To check your current Python version, run:
 
    python --version
 
+Then pick the matching file. The naming convention is
+``requirements-py<MAJOR><MINOR>-<os>.txt`` (for example
+``requirements-py312-linux.txt`` for Python 3.12 on Linux):
+
+.. code-block:: bash
+
+   # Linux (replace 312 with 311 or 313 to match your Python version)
+   pip install -r requirements-py312-linux.txt
+
+   # Windows
+   pip install -r requirements-py312-win64.txt
+
+   # macOS (arm64)
+   pip install -r requirements-py312-macos_arm64.txt
+
 Install the Package
 -------------------
 
-Install the ``oq-vmtk`` package in editable mode:
+**Standard install (recommended for users):**
+
+.. code-block:: bash
+
+   pip install .
+
+**Editable / developer install** — use this only if you plan to modify the
+source:
 
 .. code-block:: bash
 
    pip install -e .
 
-.. note::
+Verify the Installation
+-----------------------
 
-   **For macOS users:** OpenSeesPy does not currently support macOS versions running
-   on arm64 processors, such as M1 and M2 chips. As a result, newer OpenSeesPy versions
-   are not available for macOS. To use OpenSeesPy on a Mac, it is advised to run a virtual
-   machine with Linux or Windows.
+.. code-block:: bash
+
+   python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
+
+This should print the installed version (e.g., ``1.0.0``). The version reported
+here is the same version archived on Zenodo (DOI
+`10.5281/zenodo.17524871 <https://doi.org/10.5281/zenodo.17524871>`_).

@@ -48,9 +48,12 @@ class postprocessor:
 
     calculate_ordinal_fragility(
         imls, edps, damage_thresholds,
-        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
-        Fits an ordinal (cumulative) probit model to estimate fragility
-        curves for different damage states.
+        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
+        dispersion_type='constant')
+        Fits a hierarchical (cumulative link) probit model to estimate
+        fragility curves for ordered damage states. Supports constant
+        dispersion (shared slope, fully-ordered special case) and variable
+        dispersion (per-DS probit fits with isotonic ordering on medians).
 
     process_mca_results(
         imls, edps, damage_thresholds, lower_limit, censored_limit,
@@ -386,15 +389,64 @@ class postprocessor:
                                     damage_thresholds,
                                     intensities=np.round(
                                         np.geomspace(0.05, 10.0, 50),
-                                        3)):
+                                        3),
+                                    dispersion_type='constant'):
         """
-        Fits an ordinal (cumulative) probit model to estimate fragility
-        curves for different damage states.
+        Fits a hierarchical (cumulative link) probit model to estimate
+        fragility curves for ordered damage states.
 
-        This function estimates the probability of exceeding various
-        damage states using an ordinal regression model based on observed
-        Engineering Demand Parameters (EDPs) and corresponding Intensity
-        Measure Levels (IMLs).
+        This function implements the hierarchical fragility modelling
+        framework for ordinal damage levels, in which the probability of
+        equalling or exceeding damage state :math:`i` given intensity
+        measure level IM is expressed as a lognormal CDF:
+
+        .. math::
+
+           P(\\mathrm{DS} \\geq ds_i \\mid \\mathrm{IM}) =
+           \\Phi\\!\\left(\\frac{\\ln(\\mathrm{IM}) - \\ln(\\theta_i)}{\\beta_i}\\right),
+           \\quad i = 1, \\ldots, k
+
+        where :math:`\\theta_i` is the median IM capacity for damage state
+        :math:`i` and :math:`\\beta_i` is the associated dispersion. The
+        **hierarchical** property—i.e., that curves do not cross at the
+        median—is maintained through the constraint
+        :math:`\\theta_1 \\leq \\theta_2 \\leq \\cdots \\leq \\theta_k`.
+
+        Two dispersion models are supported via ``dispersion_type``:
+
+        **Constant dispersion** (``dispersion_type='constant'``, default)
+
+            All damage states share a single slope :math:`\\beta`, i.e.
+            :math:`\\beta_i = \\beta` for all :math:`i`. This is the
+            "fully ordered" special case. The model is parameterised by
+            :math:`k` ordered intercepts :math:`\\alpha_i` and one common
+            slope:
+
+            .. math::
+
+               P(\\mathrm{DS} \\geq ds_i \\mid \\mathrm{IM}) =
+               \\Phi(\\alpha_i - \\beta\\,\\ln \\mathrm{IM}),
+               \\quad \\alpha_1 \\leq \\cdots \\leq \\alpha_k
+
+            The shared slope is enforced by fitting a single
+            ``statsmodels.OrderedModel`` (probit distribution) to all
+            damage state observations simultaneously. This prevents
+            fragility curve crossings everywhere along the IM axis.
+
+        **Variable dispersion** (``dispersion_type='variable'``)
+
+            Each damage state :math:`i` has its own dispersion
+            :math:`\\beta_i`, making the model more realistic when damage
+            states differ in their sensitivity to ground-motion intensity.
+            :math:`k` independent binary probit regressions are fitted,
+            one per damage state, yielding damage-state-specific medians
+            :math:`\\theta_i` and dispersions :math:`\\beta_i`. To restore
+            the hierarchical ordering constraint, isotonic regression
+            (Pool-Adjacent Violators Algorithm) is applied to
+            :math:`\\ln(\\theta_i)` after fitting, ensuring
+            :math:`\\theta_1 \\leq \\cdots \\leq \\theta_k`. Curves may
+            cross in the tails (beyond the median), but the ordering of
+            50th-percentile capacities is guaranteed.
 
         Parameters
         ----------
@@ -412,67 +464,158 @@ class postprocessor:
             Intensity measure levels for which fragility curves are
             evaluated (default: np.geomspace(0.05, 10.0, 50)).
 
+        dispersion_type : {'constant', 'variable'}, optional
+            Controls whether a single dispersion parameter is shared across
+            all damage states ('constant', default) or each damage state
+            receives its own dispersion estimated independently
+            ('variable').
+
         Returns
         -------
         poes : numpy.ndarray
             A 2D array of exceedance probabilities (CDF values) for each
-            intensity level. Shape: (len(intensities),
-            len(damage_thresholds) + 1), where the last column represents
-            the probability of exceeding the highest damage state.
+            intensity level.
+
+            - ``dispersion_type='constant'``: shape
+              ``(len(intensities), n_categories)`` where ``n_categories``
+              is the number of distinct damage states observed in the data
+              (typically ``len(damage_thresholds) + 1`` when the no-damage
+              state DS=0 is present).
+            - ``dispersion_type='variable'``: shape
+              ``(len(intensities), len(damage_thresholds))``.
 
         References
-        -----
-        1) Lallemant, D., Kiremidjian, A., and Burton, H. (2015),
-        Statistical procedures for developing earthquake damage fragility
-        curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.
-        doi: 10.1002/eqe.2522.
+        ----------
+        1) Jalayer, F., Ebrahimian, H., Trevlopoulos, K., and Bradley, B.
+        (2023). Empirical tsunami fragility modelling for hierarchical
+        damage levels. Natural Hazards and Earth System Sciences, 23(2),
+        909-931. https://doi.org/10.5194/nhess-23-909-2023
 
-        2) Nguyen, M. and Lallemant, D. (2022), Order Matters: The
+        2) Nguyen, M. and Lallemant, D. (2022). Order Matters: The
         Benefits of Ordinal Fragility Curves for Damage and Loss
         Estimation. Risk Analysis, 42: 1136-1148.
         https://doi.org/10.1111/risa.13815
 
+        3) Lallemant, D., Kiremidjian, A., and Burton, H. (2015).
+        Statistical procedures for developing earthquake damage fragility
+        curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.
+        doi: 10.1002/eqe.2522.
+
         """
 
-        # Create probabilities of exceedance array
-        # +1 to include the highest damage state
-        poes = np.zeros((len(intensities), len(damage_thresholds) + 1))
+        if dispersion_type.lower() == 'constant':
 
-        # Initialize damage state assignments
-        damage_states = np.zeros(len(edps), dtype=int)
+            # Initialize damage state assignments
+            damage_states = np.zeros(len(edps), dtype=int)
 
-        # Loop over each EDP and determine the highest exceeded damage state
-        for i, edp in enumerate(edps):
-            # Indices where EDP exceeds thresholds
-            exceeded = np.where(edp > np.asarray(damage_thresholds))[0]
-            # Assign highest exceeded state (0-based)
-            damage_states[i] = exceeded[-1] + 1 if exceeded.size > 0 else 0
+            # Loop over each EDP and determine the highest exceeded damage
+            # state
+            for i, edp in enumerate(edps):
+                # Indices where EDP exceeds thresholds
+                exceeded = np.where(edp > np.asarray(damage_thresholds))[0]
+                # Assign highest exceeded state (0-based)
+                damage_states[i] = (
+                    exceeded[-1] + 1 if exceeded.size > 0 else 0)
 
-        # Assemble DataFrame containing log(IM) and damage state assignment
-        df = pd.DataFrame({'IM': np.log(imls), 'Damage State': damage_states})
+            # Assemble DataFrame containing log(IM) and damage state
+            # assignment
+            df = pd.DataFrame(
+                {'IM': np.log(imls), 'Damage State': damage_states})
 
-        # Fit the Cumulative Probit Model
-        X_ordinal = df[['IM']]
-        y_ordinal = df['Damage State']
+            # Fit the Cumulative Probit Model
+            X_ordinal = df[['IM']]
+            y_ordinal = df['Damage State']
 
-        # Create and fit the OrderedModel
-        ordinal_model = OrderedModel(y_ordinal, X_ordinal, distr='probit')
-        ordinal_results = ordinal_model.fit(
-            method='bfgs', disp=False)  # Silent optimization
+            # Create and fit the OrderedModel
+            ordinal_model = OrderedModel(y_ordinal, X_ordinal, distr='probit')
+            ordinal_results = ordinal_model.fit(
+                method='bfgs', disp=False)  # Silent optimization
 
-        # Generate log-transformed IM values for prediction
-        log_IM_range = np.log(intensities)
-        X_range_ordinal = pd.DataFrame({'IM': log_IM_range})
+            # Generate log-transformed IM values for prediction
+            log_IM_range = np.log(intensities)
+            X_range_ordinal = pd.DataFrame({'IM': log_IM_range})
 
-        # Predict probabilities for each damage state (PMF)
-        # Shape: (len(intensities), num_damage_states)
-        pmf_values = ordinal_results.predict(X_range_ordinal)
+            # Predict probabilities for each damage state (PMF)
+            # Shape: (len(intensities), num_damage_states)
+            pmf_values = ordinal_results.predict(X_range_ordinal)
 
-        # Convert PMF to CDF (exceedance probabilities) by cumulative sum
-        # Cumulative sum along damage state axis
-        poes = 1 - np.cumsum(pmf_values, axis=1)
+            # Convert PMF to CDF (exceedance probabilities) by cumulative sum
+            # Cumulative sum along damage state axis
+            poes = 1 - np.cumsum(pmf_values, axis=1)
 
-        return poes.values
+            return poes.values
+
+        elif dispersion_type.lower() == 'variable':
+
+            poes = np.zeros((len(intensities), len(damage_thresholds)))
+            log_thetas = []
+            betas = []
+
+            # Fit one independent binary probit model per damage state
+            for ds, threshold in enumerate(damage_thresholds):
+                exceedances = (
+                    np.asarray(edps) > threshold).astype(int)
+                df_tmp = pd.DataFrame(
+                    {'IM': np.log(imls), 'Damage': exceedances})
+                X = sm.add_constant(df_tmp['IM'])
+                probit_model = sm.GLM(
+                    df_tmp['Damage'], X,
+                    family=sm.families.Binomial(
+                        link=sm.families.links.Probit()))
+                res = probit_model.fit(disp=False)
+                b0, b1 = res.params   # intercept, slope
+                # P = Φ(b0 + b1·ln(IM))  →  θ = exp(-b0/b1), β = 1/b1
+                log_thetas.append(-b0 / b1)
+                betas.append(1.0 / b1)
+
+            # Enforce non-decreasing medians (hierarchical ordering
+            # constraint) via the pool-adjacent violators algorithm
+            log_thetas = self._isotonic_regression(log_thetas)
+
+            log_IM = np.log(intensities)
+            for ds, (lnth, beta) in enumerate(zip(log_thetas, betas)):
+                poes[:, ds] = norm.cdf((log_IM - lnth) / beta)
+
+            return poes
+
+    @staticmethod
+    def _isotonic_regression(y):
+        """
+        Non-decreasing isotonic regression via the pool-adjacent violators
+        algorithm (PAVA).
+
+        Parameters
+        ----------
+        y : array-like
+            Input sequence to be made non-decreasing.
+
+        Returns
+        -------
+        result : numpy.ndarray
+            Isotonic (non-decreasing) version of y.
+        """
+        y = np.asarray(y, dtype=float)
+        n = len(y)
+        vals = list(y)
+        wts = [1] * n
+        i = 0
+        while i < len(vals) - 1:
+            if vals[i] > vals[i + 1]:
+                w = wts[i] + wts[i + 1]
+                vals[i] = (vals[i] * wts[i] + vals[i + 1] * wts[i + 1]) / w
+                wts[i] = w
+                del vals[i + 1]
+                del wts[i + 1]
+                if i > 0:
+                    i -= 1
+            else:
+                i += 1
+        result = np.empty(n)
+        idx = 0
+        for v, w in zip(vals, wts):
+            result[idx:idx + w] = v
+            idx += w
+        return result
 
     def process_mca_results(self,
                             imls,
@@ -488,6 +631,7 @@ class postprocessor:
                             fragility_rotation=False,
                             rotation_percentile=0.10,
                             fragility_method='lognormal',
+                            dispersion_type='constant',
                             cloud_method='bootstrap',
                             n_mcmc=5000,
                             n_mcmc_burnin=1000,
@@ -563,21 +707,26 @@ class postprocessor:
             The target percentile for fragility function rotation.
             Default is 0.10.
 
-        fragility_method : {'lognormal', 'ordinal', 'probit', 'logit'},
-            optional. The methodology used to fit the fragility
-            functions. Default is 'lognormal'.
+        fragility_method : {'lognormal', 'ordinal', 'probit', 'logit'}, optional
+            The methodology used to fit the fragility functions.
+            Default is ``'lognormal'``.
+
+        dispersion_type : {'constant', 'variable'}, optional
+            Dispersion model for the ordinal CLM
+            (``fragility_method='ordinal'`` only). ``'constant'`` (default)
+            enforces a shared slope across all damage states (fully-ordered
+            special case). ``'variable'`` fits independent binary probit
+            models per damage state and applies isotonic regression to
+            enforce the hierarchical ordering of medians.
 
         cloud_method : {'bootstrap', 'classical'}, optional
-            When ``fragility_method='lognormal'``, selects the
-            uncertainty quantification approach.
-
-            - ``'bootstrap'``: non-parametric bootstrapping (default).
-            - ``'classical'``: Bayesian MCMC (Metropolis-Hastings) on
-              the full 5-parameter model chi = [ln a, b, beta,
-              alpha0, alpha1] following Jalayer et al. (2017). The
-              Robust Fragility is computed as the posterior expected
-              value of the fragility model (Eq. 10), and confidence
-              bands are derived from the posterior variance (Eq. 11).
+            When ``fragility_method='lognormal'``, selects the uncertainty
+            quantification approach. ``'bootstrap'`` uses non-parametric
+            bootstrapping (default). ``'classical'`` uses Bayesian MCMC
+            (Metropolis-Hastings) on the full 5-parameter model
+            chi = [ln a, b, beta, alpha0, alpha1] following Jalayer et al.
+            (2017), computing the Robust Fragility as the posterior expected
+            value and deriving confidence bands from the posterior variance.
 
         n_mcmc : int, optional
             Total number of MCMC samples (including burn-in) used
@@ -591,31 +740,22 @@ class postprocessor:
             Half-width of the robust confidence band in units of the
             posterior standard deviation. Default is 2.
 
+
         Returns
         -------
         cloud_dict : dict
-            A nested dictionary. Keys present for all fragility methods:
+            Nested result dictionary. Always contains keys
             ``'cloud inputs'``, ``'fragility'``, ``'regression'``.
-            Additional keys for ``fragility_method='lognormal'``:
-            ``'raw_data'``; and either ``'bootstraps'``
-            (``cloud_method='bootstrap'``) or ``'mcmc'``
-            (``cloud_method='classical'``).
-
-            ``'fragility'`` always contains: ``fragility_method``,
-            ``cloud_method``, ``intensities``, ``poes``, ``medians``,
-            ``sigma_record2record``, ``sigma_build2build``, ``sigma_ds``,
-            ``betas_total``. When ``cloud_method='classical'``, also
-            includes ``poes_robust_plus``, ``poes_robust_minus``, and
-            ``confidence_k``.
+            When ``fragility_method='lognormal'``, also contains
+            ``'raw_data'`` plus either ``'bootstraps'`` or ``'mcmc'``
+            depending on ``cloud_method``.
 
         Notes
         -----
-        The 'lognormal' method implements a dual-regression approach:
-        1.  **Linear Regression**: Performed in log-log space on
-            non-collapse data (log(EDP) = log(a) + b * log(IM)).
-        2.  **Logistic Regression**: Used to predict P(C|IM).
-        3.  **Total Fragility**: P(DS|IM) = P(DS|NC,IM)*P(NC|IM) +
-            P(C|IM).
+        The 'lognormal' method uses a dual-regression approach:
+        linear regression in log-log space on non-collapse data,
+        logistic regression to model P(C|IM), and combines them as
+        P(DS|IM) = P(DS|NC,IM)*P(NC|IM) + P(C|IM).
 
         The ``'classical'`` cloud method follows the 5-parameter
         fragility model from Jalayer et al. (2017), Eq. 7:
@@ -780,7 +920,8 @@ class postprocessor:
 
             # Compute exceedance probabilities via ordinal fragility
             poes = self.calculate_ordinal_fragility(
-                imls, edps, damage_thresholds)
+                imls, edps, damage_thresholds,
+                dispersion_type=dispersion_type)
 
             # Compute lognormal equivalent fragility parameters
             # Equivalent median intensities
@@ -1851,12 +1992,13 @@ class postprocessor:
                 # Fill the remaining EDP range with the collapse IM
                 im_at_edp_matrix[i, last_valid_idx+1:] = last_valid_im
 
-        # Calculate percentiles
-        # Now that collapse region is filled, no All-NaN slices
-        # unless a record never started at all.
-        median_ida_im = np.nanmedian(im_at_edp_matrix, axis=0)
-        p16_ida_im = np.nanpercentile(im_at_edp_matrix, 16, axis=0)
-        p84_ida_im = np.nanpercentile(im_at_edp_matrix, 84, axis=0)
+        # Calculate percentiles — suppress the all-NaN slice warning that
+        # arises for EDP levels not reached by any record (result is NaN,
+        # which is the correct behaviour).
+        with np.errstate(all='ignore'):
+            median_ida_im = np.nanmedian(im_at_edp_matrix, axis=0)
+            p16_ida_im = np.nanpercentile(im_at_edp_matrix, 16, axis=0)
+            p84_ida_im = np.nanpercentile(im_at_edp_matrix, 84, axis=0)
 
         # Fragility Fitting (MLE for Censored Data)
         im_max = np.nanmax(im_matrix)

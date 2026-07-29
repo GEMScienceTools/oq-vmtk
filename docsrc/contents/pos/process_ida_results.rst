@@ -55,4 +55,19 @@ Incremental Dynamic Analysis Postprocessing
       P(\text{DS} \geq ds_i \mid \text{IM}) =
       \Phi\!\left(\frac{\ln(\text{IM}/\theta_i)}{\beta_{\text{total}}}\right)
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      # stripe_imls, stripe_edps: 2-D arrays (n_records × n_stripes) from IDA
+      ida_dict = pp.process_ida_results(
+          stripe_imls=stripe_imls,
+          stripe_edps=stripe_edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          imt_key="Sa(T1)",
+      )
+      print(ida_dict['fragility']['medians'])

@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>openquake.vmtk.postprocessor &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
 
@@ -14,8 +14,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -52,7 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -80,18 +81,18 @@
            <div itemprop="articleBody">
              
   <h1>Source code for openquake.vmtk.postprocessor</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span><span class="p">,</span> <span class="n">optimize</span>
-<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span><span class="p">,</span> <span class="n">lognorm</span>
-<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
-<span class="kn">from</span> <span class="nn">statsmodels.miscmodels.ordinal_model</span> <span class="kn">import</span> <span class="n">OrderedModel</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span><span class="p">,</span> <span class="n">optimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">curve_fit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span><span class="p">,</span> <span class="n">lognorm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">interp1d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.miscmodels.ordinal_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedModel</span>
 
 
-<span class="k">class</span> <span class="nc">postprocessor</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">postprocessor</span><span class="p">:</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for post-processing results of nonlinear time-history analysis,</span>
@@ -175,13 +176,13 @@
 
 <div class="viewcode-block" id="postprocessor.__init__">
 <a class="viewcode-back" href="../../../contents/pos/init.html#openquake.vmtk.postprocessor.postprocessor.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="postprocessor.calculate_lognormal_fragility">
 <a class="viewcode-back" href="../../../contents/pos/calculate_lognormal_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_lognormal_fragility">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_lognormal_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_lognormal_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                       <span class="n">theta</span><span class="p">,</span>
                                       <span class="n">sigma_record2record</span><span class="p">,</span>
                                       <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.30</span><span class="p">,</span>
@@ -257,7 +258,7 @@
 
 <div class="viewcode-block" id="postprocessor.calculate_rotated_fragility">
 <a class="viewcode-back" href="../../../contents/pos/calculate_rotated_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_rotated_fragility">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_rotated_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_rotated_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                     <span class="n">percentile</span><span class="p">,</span>
                                     <span class="n">theta</span><span class="p">,</span>
                                     <span class="n">sigma_record2record</span><span class="p">,</span>
@@ -353,7 +354,7 @@
 
 <div class="viewcode-block" id="postprocessor.calculate_glm_fragility">
 <a class="viewcode-back" href="../../../contents/pos/calculate_glm_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_glm_fragility">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_glm_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_glm_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                 <span class="n">imls</span><span class="p">,</span>
                                 <span class="n">edps</span><span class="p">,</span>
                                 <span class="n">damage_thresholds</span><span class="p">,</span>
@@ -476,7 +477,7 @@
 
 <div class="viewcode-block" id="postprocessor.calculate_ordinal_fragility">
 <a class="viewcode-back" href="../../../contents/pos/calculate_ordinal_fragility.html#openquake.vmtk.postprocessor.postprocessor.calculate_ordinal_fragility">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_ordinal_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_ordinal_fragility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                     <span class="n">imls</span><span class="p">,</span>
                                     <span class="n">edps</span><span class="p">,</span>
                                     <span class="n">damage_thresholds</span><span class="p">,</span>
@@ -540,7 +541,7 @@
         <span class="c1"># Loop over each EDP and determine the highest exceeded damage state</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">edp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edps</span><span class="p">):</span>
             <span class="c1"># Indices where EDP exceeds thresholds</span>
-            <span class="n">exceeded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">edp</span> <span class="o">&gt;</span> <span class="n">damage_thresholds</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">exceeded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">edp</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
             <span class="c1"># Assign highest exceeded state (0-based)</span>
             <span class="n">damage_states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">exceeded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">exceeded</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
 
@@ -573,27 +574,42 @@
 
 <div class="viewcode-block" id="postprocessor.process_mca_results">
 <a class="viewcode-back" href="../../../contents/pos/process_mca_results.html#openquake.vmtk.postprocessor.postprocessor.process_mca_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">process_mca_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                   <span class="n">imls</span><span class="p">,</span>
-                                   <span class="n">edps</span><span class="p">,</span>
-                                   <span class="n">damage_thresholds</span><span class="p">,</span>
-                                   <span class="n">lower_limit</span><span class="p">,</span>
-                                   <span class="n">censored_limit</span><span class="p">,</span>
-                                   <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                                   <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                                   <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
-                                   <span class="n">n_bootstrap</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
-                                   <span class="n">random_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                   <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                   <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
-                                   <span class="n">fragility_method</span><span class="o">=</span><span class="s1">&#39;lognormal&#39;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_mca_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">imls</span><span class="p">,</span>
+                            <span class="n">edps</span><span class="p">,</span>
+                            <span class="n">damage_thresholds</span><span class="p">,</span>
+                            <span class="n">lower_limit</span><span class="p">,</span>
+                            <span class="n">censored_limit</span><span class="p">,</span>
+                            <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                            <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                            <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+                            <span class="n">n_bootstrap</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                            <span class="n">random_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+                            <span class="n">fragility_method</span><span class="o">=</span><span class="s1">&#39;lognormal&#39;</span><span class="p">,</span>
+                            <span class="n">cloud_method</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span>
+                            <span class="n">n_mcmc</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+                            <span class="n">n_mcmc_burnin</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                            <span class="n">confidence_k</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform a Modified Cloud Analysis (MCA) to derive seismic</span>
 <span class="sd">        fragility functions. This method extends classical cloud analysis</span>
 <span class="sd">        by incorporating logistic regression to account for structural</span>
-<span class="sd">        collapse cases and using bootstrapping to ensure statistical</span>
-<span class="sd">        stability. It supports lognormal, ordinal, and GLM-based</span>
+<span class="sd">        collapse cases. It supports lognormal, ordinal, and GLM-based</span>
 <span class="sd">        fragility fitting.</span>
+
+<span class="sd">        When ``fragility_method=&#39;lognormal&#39;``, two ``cloud_method``</span>
+<span class="sd">        options are available:</span>
+
+<span class="sd">        - ``&#39;bootstrap&#39;`` (default): uses non-parametric bootstrapping</span>
+<span class="sd">          to estimate the mean fragility and parameter uncertainty.</span>
+<span class="sd">        - ``&#39;classical&#39;``: implements the Bayesian Robust Fragility</span>
+<span class="sd">          procedure of Jalayer et al. (2017), sampling the 5-parameter</span>
+<span class="sd">          vector chi = [ln a, b, beta, alpha0, alpha1] from its</span>
+<span class="sd">          posterior distribution via MCMC (Metropolis-Hastings), and</span>
+<span class="sd">          computing the Robust Fragility as the posterior expected value</span>
+<span class="sd">          of the fragility model together with confidence bands.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -631,43 +647,99 @@
 
 <span class="sd">        n_bootstrap : int, optional</span>
 <span class="sd">            Number of bootstrap samples to draw for statistical</span>
-<span class="sd">            stability. Default is 200.</span>
+<span class="sd">            stability (used only when ``cloud_method=&#39;bootstrap&#39;``).</span>
+<span class="sd">            Default is 200.</span>
 
 <span class="sd">        random_seed : int, optional</span>
-<span class="sd">            Seed for reproducibility of the bootstrap sampling.</span>
+<span class="sd">            Seed for reproducibility of the bootstrap sampling or MCMC.</span>
 <span class="sd">            Default is None.</span>
 
-<span class="sd">        fragility_rotation : float, optional</span>
-<span class="sd">            Parameter for rotating fragility functions around a specific</span>
-<span class="sd">            percentile to adjust for target reliability. Default is 0.1.</span>
+<span class="sd">        fragility_rotation : bool, optional</span>
+<span class="sd">            Whether to rotate the fragility curve around a specific</span>
+<span class="sd">            percentile to adjust for target reliability. Default is</span>
+<span class="sd">            False.</span>
 
-<span class="sd">        fragility_method : {&#39;lognormal&#39;, &#39;ordinal&#39;, &#39;probit&#39;, &#39;logit&#39;},</span>
-<span class="sd">            optional. The methodology used to fit the fragility functions.</span>
-<span class="sd">            Default is &#39;lognormal&#39;.</span>
+<span class="sd">        rotation_percentile : float, optional</span>
+<span class="sd">            The target percentile for fragility function rotation.</span>
+<span class="sd">            Default is 0.10.</span>
+
+<span class="sd">        fragility_method : {&#39;lognormal&#39;, &#39;ordinal&#39;, &#39;probit&#39;, &#39;logit&#39;}, optional</span>
+<span class="sd">            The methodology used to fit the fragility functions.</span>
+<span class="sd">            Default is ``&#39;lognormal&#39;``.</span>
+
+<span class="sd">        cloud_method : {&#39;bootstrap&#39;, &#39;classical&#39;}, optional</span>
+<span class="sd">            When ``fragility_method=&#39;lognormal&#39;``, selects the uncertainty</span>
+<span class="sd">            quantification approach. ``&#39;bootstrap&#39;`` uses non-parametric</span>
+<span class="sd">            bootstrapping (default). ``&#39;classical&#39;`` uses Bayesian MCMC</span>
+<span class="sd">            (Metropolis-Hastings) on the full 5-parameter model</span>
+<span class="sd">            chi = [ln a, b, beta, alpha0, alpha1] following Jalayer et al.</span>
+<span class="sd">            (2017), computing the Robust Fragility as the posterior expected</span>
+<span class="sd">            value and deriving confidence bands from the posterior variance.</span>
+
+<span class="sd">        n_mcmc : int, optional</span>
+<span class="sd">            Total number of MCMC samples (including burn-in) used</span>
+<span class="sd">            when ``cloud_method=&#39;classical&#39;``. Default is 5000.</span>
+
+<span class="sd">        n_mcmc_burnin : int, optional</span>
+<span class="sd">            Number of initial MCMC samples discarded as burn-in.</span>
+<span class="sd">            Default is 1000.</span>
+
+<span class="sd">        confidence_k : float, optional</span>
+<span class="sd">            Half-width of the robust confidence band in units of the</span>
+<span class="sd">            posterior standard deviation. Default is 2.</span>
+
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        cloud_dict : dict</span>
-<span class="sd">            A nested dictionary with keys: ``&#39;cloud inputs&#39;`` (imls, edps,</span>
-<span class="sd">            lower_limit, upper_limit, damage_thresholds); ``&#39;fragility&#39;``</span>
-<span class="sd">            (fragility_method, intensities, poes, medians,</span>
-<span class="sd">            sigma_record2record, sigma_build2build, sigma_ds, betas_total);</span>
-<span class="sd">            ``&#39;regression&#39;`` (b1, b0, sigma, fitted_x, fitted_y — lognormal</span>
-<span class="sd">            only); ``&#39;bootstraps&#39;`` (b1, a, sigma_rr, alpha0, alpha1,</span>
-<span class="sd">            poes_all of shape n_bootstrap x n_IM x n_DS+1 — lognormal only);</span>
-<span class="sd">            ``&#39;raw_data&#39;`` (im_nc, edp_nc, im_c — lognormal only).</span>
+<span class="sd">            Nested result dictionary. Always contains keys</span>
+<span class="sd">            ``&#39;cloud inputs&#39;``, ``&#39;fragility&#39;``, ``&#39;regression&#39;``.</span>
+<span class="sd">            When ``fragility_method=&#39;lognormal&#39;``, also contains</span>
+<span class="sd">            ``&#39;raw_data&#39;`` plus either ``&#39;bootstraps&#39;`` or ``&#39;mcmc&#39;``</span>
+<span class="sd">            depending on ``cloud_method``.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        The &#39;lognormal&#39; method implements a dual-regression approach:</span>
-<span class="sd">        1.  **Linear Regression**: Performed in log-log space on</span>
-<span class="sd">            non-collapse data (log(EDP) = log(a) + b * log(IM)).</span>
-<span class="sd">        2.  **Logistic Regression**: Used to predict P(C|IM).</span>
-<span class="sd">        3.  **Total Fragility**: P(DS|IM) = P(DS|NC,IM)*P(NC|IM) +</span>
-<span class="sd">            P(C|IM).</span>
+<span class="sd">        The &#39;lognormal&#39; method uses a dual-regression approach:</span>
+<span class="sd">        linear regression in log-log space on non-collapse data,</span>
+<span class="sd">        logistic regression to model P(C|IM), and combines them as</span>
+<span class="sd">        P(DS|IM) = P(DS|NC,IM)*P(NC|IM) + P(C|IM).</span>
+
+<span class="sd">        The ``&#39;classical&#39;`` cloud method follows the 5-parameter</span>
+<span class="sd">        fragility model from Jalayer et al. (2017), Eq. 7:</span>
+
+<span class="sd">            P(DCR&gt;1|Sa,chi) = Phi(ln(eta)/beta) * P(NC|Sa) + P(C|Sa)</span>
+
+<span class="sd">        where chi = [ln a, b, beta, alpha0, alpha1]. The posterior</span>
+<span class="sd">        joint distribution f(chi|D) is sampled via MCMC using the</span>
+<span class="sd">        likelihood from Eq. A1.2 (Jalayer et al. 2017). The Robust</span>
+<span class="sd">        Fragility (Eq. 10) is the posterior mean of the fragility</span>
+<span class="sd">        model over the sampled chi vectors, and the confidence bands</span>
+<span class="sd">        (Eq. 11) are derived from the posterior variance.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        1) Jalayer, F., Ebrahimian, H., Miano, A., Manfredi, G., and</span>
+<span class="sd">           Sezen, H. (2017). Analytical fragility assessment using</span>
+<span class="sd">           unscaled ground motion records. Earthquake Engng Struct.</span>
+<span class="sd">           Dyn., 46, 2639-2663. https://doi.org/10.1002/eqe.2922</span>
+
+<span class="sd">        2) Jalayer, F., Elefante, L., De Risi, R., and Manfredi, G.</span>
+<span class="sd">           (2014). Cloud Analysis revisited: Efficient fragility</span>
+<span class="sd">           calculation and uncertainty propagation using simple linear</span>
+<span class="sd">           regression. Proceedings of the 10th NCEE, Anchorage, AK.</span>
+
+<span class="sd">        3) Jalayer, F., De Risi, R., and Manfredi, G. (2015). Bayesian</span>
+<span class="sd">           Cloud Analysis: efficient structural fragility assessment</span>
+<span class="sd">           using linear regression. Bulletin of Earthquake Engineering,</span>
+<span class="sd">           13(4), 1183-1203.</span>
+
+<span class="sd">        4) Miano, A., Jalayer, F., and Prota, A. (2019). Considering</span>
+<span class="sd">           structural modelling uncertainties using Bayesian cloud</span>
+<span class="sd">           analysis. COMPDYN 2019.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">cond_fragility</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">cond_fragility</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Helper function that fits the conditioned fragility</span>
 <span class="sd">            functions (i.e., considering collapse and non-collapse</span>
@@ -675,7 +747,7 @@
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="n">b</span>
 
-        <span class="k">def</span> <span class="nf">prepare_mca_data</span><span class="p">(</span><span class="n">imls</span><span class="p">,</span> <span class="n">edps</span><span class="p">,</span> <span class="n">collapse_limit</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">prepare_mca_data</span><span class="p">(</span><span class="n">imls</span><span class="p">,</span> <span class="n">edps</span><span class="p">,</span> <span class="n">collapse_limit</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Helper function that standardizes the cloud input parameters</span>
 <span class="sd">            and splits IMs and EDPs into collapse and non-collapse cases.</span>
@@ -866,201 +938,560 @@
             <span class="c1"># Ensure inputs are in the right format</span>
             <span class="n">imls</span><span class="p">,</span> <span class="n">edps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">imls</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">edps</span><span class="p">)</span>
 
-            <span class="c1"># Storage for exceedance probabilities and regression parameters</span>
+            <span class="c1"># Common dimensions (shared by both cloud methods)</span>
             <span class="n">n_ds</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">)</span>
             <span class="n">n_im</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
-            <span class="c1"># +1 to store the &quot;collapse&quot; fragility in the last index</span>
-            <span class="n">poes_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_bootstrap</span><span class="p">,</span> <span class="n">n_im</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-            <span class="n">a_s</span><span class="p">,</span> <span class="n">b_s</span><span class="p">,</span> <span class="n">sig_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                <span class="n">n_bootstrap</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">)</span>
-            <span class="n">al0_s</span><span class="p">,</span> <span class="n">al1_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">)</span>
 
-            <span class="c1"># Bootstrapping loop</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
+            <span class="c1"># =============================================================</span>
+            <span class="c1"># BOOTSTRAP APPROACH</span>
+            <span class="c1"># =============================================================</span>
+            <span class="k">if</span> <span class="n">cloud_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bootstrap&#39;</span><span class="p">:</span>
 
-                <span class="c1"># Prepare bootstrap samples</span>
-                <span class="n">im_nc_b</span><span class="p">,</span> <span class="n">edp_nc_b</span><span class="p">,</span> <span class="n">im_c_b</span> <span class="o">=</span> <span class="n">prepare_mca_data</span><span class="p">(</span><span class="n">imls</span><span class="p">,</span>
-                                                             <span class="n">edps</span><span class="p">,</span>
-                                                             <span class="n">censored_limit</span><span class="p">,</span>
-                                                             <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># --- Full-dataset OLS (regression dict) — raw data, no</span>
+                <span class="c1">#     bootstrap resampling or collapse-stabilisation ---</span>
+                <span class="n">_is_coll_f</span> <span class="o">=</span> <span class="n">edps</span> <span class="o">&gt;</span> <span class="n">censored_limit</span>
+                <span class="n">_im_nc_f</span> <span class="o">=</span> <span class="n">imls</span><span class="p">[</span><span class="o">~</span><span class="n">_is_coll_f</span><span class="p">]</span>
+                <span class="n">_edp_nc_f</span> <span class="o">=</span> <span class="n">edps</span><span class="p">[</span><span class="o">~</span><span class="n">_is_coll_f</span><span class="p">]</span>
+                <span class="n">_mask_f</span> <span class="o">=</span> <span class="n">_edp_nc_f</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span>
+                <span class="n">_ln_im_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">_im_nc_f</span><span class="p">[</span><span class="n">_mask_f</span><span class="p">])</span>
+                <span class="n">_ln_edp_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">_edp_nc_f</span><span class="p">[</span><span class="n">_mask_f</span><span class="p">])</span>
+                <span class="n">b_full</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">_ln_im_f</span> <span class="o">-</span> <span class="n">_ln_im_f</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                           <span class="o">*</span> <span class="p">(</span><span class="n">_ln_edp_f</span> <span class="o">-</span> <span class="n">_ln_edp_f</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">_ln_im_f</span> <span class="o">-</span> <span class="n">_ln_im_f</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">a_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">_ln_edp_f</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">b_full</span> <span class="o">*</span> <span class="n">_ln_im_f</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                <span class="n">_res_full</span> <span class="o">=</span> <span class="n">_ln_edp_f</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a_full</span> <span class="o">*</span> <span class="n">_im_nc_f</span><span class="p">[</span><span class="n">_mask_f</span><span class="p">]</span> <span class="o">**</span> <span class="n">b_full</span><span class="p">)</span>
+                <span class="n">sig_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">_res_full</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_res_full</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
 
-                <span class="c1"># Cloud regression on non-collapse cases above lower_limit</span>
-                <span class="n">mask_lower</span> <span class="o">=</span> <span class="n">edp_nc_b</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span>
-                <span class="n">ln_im</span><span class="p">,</span> <span class="n">ln_edp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im_nc_b</span><span class="p">[</span><span class="n">mask_lower</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
-                    <span class="n">edp_nc_b</span><span class="p">[</span><span class="n">mask_lower</span><span class="p">])</span>  <span class="c1"># log-log transform</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-                        <span class="p">(</span><span class="n">ln_im</span> <span class="o">-</span> <span class="n">ln_im</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-                        <span class="o">*</span> <span class="p">(</span><span class="n">ln_edp</span> <span class="o">-</span> <span class="n">ln_edp</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
-                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">ln_im</span> <span class="o">-</span> <span class="n">ln_im</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-                <span class="p">)</span>  <span class="c1"># b-parameter</span>
-                <span class="c1"># Calculate the a-parameter</span>
-                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ln_edp</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">ln_im</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-                <span class="c1"># Apply the regression to get the mean</span>
-                <span class="n">res</span> <span class="o">=</span> <span class="n">ln_edp</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">im_nc_b</span><span class="p">[</span><span class="n">mask_lower</span><span class="p">]</span><span class="o">**</span><span class="n">b</span><span class="p">)</span>
-                <span class="c1"># Get the standard error</span>
-                <span class="n">sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+                <span class="c1"># Storage for exceedance probabilities and regression params</span>
+                <span class="n">poes_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_bootstrap</span><span class="p">,</span> <span class="n">n_im</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">a_s</span><span class="p">,</span> <span class="n">b_s</span><span class="p">,</span> <span class="n">sig_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="n">n_bootstrap</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">)</span>
+                <span class="n">al0_s</span><span class="p">,</span> <span class="n">al1_s</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">),</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">))</span>
 
-                <span class="c1"># Store cloud analysis coefficients for this bootstrap</span>
-                <span class="n">a_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sig_s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">sig</span>
+                <span class="c1"># Bootstrapping loop</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
 
-                <span class="c1"># Do logistic regression to account for the collapse cases</span>
-                <span class="n">y_logit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
-                    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">im_nc_b</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">im_c_b</span><span class="p">))])</span>
-                <span class="n">x_logit</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">im_nc_b</span><span class="p">,</span> <span class="n">im_c_b</span><span class="p">])))</span>
-                <span class="n">logit_mod</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span>
-                    <span class="n">y_logit</span><span class="p">,</span> <span class="n">x_logit</span><span class="p">,</span>
-                    <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">())</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">disp</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="c1"># Prepare bootstrap samples</span>
+                    <span class="n">im_nc_b</span><span class="p">,</span> <span class="n">edp_nc_b</span><span class="p">,</span> <span class="n">im_c_b</span> <span class="o">=</span> <span class="n">prepare_mca_data</span><span class="p">(</span>
+                        <span class="n">imls</span><span class="p">,</span> <span class="n">edps</span><span class="p">,</span> <span class="n">censored_limit</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-                <span class="c1"># Store logistic regression coefficients for this bootstrap</span>
-                <span class="n">al0_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">al1_s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">logit_mod</span><span class="o">.</span><span class="n">params</span>
+                    <span class="c1"># Cloud regression on non-collapse cases</span>
+                    <span class="c1"># above lower_limit</span>
+                    <span class="n">mask_lower</span> <span class="o">=</span> <span class="n">edp_nc_b</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span>
+                    <span class="n">ln_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im_nc_b</span><span class="p">[</span><span class="n">mask_lower</span><span class="p">])</span>
+                    <span class="n">ln_edp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">edp_nc_b</span><span class="p">[</span><span class="n">mask_lower</span><span class="p">])</span>
+                    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                            <span class="p">(</span><span class="n">ln_im</span> <span class="o">-</span> <span class="n">ln_im</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                            <span class="o">*</span> <span class="p">(</span><span class="n">ln_edp</span> <span class="o">-</span> <span class="n">ln_edp</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+                        <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">ln_im</span> <span class="o">-</span> <span class="n">ln_im</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="p">)</span>  <span class="c1"># b-parameter</span>
+                    <span class="c1"># Calculate the a-parameter</span>
+                    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ln_edp</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ln_im</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                    <span class="c1"># Apply the regression to get the mean</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">ln_edp</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                        <span class="n">a</span> <span class="o">*</span> <span class="n">im_nc_b</span><span class="p">[</span><span class="n">mask_lower</span><span class="p">]</span><span class="o">**</span><span class="n">b</span><span class="p">)</span>
+                    <span class="c1"># Get the standard error</span>
+                    <span class="n">sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
 
-                <span class="c1"># Calculate the probabilities of exceedance</span>
-                <span class="n">p_collapse</span> <span class="o">=</span> <span class="n">logit_mod</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">)))</span>  <span class="c1"># The probability of collapse</span>
-                <span class="c1"># The cloud regression</span>
-                <span class="n">mu_ln</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">intensities</span><span class="o">**</span><span class="n">b</span><span class="p">)</span>
-                <span class="c1"># Total uncertainty (b2b + DS threshold inflated)</span>
-                <span class="n">sig_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sig</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sigma_build2build</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">sigma_ds</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="c1"># Store cloud analysis coefficients</span>
+                    <span class="n">a_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sig_s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">sig</span>
 
-                <span class="c1"># Loop over damage states</span>
-                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">):</span>
-                    <span class="c1"># Calculate the non-collapse fragility functions</span>
-                    <span class="n">poe_nc</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> \
-                        <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
+                    <span class="c1"># Logistic regression for collapse cases</span>
+                    <span class="n">y_logit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">im_nc_b</span><span class="p">)),</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">im_c_b</span><span class="p">))])</span>
+                    <span class="n">x_logit</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                            <span class="p">[</span><span class="n">im_nc_b</span><span class="p">,</span> <span class="n">im_c_b</span><span class="p">])))</span>
+                    <span class="n">logit_mod</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span>
+                        <span class="n">y_logit</span><span class="p">,</span> <span class="n">x_logit</span><span class="p">,</span>
+                        <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">())</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">disp</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                    <span class="c1"># Store logistic regression coefficients</span>
+                    <span class="n">al0_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">al1_s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">logit_mod</span><span class="o">.</span><span class="n">params</span>
+
+                    <span class="c1"># Calculate the probabilities of exceedance</span>
+                    <span class="n">p_collapse</span> <span class="o">=</span> <span class="n">logit_mod</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                        <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">)))</span>
+                    <span class="n">mu_ln</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">intensities</span><span class="o">**</span><span class="n">b</span><span class="p">)</span>
+                    <span class="n">sig_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                        <span class="n">sig</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sigma_build2build</span><span class="o">**</span><span class="mi">2</span>
+                        <span class="o">+</span> <span class="n">sigma_ds</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+                    <span class="c1"># Loop over damage states</span>
+                    <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">):</span>
+                        <span class="n">poe_nc</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
                             <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">[</span><span class="n">ds</span><span class="p">]),</span>
                             <span class="n">loc</span><span class="o">=</span><span class="n">mu_ln</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">sig_total</span><span class="p">)</span>
-                    <span class="c1"># Calculate the conditional fragility functions P(NC, IM|C)</span>
-                    <span class="n">poes_s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">poe_nc</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p_collapse</span><span class="p">)</span> <span class="o">+</span> <span class="n">p_collapse</span>
+                        <span class="n">poes_s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">poe_nc</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_collapse</span><span class="p">)</span>
+                            <span class="o">+</span> <span class="n">p_collapse</span><span class="p">)</span>
 
-                <span class="c1"># Store the collapse fragility</span>
-                <span class="n">poes_s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_collapse</span>
+                    <span class="c1"># Store the collapse fragility</span>
+                    <span class="n">poes_s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_collapse</span>
 
-            <span class="c1"># Storage for mean statistics and lognormal CDF parameters</span>
-            <span class="n">poes_mean</span> <span class="o">=</span> <span class="n">poes_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">poes_fitted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">poes_mean</span><span class="p">)</span>
-            <span class="n">params_a</span><span class="p">,</span> <span class="n">params_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">medians</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">betas_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">sigmas_ds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">),</span> <span class="n">sigma_ds</span><span class="p">)</span>
+                <span class="c1"># Mean statistics and lognormal CDF parameters</span>
+                <span class="n">poes_mean</span> <span class="o">=</span> <span class="n">poes_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">poes_fitted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">poes_mean</span><span class="p">)</span>
+                <span class="n">params_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">params_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">medians</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">betas_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">sigmas_ds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">),</span> <span class="n">sigma_ds</span><span class="p">)</span>
 
-            <span class="c1"># Loop over damage states and collapse</span>
-            <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                <span class="c1"># Fit functional form</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">cond_fragility</span><span class="p">,</span>
-                                        <span class="n">intensities</span><span class="p">,</span>
-                                        <span class="n">poes_mean</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">],</span>
-                                        <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)))</span>
-                    <span class="n">params_a</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">params_b</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">popt</span>
+                <span class="c1"># Loop over damage states and collapse</span>
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span>
+                            <span class="n">cond_fragility</span><span class="p">,</span>
+                            <span class="n">intensities</span><span class="p">,</span>
+                            <span class="n">poes_mean</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">],</span>
+                            <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                                    <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)))</span>
+                        <span class="n">params_a</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">params_b</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">popt</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s1">&#39;ERROR! Curve fitting failed for &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;DS </span><span class="si">{</span><span class="n">ds</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s1">&#39;ERROR! Curve fitting failed for DS &#39;</span>
-                        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ds</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">cond_fragility</span><span class="p">(</span>
+                        <span class="n">intensities</span><span class="p">,</span> <span class="n">params_a</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">params_b</span><span class="p">[</span><span class="n">ds</span><span class="p">])</span>
 
-                <span class="c1"># Calculate the fitted probabilities</span>
-                <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">cond_fragility</span><span class="p">(</span><span class="n">intensities</span><span class="p">,</span>
-                                                    <span class="n">params_a</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                                                    <span class="n">params_b</span><span class="p">[</span><span class="n">ds</span><span class="p">])</span>
+                    <span class="c1"># Lognormal equivalents at 16%, 50%, 84%</span>
+                    <span class="n">f_interp</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
+                        <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">],</span> <span class="n">intensities</span><span class="p">,</span>
+                        <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
+                    <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                    <span class="n">im16</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.16</span><span class="p">)</span>
+                    <span class="n">im84</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.84</span><span class="p">)</span>
 
-                <span class="c1"># Interpolate for lognormal equivalents at 16%, 50%, 84%</span>
-                <span class="n">f_interp</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
-                    <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">],</span> <span class="n">intensities</span><span class="p">,</span>
-                    <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
-                <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-                <span class="n">im16</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.16</span><span class="p">)</span>
-                <span class="n">im84</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.84</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">im16</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">im84</span> <span class="o">&gt;</span> <span class="n">im16</span><span class="p">:</span>
+                        <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im84</span> <span class="o">/</span> <span class="n">im16</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
-                <span class="c1"># Calculate the uncertainty</span>
-                <span class="k">if</span> <span class="n">im16</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">im84</span> <span class="o">&gt;</span> <span class="n">im16</span><span class="p">:</span>
-                    <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im84</span><span class="o">/</span><span class="n">im16</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="c1"># Fill NaN betas from the next valid DS</span>
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]):</span>
+                        <span class="k">for</span> <span class="n">ds_next</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">betas_total</span><span class="p">[</span><span class="n">ds_next</span><span class="p">]):</span>
+                                <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">betas_total</span><span class="p">[</span><span class="n">ds_next</span><span class="p">])</span>
+                                <span class="k">break</span>
 
-            <span class="c1"># Recalculate the lognormal fragility functions</span>
-            <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># Recalculate lognormal fragility functions</span>
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">fragility_rotation</span><span class="p">:</span>
+                        <span class="n">fragility_method</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="sa">f</span><span class="s1">&#39;lognormal - rotated around the &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">rotation_percentile</span><span class="si">}</span><span class="s1">th percentile&#39;</span><span class="p">)</span>
+                        <span class="p">(</span><span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                         <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                         <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">])</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_rotated_fragility</span><span class="p">(</span>
+                                <span class="n">rotation_percentile</span><span class="p">,</span>
+                                <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_lognormal_fragility</span><span class="p">(</span>
+                                <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
 
-                <span class="k">if</span> <span class="n">fragility_rotation</span><span class="p">:</span>
-                    <span class="n">fragility_method</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="sa">f</span><span class="s1">&#39;lognormal - rotated around the &#39;</span>
-                        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">rotation_percentile</span><span class="si">}</span><span class="s1">th percentile&#39;</span><span class="p">)</span>
-                    <span class="p">(</span><span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                     <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                     <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">])</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_rotated_fragility</span><span class="p">(</span>
-                            <span class="n">rotation_percentile</span><span class="p">,</span>
-                            <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                            <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                            <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-                            <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_lognormal_fragility</span><span class="p">(</span>
-                            <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                            <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
-                            <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-                            <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
+                <span class="c1"># Final cleanup: prevent fragility crossing</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                        <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
 
-            <span class="c1"># Final cleanup: ensure fragility functions are not crossing</span>
-            <span class="c1"># Work backwards from Collapse to DS1 to ensure PoE(DS_i) is always</span>
-            <span class="c1"># &gt;= PoE(Collapse) and PoE(DS_i) &gt;= PoE(DS_i+1)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-                <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
-                    <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+                <span class="c1"># Store everything</span>
+                <span class="n">is_collapse</span> <span class="o">=</span> <span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">censored_limit</span>
+                <span class="n">is_nc_plot</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="o">~</span><span class="n">is_collapse</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span><span class="p">))</span>
 
-            <span class="c1"># Store everything in dedicated dictionary</span>
-            <span class="n">is_collapse</span> <span class="o">=</span> <span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">censored_limit</span>
-            <span class="n">is_nc_plot</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">is_collapse</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span><span class="p">)</span>
+                <span class="n">cloud_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;cloud inputs&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;imls&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">,</span>
+                        <span class="s1">&#39;edps&#39;</span><span class="p">:</span> <span class="n">edps</span><span class="p">,</span>
+                        <span class="s1">&#39;lower_limit&#39;</span><span class="p">:</span> <span class="n">lower_limit</span><span class="p">,</span>
+                        <span class="s1">&#39;upper_limit&#39;</span><span class="p">:</span> <span class="n">censored_limit</span><span class="p">,</span>
+                        <span class="s1">&#39;damage_thresholds&#39;</span><span class="p">:</span> <span class="n">damage_thresholds</span><span class="p">},</span>
+                    <span class="s1">&#39;fragility&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;fragility_method&#39;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="n">fragility_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
+                        <span class="s1">&#39;cloud_method&#39;</span><span class="p">:</span> <span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;intensities&#39;</span><span class="p">:</span> <span class="n">intensities</span><span class="p">,</span>
+                        <span class="s1">&#39;poes&#39;</span><span class="p">:</span> <span class="n">poes_fitted</span><span class="p">,</span>
+                        <span class="s1">&#39;medians&#39;</span><span class="p">:</span> <span class="n">medians</span><span class="p">[:</span><span class="n">n_ds</span><span class="p">],</span>
+                        <span class="s1">&#39;sigma_record2record&#39;</span><span class="p">:</span> <span class="n">sig_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+                        <span class="s1">&#39;sigma_build2build&#39;</span><span class="p">:</span> <span class="n">sigma_build2build</span><span class="p">,</span>
+                        <span class="s1">&#39;sigma_ds&#39;</span><span class="p">:</span> <span class="n">sigmas_ds</span><span class="p">,</span>
+                        <span class="s1">&#39;betas_total&#39;</span><span class="p">:</span> <span class="n">betas_total</span><span class="p">[:</span><span class="n">n_ds</span><span class="p">]},</span>
+                    <span class="s1">&#39;regression&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">b_full</span><span class="p">,</span>
+                        <span class="s1">&#39;b0&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a_full</span><span class="p">),</span>
+                        <span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="n">sig_full</span><span class="p">,</span>
+                        <span class="s1">&#39;alpha0&#39;</span><span class="p">:</span> <span class="n">al0_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+                        <span class="s1">&#39;alpha1&#39;</span><span class="p">:</span> <span class="n">al1_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+                        <span class="s1">&#39;fitted_x&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">),</span>
+                        <span class="s1">&#39;fitted_y&#39;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a_full</span><span class="p">)</span>
+                            <span class="o">+</span> <span class="n">b_full</span>
+                            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">))},</span>
+                    <span class="s1">&#39;bootstraps&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">b_s</span><span class="p">,</span>
+                        <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">a_s</span><span class="p">,</span>
+                        <span class="s1">&#39;sigma_rr&#39;</span><span class="p">:</span> <span class="n">sig_s</span><span class="p">,</span>
+                        <span class="s1">&#39;alpha0&#39;</span><span class="p">:</span> <span class="n">al0_s</span><span class="p">,</span>
+                        <span class="s1">&#39;alpha1&#39;</span><span class="p">:</span> <span class="n">al1_s</span><span class="p">,</span>
+                        <span class="s1">&#39;poes_all&#39;</span><span class="p">:</span> <span class="n">poes_s</span><span class="p">},</span>
+                    <span class="s1">&#39;raw_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;im_nc&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_nc_plot</span><span class="p">],</span>
+                        <span class="s1">&#39;edp_nc&#39;</span><span class="p">:</span> <span class="n">edps</span><span class="p">[</span><span class="n">is_nc_plot</span><span class="p">],</span>
+                        <span class="s1">&#39;im_c&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_collapse</span><span class="p">]}</span>
+                <span class="p">}</span>
 
-            <span class="c1"># Create the dictionary</span>
-            <span class="n">cloud_dict</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="c1"># Add a nested dictionary for the inputs of the regression</span>
-                <span class="s1">&#39;cloud inputs&#39;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s1">&#39;imls&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">,</span>
-                    <span class="s1">&#39;edps&#39;</span><span class="p">:</span> <span class="n">edps</span><span class="p">,</span>
-                    <span class="s1">&#39;lower_limit&#39;</span><span class="p">:</span> <span class="n">lower_limit</span><span class="p">,</span>
-                    <span class="s1">&#39;upper_limit&#39;</span><span class="p">:</span> <span class="n">censored_limit</span><span class="p">,</span>
-                    <span class="s1">&#39;damage_thresholds&#39;</span><span class="p">:</span> <span class="n">damage_thresholds</span><span class="p">},</span>
+                <span class="k">return</span> <span class="n">cloud_dict</span>
 
-                <span class="c1"># Fragility functions parameters</span>
-                <span class="s1">&#39;fragility&#39;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s1">&#39;fragility_method&#39;</span><span class="p">:</span> <span class="n">fragility_method</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
-                    <span class="s1">&#39;intensities&#39;</span><span class="p">:</span> <span class="n">intensities</span><span class="p">,</span>
-                    <span class="s1">&#39;poes&#39;</span><span class="p">:</span> <span class="n">poes_fitted</span><span class="p">,</span>
-                    <span class="s1">&#39;medians&#39;</span><span class="p">:</span> <span class="n">medians</span><span class="p">,</span>
-                    <span class="s1">&#39;sigma_record2record&#39;</span><span class="p">:</span> <span class="n">sig_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-                    <span class="s1">&#39;sigma_build2build&#39;</span><span class="p">:</span> <span class="n">sigma_build2build</span><span class="p">,</span>
-                    <span class="s1">&#39;sigma_ds&#39;</span><span class="p">:</span> <span class="n">sigmas_ds</span><span class="p">,</span>
-                    <span class="s1">&#39;betas_total&#39;</span><span class="p">:</span> <span class="n">betas_total</span><span class="p">},</span>
+            <span class="c1"># =============================================================</span>
+            <span class="c1"># CLASSICAL APPROACH (Jalayer et al. 2017, Bayesian MCMC)</span>
+            <span class="c1"># =============================================================</span>
+            <span class="k">elif</span> <span class="n">cloud_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;classical&#39;</span><span class="p">:</span>
 
-                <span class="c1"># Regression coefficients</span>
-                <span class="s1">&#39;regression&#39;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">b_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-                    <span class="s1">&#39;b0&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a_s</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span>
-                    <span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="n">sig_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-                    <span class="s1">&#39;alpha0&#39;</span><span class="p">:</span> <span class="n">al0_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-                    <span class="s1">&#39;alpha1&#39;</span><span class="p">:</span> <span class="n">al1_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-                    <span class="s1">&#39;fitted_x&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">),</span>
-                    <span class="s1">&#39;fitted_y&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a_s</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-                                 <span class="o">+</span> <span class="n">b_s</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">))},</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 1: Partition data into NoC and C</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">is_collapse</span> <span class="o">=</span> <span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">censored_limit</span>
+                <span class="n">is_nc</span> <span class="o">=</span> <span class="o">~</span><span class="n">is_collapse</span>
+                <span class="c1"># For regression: also exclude sub-lower_limit data</span>
+                <span class="n">is_nc_reg</span> <span class="o">=</span> <span class="n">is_nc</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span><span class="p">)</span>
 
-                <span class="c1"># Bootstrap iteration results</span>
-                <span class="s1">&#39;bootstraps&#39;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">b_s</span><span class="p">,</span>
-                    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">a_s</span><span class="p">,</span>
-                    <span class="s1">&#39;sigma_rr&#39;</span><span class="p">:</span> <span class="n">sig_s</span><span class="p">,</span>
-                    <span class="s1">&#39;alpha0&#39;</span><span class="p">:</span> <span class="n">al0_s</span><span class="p">,</span>
-                    <span class="s1">&#39;alpha1&#39;</span><span class="p">:</span> <span class="n">al1_s</span><span class="p">,</span>
-                    <span class="s1">&#39;poes_all&#39;</span><span class="p">:</span> <span class="n">poes_s</span><span class="p">},</span>
+                <span class="n">im_nc</span> <span class="o">=</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_nc_reg</span><span class="p">]</span>
+                <span class="n">edp_nc</span> <span class="o">=</span> <span class="n">edps</span><span class="p">[</span><span class="n">is_nc_reg</span><span class="p">]</span>
+                <span class="n">im_c</span> <span class="o">=</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_collapse</span><span class="p">]</span>
+                <span class="n">n_nc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">im_nc</span><span class="p">)</span>
+                <span class="n">n_c</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">im_c</span><span class="p">)</span>
 
-                <span class="s1">&#39;raw_data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;im_nc&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_nc_plot</span><span class="p">],</span>
-                             <span class="s1">&#39;edp_nc&#39;</span><span class="p">:</span> <span class="n">edps</span><span class="p">[</span><span class="n">is_nc_plot</span><span class="p">],</span>
-                             <span class="s1">&#39;im_c&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_collapse</span><span class="p">]}</span>
-            <span class="p">}</span>
+                <span class="k">if</span> <span class="n">n_nc</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s1">&#39;ERROR! Fewer than 3 non-collapse data &#39;</span>
+                        <span class="s1">&#39;points above lower_limit. Cloud &#39;</span>
+                        <span class="s1">&#39;regression cannot be performed.&#39;</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="n">cloud_dict</span></div>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 2: OLS point estimates for [ln a, b, beta]</span>
+                <span class="c1"># Jalayer et al. 2017, Eq. 2</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">ln_im_nc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im_nc</span><span class="p">)</span>
+                <span class="n">ln_edp_nc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">edp_nc</span><span class="p">)</span>
+                <span class="n">nu</span> <span class="o">=</span> <span class="n">n_nc</span> <span class="o">-</span> <span class="mi">2</span>  <span class="c1"># degrees of freedom</span>
+
+                <span class="c1"># Slope b</span>
+                <span class="n">b_hat</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">ln_im_nc</span> <span class="o">-</span> <span class="n">ln_im_nc</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                           <span class="o">*</span> <span class="p">(</span><span class="n">ln_edp_nc</span> <span class="o">-</span> <span class="n">ln_edp_nc</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">ln_im_nc</span> <span class="o">-</span> <span class="n">ln_im_nc</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="c1"># Intercept ln(a)</span>
+                <span class="n">lna_hat</span> <span class="o">=</span> <span class="p">(</span><span class="n">ln_edp_nc</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                           <span class="o">-</span> <span class="n">b_hat</span> <span class="o">*</span> <span class="n">ln_im_nc</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                <span class="c1"># Residuals and standard error (beta)</span>
+                <span class="n">residuals</span> <span class="o">=</span> <span class="p">(</span><span class="n">ln_edp_nc</span>
+                             <span class="o">-</span> <span class="p">(</span><span class="n">lna_hat</span> <span class="o">+</span> <span class="n">b_hat</span> <span class="o">*</span> <span class="n">ln_im_nc</span><span class="p">))</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">residuals</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">nu</span>
+                <span class="n">beta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span>
+
+                <span class="c1"># Design matrix quantities</span>
+                <span class="n">X_design</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_nc</span><span class="p">),</span> <span class="n">ln_im_nc</span><span class="p">])</span>
+                <span class="n">XtX</span> <span class="o">=</span> <span class="n">X_design</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">X_design</span>
+                <span class="n">XtX_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">XtX</span><span class="p">)</span>
+
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 3: Logistic regression for [alpha0, alpha1]</span>
+                <span class="c1"># Jalayer et al. 2017, Eq. 6 and Appendix B</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">im_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">imls</span><span class="p">[</span><span class="n">is_nc</span><span class="p">],</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_collapse</span><span class="p">]])</span>
+                <span class="n">y_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">is_nc</span><span class="p">)),</span>
+                     <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_c</span><span class="p">)])</span>
+                <span class="n">x_logit_all</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im_all</span><span class="p">))</span>
+                <span class="n">logit_fit</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span>
+                    <span class="n">y_all</span><span class="p">,</span> <span class="n">x_logit_all</span><span class="p">,</span>
+                    <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">())</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">disp</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">alpha0_hat</span><span class="p">,</span> <span class="n">alpha1_hat</span> <span class="o">=</span> <span class="n">logit_fit</span><span class="o">.</span><span class="n">params</span>
+
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 4: Define the log-likelihood function</span>
+                <span class="c1"># Jalayer et al. 2017, Eq. A1.2</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">sa_nc</span> <span class="o">=</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_nc_reg</span><span class="p">]</span>
+                <span class="n">dcr_nc</span> <span class="o">=</span> <span class="n">edps</span><span class="p">[</span><span class="n">is_nc_reg</span><span class="p">]</span>
+                <span class="n">ln_sa_nc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sa_nc</span><span class="p">)</span>
+                <span class="n">ln_dcr_nc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dcr_nc</span><span class="p">)</span>
+                <span class="n">sa_c</span> <span class="o">=</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_collapse</span><span class="p">]</span>
+                <span class="n">ln_sa_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sa_c</span><span class="p">)</span>
+
+                <span class="k">def</span><span class="w"> </span><span class="nf">log_likelihood</span><span class="p">(</span><span class="n">chi</span><span class="p">):</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    Log-likelihood f(D|chi) from Eq. A1.2 of</span>
+<span class="sd">                    Jalayer et al. (2017).</span>
+
+<span class="sd">                    Parameters</span>
+<span class="sd">                    ----------</span>
+<span class="sd">                    chi : array of length 5</span>
+<span class="sd">                        [ln_a, b, beta, alpha0, alpha1]</span>
+
+<span class="sd">                    Returns</span>
+<span class="sd">                    -------</span>
+<span class="sd">                    ll : float</span>
+<span class="sd">                        The log-likelihood value.</span>
+<span class="sd">                    &quot;&quot;&quot;</span>
+                    <span class="n">ln_a</span><span class="p">,</span> <span class="n">b_val</span><span class="p">,</span> <span class="n">beta_val</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="n">a1</span> <span class="o">=</span> <span class="n">chi</span>
+
+                    <span class="k">if</span> <span class="n">beta_val</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+                    <span class="c1"># NoC contribution</span>
+                    <span class="n">mu_nc</span> <span class="o">=</span> <span class="n">ln_a</span> <span class="o">+</span> <span class="n">b_val</span> <span class="o">*</span> <span class="n">ln_sa_nc</span>
+                    <span class="n">z_nc</span> <span class="o">=</span> <span class="p">(</span><span class="n">ln_dcr_nc</span> <span class="o">-</span> <span class="n">mu_nc</span><span class="p">)</span> <span class="o">/</span> <span class="n">beta_val</span>
+                    <span class="n">ll_nc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">norm</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">z_nc</span><span class="p">)</span>
+                        <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">beta_val</span><span class="p">))</span>
+                    <span class="n">eta_nc</span> <span class="o">=</span> <span class="n">a0</span> <span class="o">+</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">ln_sa_nc</span>
+                    <span class="n">ll_nc</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">eta_nc</span><span class="p">))</span>
+                               <span class="o">+</span> <span class="mf">1e-300</span><span class="p">))</span>
+
+                    <span class="c1"># C contribution</span>
+                    <span class="n">eta_c</span> <span class="o">=</span> <span class="n">a0</span> <span class="o">+</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">ln_sa_c</span>
+                    <span class="n">ll_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">eta_c</span><span class="p">))</span>
+                               <span class="o">+</span> <span class="mf">1e-300</span><span class="p">))</span>
+
+                    <span class="k">return</span> <span class="n">ll_nc</span> <span class="o">+</span> <span class="n">ll_c</span>
+
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 5: MCMC sampling (Metropolis-Hastings)</span>
+                <span class="c1"># Jalayer et al. 2017, Appendix A</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">chi_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                    <span class="n">lna_hat</span><span class="p">,</span> <span class="n">b_hat</span><span class="p">,</span> <span class="n">beta_hat</span><span class="p">,</span>
+                    <span class="n">alpha0_hat</span><span class="p">,</span> <span class="n">alpha1_hat</span><span class="p">])</span>
+                <span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chi_current</span><span class="p">)</span>
+
+                <span class="n">se_lna</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">XtX_inv</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">s2</span><span class="p">)</span>
+                <span class="n">se_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">XtX_inv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">s2</span><span class="p">)</span>
+                <span class="n">se_beta</span> <span class="o">=</span> <span class="n">beta_hat</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">nu</span><span class="p">)</span>
+                <span class="n">se_a0</span> <span class="o">=</span> <span class="n">logit_fit</span><span class="o">.</span><span class="n">bse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">se_a1</span> <span class="o">=</span> <span class="n">logit_fit</span><span class="o">.</span><span class="n">bse</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">proposal_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">se_lna</span><span class="p">,</span> <span class="n">se_b</span><span class="p">,</span> <span class="n">se_beta</span><span class="p">,</span> <span class="n">se_a0</span><span class="p">,</span> <span class="n">se_a1</span><span class="p">])</span>
+                <span class="n">prop_factor</span> <span class="o">=</span> <span class="mf">2.4</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span>
+                <span class="n">proposal_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">prop_factor</span> <span class="o">*</span> <span class="n">proposal_scale</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+                <span class="n">chain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_mcmc</span><span class="p">,</span> <span class="n">n_params</span><span class="p">))</span>
+                <span class="n">ll_current</span> <span class="o">=</span> <span class="n">log_likelihood</span><span class="p">(</span><span class="n">chi_current</span><span class="p">)</span>
+                <span class="n">n_accepted</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">n_adapt</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_mcmc_burnin</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_mcmc</span><span class="p">):</span>
+                    <span class="n">chi_candidate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span>
+                        <span class="n">chi_current</span><span class="p">,</span> <span class="n">proposal_cov</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">chi_candidate</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">chain</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_current</span>
+                        <span class="k">continue</span>
+
+                    <span class="n">ll_candidate</span> <span class="o">=</span> <span class="n">log_likelihood</span><span class="p">(</span><span class="n">chi_candidate</span><span class="p">)</span>
+                    <span class="n">log_r</span> <span class="o">=</span> <span class="n">ll_candidate</span> <span class="o">-</span> <span class="n">ll_current</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">log_r</span><span class="p">:</span>
+                        <span class="n">chi_current</span> <span class="o">=</span> <span class="n">chi_candidate</span>
+                        <span class="n">ll_current</span> <span class="o">=</span> <span class="n">ll_candidate</span>
+                        <span class="n">n_accepted</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="n">chain</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_current</span>
+
+                    <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="n">n_adapt</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">step</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">:</span>
+                        <span class="n">emp_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span>
+                            <span class="n">chain</span><span class="p">[:</span><span class="n">n_adapt</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                        <span class="n">proposal_cov</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">prop_factor</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">emp_cov</span>
+                            <span class="o">+</span> <span class="mf">1e-8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_params</span><span class="p">))</span>
+
+                <span class="c1"># Discard burn-in</span>
+                <span class="n">chain_post</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="n">n_mcmc_burnin</span><span class="p">:]</span>
+                <span class="n">n_post</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain_post</span><span class="p">)</span>
+                <span class="n">acceptance_rate</span> <span class="o">=</span> <span class="n">n_accepted</span> <span class="o">/</span> <span class="n">n_mcmc</span>
+
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 6: Robust Fragility (Eq. 10) and variance (Eq. 11)</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">poes_mcmc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_post</span><span class="p">,</span> <span class="n">n_im</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">ln_intensities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_post</span><span class="p">):</span>
+                    <span class="n">ln_a_j</span><span class="p">,</span> <span class="n">b_j</span><span class="p">,</span> <span class="n">beta_j</span><span class="p">,</span> <span class="n">a0_j</span><span class="p">,</span> <span class="n">a1_j</span> <span class="o">=</span> <span class="n">chain_post</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                    <span class="n">eta_j</span> <span class="o">=</span> <span class="n">a0_j</span> <span class="o">+</span> <span class="n">a1_j</span> <span class="o">*</span> <span class="n">ln_intensities</span>
+                    <span class="n">p_c_j</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">eta_j</span><span class="p">))</span>
+                    <span class="n">mu_ln_j</span> <span class="o">=</span> <span class="n">ln_a_j</span> <span class="o">+</span> <span class="n">b_j</span> <span class="o">*</span> <span class="n">ln_intensities</span>
+
+                    <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">):</span>
+                        <span class="n">poe_nc_j</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">[</span><span class="n">ds</span><span class="p">]),</span>
+                            <span class="n">loc</span><span class="o">=</span><span class="n">mu_ln_j</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">beta_j</span><span class="p">)</span>
+                        <span class="n">poes_mcmc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">poe_nc_j</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">p_c_j</span><span class="p">)</span> <span class="o">+</span> <span class="n">p_c_j</span><span class="p">)</span>
+
+                    <span class="n">poes_mcmc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_c_j</span>
+
+                <span class="c1"># Posterior mean (Eq. 10) and variance (Eq. 11)</span>
+                <span class="n">poes_robust</span> <span class="o">=</span> <span class="n">poes_mcmc</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">poes_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">poes_mcmc</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+                <span class="n">poes_robust_plus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                    <span class="n">poes_robust</span> <span class="o">+</span> <span class="n">confidence_k</span> <span class="o">*</span> <span class="n">poes_std</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">poes_robust_minus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                    <span class="n">poes_robust</span> <span class="o">-</span> <span class="n">confidence_k</span> <span class="o">*</span> <span class="n">poes_std</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 7: Lognormal-equivalent parameters</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">medians</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">betas_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">sigmas_ds_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">),</span> <span class="n">sigma_ds</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">f_interp</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
+                        <span class="n">poes_robust</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">],</span> <span class="n">intensities</span><span class="p">,</span>
+                        <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
+                    <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                    <span class="n">im16</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.16</span><span class="p">)</span>
+                    <span class="n">im84</span> <span class="o">=</span> <span class="n">f_interp</span><span class="p">(</span><span class="mf">0.84</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">im16</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">im84</span> <span class="o">&gt;</span> <span class="n">im16</span><span class="p">:</span>
+                        <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">im84</span> <span class="o">/</span> <span class="n">im16</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+                <span class="c1"># Fill NaN betas from the next valid DS</span>
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]):</span>
+                        <span class="k">for</span> <span class="n">ds_next</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">betas_total</span><span class="p">[</span><span class="n">ds_next</span><span class="p">]):</span>
+                                <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">betas_total</span><span class="p">[</span><span class="n">ds_next</span><span class="p">])</span>
+                                <span class="k">break</span>
+
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="c1"># Step 8: Optional rotation and crossing cleanup</span>
+                <span class="c1"># ---------------------------------------------------------</span>
+                <span class="n">poes_fitted</span> <span class="o">=</span> <span class="n">poes_robust</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">fragility_rotation</span><span class="p">:</span>
+                        <span class="n">fragility_method</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="sa">f</span><span class="s1">&#39;lognormal - rotated around the &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">rotation_percentile</span><span class="si">}</span><span class="s1">th percentile&#39;</span><span class="p">)</span>
+                        <span class="p">(</span><span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                         <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                         <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">])</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_rotated_fragility</span><span class="p">(</span>
+                                <span class="n">rotation_percentile</span><span class="p">,</span>
+                                <span class="n">medians</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                <span class="n">betas_total</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
+
+                <span class="c1"># Final cleanup: prevent fragility crossing</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                        <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">poes_fitted</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+
+                <span class="c1"># Apply crossing cleanup to confidence bands</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">poes_robust_plus</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                        <span class="n">poes_robust_plus</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span>
+                        <span class="n">poes_robust_plus</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                    <span class="n">poes_robust_minus</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                        <span class="n">poes_robust_minus</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span>
+                        <span class="n">poes_robust_minus</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+
+                <span class="n">chi_mean</span> <span class="o">=</span> <span class="n">chain_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">is_nc_plot</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="o">~</span><span class="n">is_collapse</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">edps</span> <span class="o">&gt;=</span> <span class="n">lower_limit</span><span class="p">))</span>
+
+                <span class="n">cloud_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;cloud inputs&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;imls&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">,</span>
+                        <span class="s1">&#39;edps&#39;</span><span class="p">:</span> <span class="n">edps</span><span class="p">,</span>
+                        <span class="s1">&#39;lower_limit&#39;</span><span class="p">:</span> <span class="n">lower_limit</span><span class="p">,</span>
+                        <span class="s1">&#39;upper_limit&#39;</span><span class="p">:</span> <span class="n">censored_limit</span><span class="p">,</span>
+                        <span class="s1">&#39;damage_thresholds&#39;</span><span class="p">:</span> <span class="n">damage_thresholds</span><span class="p">},</span>
+                    <span class="s1">&#39;fragility&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;fragility_method&#39;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="n">fragility_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
+                        <span class="s1">&#39;cloud_method&#39;</span><span class="p">:</span> <span class="s1">&#39;classical&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;intensities&#39;</span><span class="p">:</span> <span class="n">intensities</span><span class="p">,</span>
+                        <span class="s1">&#39;poes&#39;</span><span class="p">:</span> <span class="n">poes_fitted</span><span class="p">,</span>
+                        <span class="s1">&#39;poes_robust_plus&#39;</span><span class="p">:</span> <span class="n">poes_robust_plus</span><span class="p">,</span>
+                        <span class="s1">&#39;poes_robust_minus&#39;</span><span class="p">:</span> <span class="n">poes_robust_minus</span><span class="p">,</span>
+                        <span class="s1">&#39;medians&#39;</span><span class="p">:</span> <span class="n">medians</span><span class="p">[:</span><span class="n">n_ds</span><span class="p">],</span>
+                        <span class="s1">&#39;sigma_record2record&#39;</span><span class="p">:</span> <span class="n">beta_hat</span><span class="p">,</span>
+                        <span class="s1">&#39;sigma_build2build&#39;</span><span class="p">:</span> <span class="n">sigma_build2build</span><span class="p">,</span>
+                        <span class="s1">&#39;sigma_ds&#39;</span><span class="p">:</span> <span class="n">sigmas_ds_arr</span><span class="p">,</span>
+                        <span class="s1">&#39;betas_total&#39;</span><span class="p">:</span> <span class="n">betas_total</span><span class="p">[:</span><span class="n">n_ds</span><span class="p">],</span>
+                        <span class="s1">&#39;confidence_k&#39;</span><span class="p">:</span> <span class="n">confidence_k</span><span class="p">},</span>
+                    <span class="s1">&#39;regression&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">chi_mean</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="s1">&#39;b0&#39;</span><span class="p">:</span> <span class="n">chi_mean</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="n">chi_mean</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="s1">&#39;alpha0&#39;</span><span class="p">:</span> <span class="n">chi_mean</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                        <span class="s1">&#39;alpha1&#39;</span><span class="p">:</span> <span class="n">chi_mean</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+                        <span class="s1">&#39;fitted_x&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">),</span>
+                        <span class="s1">&#39;fitted_y&#39;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="n">chi_mean</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="o">+</span> <span class="n">chi_mean</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">))},</span>
+                    <span class="s1">&#39;mcmc&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;chain&#39;</span><span class="p">:</span> <span class="n">chain_post</span><span class="p">,</span>
+                        <span class="s1">&#39;acceptance_rate&#39;</span><span class="p">:</span> <span class="n">acceptance_rate</span><span class="p">,</span>
+                        <span class="s1">&#39;n_mcmc&#39;</span><span class="p">:</span> <span class="n">n_mcmc</span><span class="p">,</span>
+                        <span class="s1">&#39;n_burnin&#39;</span><span class="p">:</span> <span class="n">n_mcmc_burnin</span><span class="p">,</span>
+                        <span class="s1">&#39;chi_labels&#39;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="s1">&#39;ln_a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;alpha0&#39;</span><span class="p">,</span> <span class="s1">&#39;alpha1&#39;</span><span class="p">],</span>
+                        <span class="s1">&#39;chi_mean&#39;</span><span class="p">:</span> <span class="n">chi_mean</span><span class="p">,</span>
+                        <span class="s1">&#39;chi_std&#39;</span><span class="p">:</span> <span class="n">chain_post</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="s1">&#39;chi_median&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span>
+                            <span class="n">chain_post</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="s1">&#39;poes_all&#39;</span><span class="p">:</span> <span class="n">poes_mcmc</span><span class="p">},</span>
+                    <span class="s1">&#39;raw_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;im_nc&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_nc_plot</span><span class="p">],</span>
+                        <span class="s1">&#39;edp_nc&#39;</span><span class="p">:</span> <span class="n">edps</span><span class="p">[</span><span class="n">is_nc_plot</span><span class="p">],</span>
+                        <span class="s1">&#39;im_c&#39;</span><span class="p">:</span> <span class="n">imls</span><span class="p">[</span><span class="n">is_collapse</span><span class="p">]}</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">cloud_dict</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;ERROR! Unknown cloud_method: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">cloud_method</span><span class="si">}</span><span class="s2">&#39;. Expected &#39;bootstrap&#39; &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;or &#39;classical&#39;.&quot;</span><span class="p">)</span></div>
 
 
     <span class="c1"># ---------------------------------------------------------------</span>
@@ -1068,16 +1499,16 @@
     <span class="c1"># ---------------------------------------------------------------</span>
 <div class="viewcode-block" id="postprocessor.process_msa_results">
 <a class="viewcode-back" href="../../../contents/pos/process_msa_results.html#openquake.vmtk.postprocessor.postprocessor.process_msa_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">process_msa_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                    <span class="n">imls</span><span class="p">,</span>
-                                    <span class="n">edps</span><span class="p">,</span>
-                                    <span class="n">damage_thresholds</span><span class="p">,</span>
-                                    <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                                    <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                                    <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
-                                        <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
-                                    <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                    <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_msa_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">imls</span><span class="p">,</span>
+                            <span class="n">edps</span><span class="p">,</span>
+                            <span class="n">damage_thresholds</span><span class="p">,</span>
+                            <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                            <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                            <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
+                            <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform maximum likelihood estimation (MLE) for fragility curve</span>
 <span class="sd">        fitting following a multiple stripe analysis. This method</span>
@@ -1206,7 +1637,7 @@
         <span class="n">num_gmrs_per_stripe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
             <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">edps</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_stripes</span><span class="p">)])</span>
 
-        <span class="k">def</span> <span class="nf">negative_log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">negative_log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Negative Log-Likelihood for Binomial Distribution.</span>
 <span class="sd">            Fits the aleatory (record-to-record) parameters to the data.</span>
@@ -1265,13 +1696,13 @@
         <span class="n">poes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">)))</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">)):</span>
             <span class="k">if</span> <span class="n">fragility_rotation</span><span class="p">:</span>
-                <span class="c1"># Assuming this helper exists in your class</span>
-                <span class="n">poes</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_rotated_fragility</span><span class="p">(</span>
-                    <span class="n">thetas</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">poes</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_rotated_fragility</span><span class="p">(</span>
                     <span class="n">rotation_percentile</span><span class="p">,</span>
+                    <span class="n">thetas</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="n">sigmas_record2record</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="n">sigma_build2build</span><span class="o">=</span><span class="n">sigma_build2build</span><span class="p">,</span>
-                    <span class="n">sigma_ds</span><span class="o">=</span><span class="n">sigma_ds</span>
+                    <span class="n">sigma_ds</span><span class="o">=</span><span class="n">sigma_ds</span><span class="p">,</span>
+                    <span class="n">intensities</span><span class="o">=</span><span class="n">intensities</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Standard lognormal PoE</span>
@@ -1315,18 +1746,18 @@
     <span class="c1"># ---------------------------------------------------------------</span>
 <div class="viewcode-block" id="postprocessor.process_ida_results">
 <a class="viewcode-back" href="../../../contents/pos/process_ida_results.html#openquake.vmtk.postprocessor.postprocessor.process_ida_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">process_ida_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                        <span class="n">ansys_dict</span><span class="p">,</span>
-                                        <span class="n">im_matrix</span><span class="p">,</span>
-                                        <span class="n">damage_thresholds</span><span class="p">,</span>
-                                        <span class="n">edp_key</span><span class="p">,</span>
-                                        <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                                        <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                                        <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
-                                            <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
-                                        <span class="n">edp_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
-                                        <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                        <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_ida_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">ansys_dict</span><span class="p">,</span>
+                            <span class="n">im_matrix</span><span class="p">,</span>
+                            <span class="n">damage_thresholds</span><span class="p">,</span>
+                            <span class="n">edp_key</span><span class="p">,</span>
+                            <span class="n">sigma_build2build</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                            <span class="n">sigma_ds</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                            <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
+                            <span class="n">edp_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
+                            <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform fragility function fitting and statistical processing on</span>
 <span class="sd">        Incremental Dynamic Analysis (IDA) results.</span>
@@ -1514,12 +1945,13 @@
                 <span class="c1"># Fill the remaining EDP range with the collapse IM</span>
                 <span class="n">im_at_edp_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">last_valid_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">last_valid_im</span>
 
-        <span class="c1"># Calculate percentiles</span>
-        <span class="c1"># Now that collapse region is filled, no All-NaN slices</span>
-        <span class="c1"># unless a record never started at all.</span>
-        <span class="n">median_ida_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">im_at_edp_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">p16_ida_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">im_at_edp_matrix</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">p84_ida_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">im_at_edp_matrix</span><span class="p">,</span> <span class="mi">84</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Calculate percentiles — suppress the all-NaN slice warning that</span>
+        <span class="c1"># arises for EDP levels not reached by any record (result is NaN,</span>
+        <span class="c1"># which is the correct behaviour).</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+            <span class="n">median_ida_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">im_at_edp_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">p16_ida_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">im_at_edp_matrix</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">p84_ida_im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">im_at_edp_matrix</span><span class="p">,</span> <span class="mi">84</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="c1"># Fragility Fitting (MLE for Censored Data)</span>
         <span class="n">im_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">im_matrix</span><span class="p">)</span>
@@ -1538,7 +1970,7 @@
                 <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ln_cap</span><span class="p">))</span>
                 <span class="n">beta_rec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">ln_cap</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
                     <span class="n">t</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">params</span>
                     <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="k">return</span> <span class="mf">1e10</span>
@@ -1626,7 +2058,7 @@
 
 <div class="viewcode-block" id="postprocessor.calculate_vulnerability_function">
 <a class="viewcode-back" href="../../../contents/pos/calculate_vulnerability_function.html#openquake.vmtk.postprocessor.postprocessor.calculate_vulnerability_function">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_vulnerability_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_vulnerability_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                          <span class="n">poes</span><span class="p">,</span>
                                          <span class="n">consequence_model</span><span class="p">,</span>
                                          <span class="n">cov_consequence</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1731,7 +2163,7 @@
 <span class="sd">        IM-dependent uncertainty.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">calculate_sigma_silva</span><span class="p">(</span><span class="n">loss</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">calculate_sigma_silva</span><span class="p">(</span><span class="n">loss</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Helper function to calculate uncertainty in the loss</span>
 <span class="sd">            estimates based on the method proposed in Silva (2019),</span>
@@ -1863,7 +2295,7 @@
 
 <div class="viewcode-block" id="postprocessor.calculate_average_annual_damage_probability">
 <a class="viewcode-back" href="../../../contents/pos/calculate_average_annual_damage_probability.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_damage_probability">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_average_annual_damage_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_average_annual_damage_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                                     <span class="n">fragility_array</span><span class="p">,</span>
                                                     <span class="n">hazard_array</span><span class="p">,</span>
                                                     <span class="n">return_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -1950,7 +2382,7 @@
 
 <div class="viewcode-block" id="postprocessor.calculate_average_annual_loss">
 <a class="viewcode-back" href="../../../contents/pos/calculate_average_annual_loss.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_loss">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_average_annual_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_average_annual_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                       <span class="n">vulnerability_array</span><span class="p">,</span>
                                       <span class="n">hazard_array</span><span class="p">,</span>
                                       <span class="n">return_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>

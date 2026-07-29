@@ -19,7 +19,7 @@ def _make_synthetic_cloud_dict(b1=1.2, b0=-3.5, sigma=0.4,
                                alpha0=-5.0, alpha1=3.0,
                                n=80, seed=0, add_collapse=False):
     """
-    Build a minimal cloud_dict compatible with do_modified_cloud_analysis
+    Build a minimal cloud_dict compatible with process_mca_results
     output without running the full postprocessor stack.
 
     Parameters
@@ -84,7 +84,7 @@ def _make_synthetic_cloud_dict(b1=1.2, b0=-3.5, sigma=0.4,
 def _make_synthetic_ida_dict(n_records=30, n_steps=20, seed=1,
                              b1=1.2, sigma=0.4):
     """
-    Build a minimal ida_dict compatible with do_incremental_dynamic_analysis
+    Build a minimal ida_dict compatible with postprocessor.process_ida_results
     output.
 
     IDA curves are generated as power-law: EDP = a·IM^b1 with lognormal

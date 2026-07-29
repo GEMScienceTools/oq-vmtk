@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>openquake.vmtk.modeller &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
 
@@ -14,8 +14,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -52,7 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">10. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
 </ul>
 
         </div>
@@ -80,17 +81,23 @@
            <div itemprop="articleBody">
              
   <h1>Source code for openquake.vmtk.modeller</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">openseespy.opensees</span> <span class="k">as</span> <span class="nn">ops</span>
-<span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">mlines</span>
-<span class="kn">from</span> <span class="nn">matplotlib.lines</span> <span class="kn">import</span> <span class="n">Line2D</span>
-<span class="kn">from</span> <span class="nn">openquake.vmtk.units</span> <span class="kn">import</span> <span class="n">units</span>
-<span class="kn">from</span> <span class="nn">openquake.vmtk.plotter</span> <span class="kn">import</span> <span class="n">plotter</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">openseespy.opensees</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ops</span>
+<span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Darwin&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">openseespymac.opensees</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ops</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">openseespy.opensees</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ops</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mlines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotter</span>
 
 
-<span class="k">class</span> <span class="nc">modeller</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">modeller</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Model and analyse multi-degree-of-freedom (MDOF) oscillators</span>
 <span class="sd">    using OpenSees.</span>
@@ -162,7 +169,7 @@
 <span class="sd">        system with absolute-acceleration recording and MinMax</span>
 <span class="sd">        stopping criteria.</span>
 
-<span class="sd">    do_incremental_dynamic_analysis(fnames, dt_gm, t_max, dt_ansys,</span>
+<span class="sd">    do_ida_analysis(fnames, dt_gm, t_max, dt_ansys,</span>
 <span class="sd">            ...)</span>
 <span class="sd">        Performs incremental dynamic analysis (IDA) using the</span>
 <span class="sd">        Hunt-Trace-Fill algorithm (Vamvatsikos &amp; Cornell, 2002).</span>
@@ -180,7 +187,7 @@
 
 <div class="viewcode-block" id="modeller.__init__">
 <a class="viewcode-back" href="../../../contents/mod/init.html#openquake.vmtk.modeller.modeller.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">number_storeys</span><span class="p">,</span>
         <span class="n">storey_heights</span><span class="p">,</span>
@@ -300,7 +307,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span> <span class="o">=</span> <span class="n">degradation</span></div>
 
 
-    <span class="k">def</span> <span class="nf">create_Pinching4_material</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_Pinching4_material</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">mat1Tag</span><span class="p">,</span>
         <span class="n">mat2Tag</span><span class="p">,</span>
@@ -518,7 +525,7 @@
 
 <div class="viewcode-block" id="modeller.compile_model">
 <a class="viewcode-back" href="../../../contents/mod/compile_model.html#openquake.vmtk.modeller.modeller.compile_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compile_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compiles and sets up the multi-degree-of-freedom (MDOF) oscillator</span>
 <span class="sd">        model in OpenSees.</span>
@@ -663,7 +670,7 @@
 
 <div class="viewcode-block" id="modeller.plot_model">
 <a class="viewcode-back" href="../../../contents/mod/plot_model.html#openquake.vmtk.modeller.modeller.plot_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pFlag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">export_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pFlag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">export_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plots a 2-D visualisation of the stick-and-mass model as two subplots.</span>
 
@@ -710,7 +717,7 @@
 
         <span class="c1"># Custom function to draw zigzag spring symbols representing the</span>
         <span class="c1"># zero-length Pinching4 elements</span>
-        <span class="k">def</span> <span class="nf">_draw_spring</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z_bot</span><span class="p">,</span> <span class="n">z_top</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">n_teeth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.06</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_draw_spring</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z_bot</span><span class="p">,</span> <span class="n">z_top</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">n_teeth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.06</span><span class="p">):</span>
             <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="n">z_top</span> <span class="o">-</span> <span class="n">z_bot</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.15</span>
             <span class="n">n_pts</span> <span class="o">=</span> <span class="n">n_teeth</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">z_bot</span> <span class="o">+</span> <span class="n">pad</span><span class="p">,</span> <span class="n">z_top</span> <span class="o">-</span> <span class="n">pad</span><span class="p">,</span> <span class="n">n_pts</span><span class="p">)</span>
@@ -739,8 +746,8 @@
         <span class="c1"># node elevation diagram, enhancing the clarity and visual appeal of</span>
         <span class="c1"># the plot while maintaining consistency with the overall design and</span>
         <span class="c1"># color scheme</span>
-        <span class="k">class</span> <span class="nc">_SpringHandler</span><span class="p">:</span>
-            <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">legend</span><span class="p">,</span> <span class="n">orig_handle</span><span class="p">,</span> <span class="n">fontsize</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">_SpringHandler</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">legend</span><span class="p">,</span> <span class="n">orig_handle</span><span class="p">,</span> <span class="n">fontsize</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
                 <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
                 <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
                 <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>
@@ -1026,7 +1033,7 @@
     <span class="c1">##########################################################################</span>
 <div class="viewcode-block" id="modeller.do_gravity_analysis">
 <a class="viewcode-back" href="../../../contents/mod/do_gravity_analysis.html#openquake.vmtk.modeller.modeller.do_gravity_analysis">[docs]</a>
-    <span class="k">def</span> <span class="nf">do_gravity_analysis</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_gravity_analysis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">nG</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">ansys_soe</span><span class="o">=</span><span class="s2">&quot;UmfPack&quot;</span><span class="p">,</span>
@@ -1145,7 +1152,7 @@
 
 <div class="viewcode-block" id="modeller.do_modal_analysis">
 <a class="viewcode-back" href="../../../contents/mod/do_modal_analysis.html#openquake.vmtk.modeller.modeller.do_modal_analysis">[docs]</a>
-    <span class="k">def</span> <span class="nf">do_modal_analysis</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_modal_analysis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_modes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;-genBandArpack&quot;</span><span class="p">,</span>
@@ -1265,7 +1272,7 @@
 
 <div class="viewcode-block" id="modeller.do_spo_analysis">
 <a class="viewcode-back" href="../../../contents/mod/do_spo_analysis.html#openquake.vmtk.modeller.modeller.do_spo_analysis">[docs]</a>
-    <span class="k">def</span> <span class="nf">do_spo_analysis</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_spo_analysis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ref_disp</span><span class="p">,</span>
         <span class="n">disp_scale_factor</span><span class="p">,</span>
@@ -1601,7 +1608,7 @@
         <span class="k">return</span> <span class="n">spo_dict</span></div>
 
 
-    <span class="k">def</span> <span class="nf">do_cpo_analysis</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_cpo_analysis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ref_disp</span><span class="p">,</span>
         <span class="n">mu_levels</span><span class="p">,</span>
@@ -1989,7 +1996,7 @@
 
 <div class="viewcode-block" id="modeller.do_nrha_analysis">
 <a class="viewcode-back" href="../../../contents/mod/do_nrha_analysis.html#openquake.vmtk.modeller.modeller.do_nrha_analysis">[docs]</a>
-    <span class="k">def</span> <span class="nf">do_nrha_analysis</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_nrha_analysis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">fnames</span><span class="p">,</span> <span class="n">dt_gm</span><span class="p">,</span> <span class="n">sf</span><span class="p">,</span> <span class="n">t_max</span><span class="p">,</span> <span class="n">dt_ansys</span><span class="p">,</span>
         <span class="n">pFlag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">ansys_soe</span><span class="o">=</span><span class="s1">&#39;BandGeneral&#39;</span><span class="p">,</span>
         <span class="n">constraints_handler</span><span class="o">=</span><span class="s1">&#39;Plain&#39;</span><span class="p">,</span> <span class="n">numberer</span><span class="o">=</span><span class="s1">&#39;RCM&#39;</span><span class="p">,</span>
@@ -2552,7 +2559,7 @@
                 <span class="n">hysteretic_energy_per_storey</span><span class="p">,</span> <span class="n">total_hysteretic_energy</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">do_incremental_dynamic_analysis</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_ida_analysis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fnames</span><span class="p">,</span>
         <span class="n">dt_gm</span><span class="p">,</span>
@@ -2650,15 +2657,17 @@
         <span class="n">ordered_sfs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">run_count</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="k">def</span> <span class="nf">run_step</span><span class="p">(</span><span class="n">sf_value</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">run_step</span><span class="p">(</span><span class="n">sf_value</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute a single simulation step and capture results.&quot;&quot;&quot;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_count</span> <span class="o">&gt;=</span> <span class="n">max_runs</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Execution Limit Reached: </span><span class="si">{</span><span class="n">max_runs</span><span class="si">}</span><span class="s2"> runs. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Skipping SF </span><span class="si">{</span><span class="n">sf_value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; -- Run </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_count</span><span class="w"> </span><span class="o">+</span>
-<span class="w">                             </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_runs</span><span class="si">}</span><span class="s2"> | SF: </span><span class="si">{</span><span class="n">sf_value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot; -- Run </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_runs</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; | SF: </span><span class="si">{</span><span class="n">sf_value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
             <span class="c1"># Reset environment and rebuild model for the current iteration</span>
             <span class="n">ops</span><span class="o">.</span><span class="n">wipe</span><span class="p">()</span>
@@ -2735,7 +2744,7 @@
 
         <span class="k">return</span> <span class="n">ida_data</span><span class="p">,</span> <span class="n">ordered_sfs</span>
 
-    <span class="k">def</span> <span class="nf">do_nrha_analysis_sequences</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_nrha_analysis_sequences</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">fnames</span><span class="p">,</span> <span class="n">time_vector</span><span class="p">,</span> <span class="n">sf</span><span class="p">,</span>
         <span class="n">pFlag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">ansys_soe</span><span class="o">=</span><span class="s1">&#39;BandGeneral&#39;</span><span class="p">,</span>
         <span class="n">constraints_handler</span><span class="o">=</span><span class="s1">&#39;Plain&#39;</span><span class="p">,</span> <span class="n">numberer</span><span class="o">=</span><span class="s1">&#39;RCM&#39;</span><span class="p">,</span>
@@ -3217,7 +3226,7 @@
         <span class="c1"># --------------------------------------------------------</span>
         <span class="c1">#  Helper: determine which sequence index a time belongs to</span>
         <span class="c1"># --------------------------------------------------------</span>
-        <span class="k">def</span> <span class="nf">_get_sequence_index</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_get_sequence_index</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Return the 0-based sequence index for time *t*,</span>
 <span class="sd">            or -1 if *t* falls in a padding zone.&quot;&quot;&quot;</span>
             <span class="k">for</span> <span class="n">si</span><span class="p">,</span> <span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">te</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">boundaries</span><span class="p">):</span>

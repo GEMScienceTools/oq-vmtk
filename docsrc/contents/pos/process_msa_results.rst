@@ -43,4 +43,18 @@ Multiple Stripe Analysis Postprocessing
 
       \beta_{\text{total}} = \sqrt{\beta_{\text{r2r}}^2 + \beta_{\text{b2b}}^2 + \beta_{\text{DS}}^2}
 
+.. admonition:: Example
+   :class: note
 
+   .. code-block:: python
+
+      from openquake.vmtk.postprocessor import postprocessor
+
+      pp = postprocessor()
+      # stripe_imls, stripe_edps: 2-D arrays (n_records × n_stripes) from MSA
+      msa_dict = pp.process_msa_results(
+          stripe_imls=stripe_imls,
+          stripe_edps=stripe_edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+      )
+      print(msa_dict['fragility']['medians'])
