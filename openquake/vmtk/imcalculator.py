@@ -145,7 +145,7 @@ class imcalculator:
     def get_spectrum(
         self,
         periods=np.linspace(1e-5, 4.0, 500),
-        damping_ratio=0.05,
+        damping_ratio=None,
     ):
         """
         Computes the response spectrum using the Newmark-beta method.
@@ -153,8 +153,8 @@ class imcalculator:
         The method performs Newmark constant-average-acceleration
         time integration (gamma = 0.5, beta = 0.25) for a unit-mass
         single-degree-of-freedom oscillator at each requested period,
-        returning the spectral displacement, pseudo-velocity, and
-        pseudo-acceleration.
+        returning the spectral displacement, pseudo-spectral velocity
+        (psv), and pseudo-spectral acceleration (psa).
 
         Parameters
         ----------
@@ -164,8 +164,9 @@ class imcalculator:
             4.0 s.
 
         damping_ratio : float, optional
-            Damping ratio for the SDOF oscillator. Default is 0.05
-            (5%).
+            Damping ratio for the SDOF oscillator. Defaults to
+            ``self.damping`` (the damping ratio supplied at
+            construction, itself 0.05 / 5% by default).
 
         Returns
         -------
@@ -175,10 +176,10 @@ class imcalculator:
         sd : numpy.ndarray
             Spectral displacement (m).
 
-        sv : numpy.ndarray
+        psv : numpy.ndarray
             Pseudo spectral velocity (m/s).
 
-        sa : numpy.ndarray
+        psa : numpy.ndarray
             Pseudo spectral acceleration (g).
 
         Notes
@@ -188,6 +189,9 @@ class imcalculator:
         acceleration method (unconditionally stable).
 
         """
+        if damping_ratio is None:
+            damping_ratio = self.damping
+
         # Newmark-beta integration constants
         gamma = 0.5
         beta = 0.25
@@ -246,10 +250,10 @@ class imcalculator:
 
         # Compute spectral values (vectorised across all periods)
         sd = np.max(np.abs(u), axis=1)  # Spectral displacement (m)
-        sv = sd * omega  # Pseudo spectral velocity (m/s)
-        sa = sd * omega**2 / _G  # Pseudo spectral acceleration (g)
+        psv = sd * omega  # Pseudo spectral velocity (m/s)
+        psa = sd * omega**2 / _G  # Pseudo spectral acceleration (g)
 
-        return periods, sd, sv, sa
+        return periods, sd, psv, psa
 
     def get_sa(self, period):
         """
@@ -263,14 +267,14 @@ class imcalculator:
 
         Returns
         -------
-        sa_interp : float
-            Spectral acceleration (g) at the requested period.
+        psa_interp : float
+            Pseudo-spectral acceleration (g) at the requested period.
 
         """
-        periods, _, _, sa = self.get_spectrum()
+        periods, _, _, psa = self.get_spectrum()
 
-        # Interpolate to find SA at the requested period
-        return np.interp(period, periods, sa)
+        # Interpolate to find PSA at the requested period
+        return np.interp(period, periods, psa)
 
     def get_saavg(self, period):
         """
@@ -287,37 +291,37 @@ class imcalculator:
 
         Returns
         -------
-        sa_avg : float
-            Geometric mean of spectral accelerations (g) over the
-            defined period range.
+        psa_avg : float
+            Geometric mean of pseudo-spectral accelerations (g) over
+            the defined period range.
 
         References
         -------
-        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000. 
-            Development of a two-parameter seismic intensity measure and 
-            probabilistic assessment procedure. 2nd US–Japan Workshop on 
-            Performance-Based Earthquake Engineering Methodology for RC 
+        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.
+            Development of a two-parameter seismic intensity measure and
+            probabilistic assessment procedure. 2nd US–Japan Workshop on
+            Performance-Based Earthquake Engineering Methodology for RC
             Building Structures.
 
-        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral 
-            acceleration as an intensity measure for collapse risk 
-            assessment. Earthquake Engineering & Structural Dynamics, 
+        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral
+            acceleration as an intensity measure for collapse risk
+            assessment. Earthquake Engineering & Structural Dynamics,
             44(12), 2057–2073. DOI: 10.1002/eqe.2575
 
         """
-        periods, _, _, sa = self.get_spectrum()
+        periods, _, _, psa = self.get_spectrum()
 
         # Define 10 equally spaced periods in [0.2T, 1.5T]
         period_range = np.linspace(0.2 * period, 1.5 * period, 10)
 
-        # Interpolate SA values at the defined period range
-        sa_values = np.interp(period_range, periods, sa)
+        # Interpolate PSA values at the defined period range
+        psa_values = np.interp(period_range, periods, psa)
 
         # Clip to prevent underflow in the log-space geometric mean
-        sa_values = np.clip(sa_values, 1e-6, None)
+        psa_values = np.clip(psa_values, 1e-6, None)
 
         # Geometric mean via log-space averaging
-        return np.exp(np.mean(np.log(sa_values)))
+        return np.exp(np.mean(np.log(psa_values)))
 
     def get_saavg_user_defined(self, periods_list):
         """
@@ -332,34 +336,34 @@ class imcalculator:
 
         Returns
         -------
-        sa_avg : float
-            Geometric mean of spectral accelerations (g) over the
-            user-defined periods.
+        psa_avg : float
+            Geometric mean of pseudo-spectral accelerations (g) over
+            the user-defined periods.
 
         References
         -------
-        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000. 
-            Development of a two-parameter seismic intensity measure and 
-            probabilistic assessment procedure. 2nd US–Japan Workshop on 
-            Performance-Based Earthquake Engineering Methodology for RC 
+        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.
+            Development of a two-parameter seismic intensity measure and
+            probabilistic assessment procedure. 2nd US–Japan Workshop on
+            Performance-Based Earthquake Engineering Methodology for RC
             Building Structures.
 
-        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral 
-            acceleration as an intensity measure for collapse risk 
-            assessment. Earthquake Engineering & Structural Dynamics, 
+        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral
+            acceleration as an intensity measure for collapse risk
+            assessment. Earthquake Engineering & Structural Dynamics,
             44(12), 2057–2073. DOI: 10.1002/eqe.2575
 
         """
-        periods, _, _, sa = self.get_spectrum()
+        periods, _, _, psa = self.get_spectrum()
 
-        # Interpolate SA values at user-defined periods
-        sa_values = np.interp(periods_list, periods, sa)
+        # Interpolate PSA values at user-defined periods
+        psa_values = np.interp(periods_list, periods, psa)
 
         # Clip to prevent underflow in the log-space geometric mean
-        sa_values = np.clip(sa_values, 1e-6, None)
+        psa_values = np.clip(psa_values, 1e-6, None)
 
         # Geometric mean via log-space averaging
-        return np.exp(np.mean(np.log(sa_values)))
+        return np.exp(np.mean(np.log(psa_values)))
 
     def get_vel_disp_history(self):
         """
@@ -694,7 +698,7 @@ class imcalculator:
         acc2,
         percentile=50,
         periods=np.linspace(1e-5, 4.0, 500),
-        damping_ratio=0.05,
+        damping_ratio=None,
     ):
         """
         Computes the RotDxx orientation-independent spectral
@@ -737,8 +741,9 @@ class imcalculator:
             4.0 s.
 
         damping_ratio : float, optional
-            Damping ratio for the SDOF oscillator. Default is
-            0.05 (5%).
+            Damping ratio for the SDOF oscillator. Defaults to
+            ``self.damping`` (the damping ratio supplied at
+            construction, itself 0.05 / 5% by default).
 
         Returns
         -------
@@ -746,7 +751,7 @@ class imcalculator:
             Periods of the RotDxx spectrum (s).
 
         rotdxx : numpy.ndarray
-            RotDxx spectral acceleration (g) at each period.
+            RotDxx pseudo-spectral acceleration (g) at each period.
 
         Notes
         -----
@@ -756,7 +761,7 @@ class imcalculator:
         orientation-independent maximum.
 
         When the second component is zero, RotD100 equals the
-        single-component SA and RotD50 equals SA · √2/2 (the
+        single-component PSA and RotD50 equals PSA · √2/2 (the
         median of abs(cos θ) over 180 uniformly spaced angles).
 
         References
@@ -768,6 +773,9 @@ class imcalculator:
         DOI: 10.1785/0120090400.
 
         """
+        if damping_ratio is None:
+            damping_ratio = self.damping
+
         # Newmark-beta integration constants (constant average
         # acceleration — unconditionally stable)
         gamma_nb = 0.5
@@ -836,7 +844,7 @@ class imcalculator:
         # 180 rotation angles: 0°, 1°, …, 179°
         theta_rad = np.deg2rad(np.arange(180))   # (180,)
 
-        # SA at each (angle, period) combination
+        # PSA at each (angle, period) combination
         # u_rot(θ) = cos(θ)*u1 + sin(θ)*u2  →  shape (n_periods, n_time)
         # Vectorise over angles by broadcasting
         # cos_th: (180, 1, 1), u1: (1, n_periods, n_time)
@@ -846,9 +854,9 @@ class imcalculator:
         # u_rot shape: (180, n_periods, n_time)
 
         sd_rot = np.max(np.abs(u_rot), axis=2)   # (180, n_periods)
-        sa_rot = sd_rot * omega[np.newaxis, :] ** 2 / _G   # (180, n_periods)
+        psa_rot = sd_rot * omega[np.newaxis, :] ** 2 / _G   # (180, n_periods)
 
         # RotDxx: percentile across the 180 rotation angles
-        rotdxx = np.percentile(sa_rot, percentile, axis=0)   # (n_periods,)
+        rotdxx = np.percentile(psa_rot, percentile, axis=0)   # (n_periods,)
 
         return periods, rotdxx
