@@ -291,6 +291,19 @@ class imcalculator:
             Geometric mean of spectral accelerations (g) over the
             defined period range.
 
+        References
+        -------
+        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000. 
+            Development of a two-parameter seismic intensity measure and 
+            probabilistic assessment procedure. 2nd US–Japan Workshop on 
+            Performance-Based Earthquake Engineering Methodology for RC 
+            Building Structures.
+
+        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral 
+            acceleration as an intensity measure for collapse risk 
+            assessment. Earthquake Engineering & Structural Dynamics, 
+            44(12), 2057–2073. DOI: 10.1002/eqe.2575
+
         """
         periods, _, _, sa = self.get_spectrum()
 
@@ -322,6 +335,19 @@ class imcalculator:
         sa_avg : float
             Geometric mean of spectral accelerations (g) over the
             user-defined periods.
+
+        References
+        -------
+        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000. 
+            Development of a two-parameter seismic intensity measure and 
+            probabilistic assessment procedure. 2nd US–Japan Workshop on 
+            Performance-Based Earthquake Engineering Methodology for RC 
+            Building Structures.
+
+        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral 
+            acceleration as an intensity measure for collapse risk 
+            assessment. Earthquake Engineering & Structural Dynamics, 
+            44(12), 2057–2073. DOI: 10.1002/eqe.2575
 
         """
         periods, _, _, sa = self.get_spectrum()
@@ -450,6 +476,12 @@ class imcalculator:
         ai : float
             Arias Intensity (m/s).
 
+        References
+        -------
+        Arias, A., 1970. A measure of earthquake intensity. 
+            Hansen, R. J. (ed.), Seismic Design for Nuclear Power 
+            Plants (pp. 438–483). Cambridge, MA: MIT Press.
+
         """
         # Acceleration in m/s²
         acc_m_s2 = self.acc_m_s2
@@ -476,6 +508,13 @@ class imcalculator:
         -------
         cav : float
             Cumulative Absolute Velocity (m/s).
+
+        References
+        -------
+        O’Hara, T. F., and Jacobson, J. P., 1991. Standardization
+            of the cumulative absolute velocity (EPRI-TR--100082; 
+            ON: UN92004453). Palo Alto, CA.
+
 
         """
         # Integrate the absolute acceleration (m/s²) over the full
@@ -506,6 +545,12 @@ class imcalculator:
         -------
         sig_duration : float
             Significant duration (s).
+
+        References
+        -------
+        Trifunac, M. D., and Brady, A. G., 1975. A study on the duration
+            of strong earthquake ground motion. Bulletin of the 
+            Seismological Society of America, 65(3), 581–626.
 
         Notes
         -----
@@ -578,11 +623,11 @@ class imcalculator:
 
         References
         ----------
-        Dávalos H, Miranda E. "Filtered incremental velocity: A novel
-        approach in intensity measures for seismic collapse
-        estimation." *Earthquake Engineering & Structural Dynamics*,
-        2019, 48(12), 1384-1405.
-        DOI: 10.1002/eqe.3205.
+        Davalos, H., and Miranda, E., 2019. Filtered incremental 
+            velocity: A novel approach in intensity measures for 
+            seismic collapse estimation. Earthquake Engineering & 
+            Structural Dynamics, 48(12), 1384–1405. 
+            DOI: 10.1002/eqe.3205.
 
         """
         n = len(self.acc)
