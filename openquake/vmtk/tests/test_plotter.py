@@ -210,8 +210,9 @@ def _slf_out_cache():
     """Minimal out/cache dicts for plot_slf_model.
 
     plot_slf_model iterates over cache.keys() and accesses
-    cache[key]['total_loss_storey'] (shape: n_real x n_edp),
-    cache[key]['empirical_16th/84th/median'], and out[key]['edp_range']/['slf'].
+    cache[key]['total_loss_storey_ratio'] (shape: n_real x n_edp), and
+    out[key]['edp_range']/['slf_16th']/['slf']/['slf_84th'] (all
+    loss-ratio values).
     """
     rng = np.random.default_rng(3)
     edp_range = np.linspace(0.0, 0.1, 50)
@@ -220,17 +221,15 @@ def _slf_out_cache():
     out = {
         group_key: {
             'edp_range': edp_range,
-            'slf': np.clip(
-                np.cumsum(rng.uniform(0.0, 0.02, len(edp_range))), 0, 1),
+            'slf_16th':  rng.uniform(0.0, 0.15, len(edp_range)),
+            'slf':       rng.uniform(0.07, 0.2, len(edp_range)),
+            'slf_84th':  rng.uniform(0.15, 0.3, len(edp_range)),
         }
     }
     cache = {
         group_key: {
             # shape (n_real, n_edp) — each row is one realisation
-            'total_loss_storey': rng.uniform(0.0, 0.3, (n_real, len(edp_range))),
-            'empirical_16th': rng.uniform(0.0, 0.15, len(edp_range)),
-            'empirical_84th': rng.uniform(0.15, 0.3, len(edp_range)),
-            'empirical_median': rng.uniform(0.07, 0.2, len(edp_range)),
+            'total_loss_storey_ratio': rng.uniform(0.0, 0.3, (n_real, len(edp_range))),
         }
     }
     return out, cache
@@ -653,6 +652,26 @@ class TestPlotSLFModel(unittest.TestCase):
             xlims=(0.0, 0.1), ylims=(0.0, 1.0),
             pFlag=False,
         )
+
+    def test_overlays_multiple_groups_on_one_axes(self):
+        """Regression guard: plot_slf_model used to build a new fig/ax
+        inside the per-key loop but only style/save/show the LAST one, so
+        every earlier group's figure was silently discarded. With more
+        than one key, everything must land on a single shared figure.
+        """
+        out_a, cache_a = _slf_out_cache()
+        out_b, cache_b = _slf_out_cache()
+        out = {'Example A': out_a['psd_ns_1'], 'Example B': out_b['psd_ns_1']}
+        cache = {'Example A': cache_a['psd_ns_1'], 'Example B': cache_b['psd_ns_1']}
+        self.pl.plot_slf_model(
+            out, cache,
+            edp_label='PSD [-]', loss_label='Loss Ratio',
+            xlims=(0.0, 0.1), ylims=(0.0, 1.0),
+            pFlag=True,
+        )
+        self.assertEqual(len(plt.get_fignums()), 1)
+        self.assertEqual(len(plt.gcf().axes), 1)
+        self.assertEqual(len(plt.gcf().axes[0].lines), 2)
 
 
 # ---------------------------------------------------------------------------
