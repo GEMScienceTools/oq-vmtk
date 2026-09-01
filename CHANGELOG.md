@@ -22,6 +22,7 @@
 - Demo `StoreyLossFunctionApplication`: re-themed from "Fitted vs. Empirical" to "Example A vs. Example B" throughout (demand interpolation, vulnerability fitting, collapse conditioning, AALR comparison).
 
 ### Removed
+- `postprocessor.calculate_rotated_fragility` and the `fragility_rotation`/`rotation_percentile` options on `process_mca_results`, `process_msa_results`, and `process_ida_results` are removed (along with the `is_rotated`/`rotation_active`/`rotation_percentile` keys previously returned in their result dicts). Demo `FragilityAnalysis`'s "Method 4: rotation" is removed and the remaining methods renumbered 1–8; its "recommended method" plot now uses the lognormal + building-to-building + damage-state uncertainty variant.
 - `postprocessor.calculate_vulnerability_function`: the `method='silva'` empirical COV option (Silva, 2019) is removed, along with the `method` parameter. Explicit law-of-total-variance uncertainty propagation is now always used when `uncertainty=True`.
 - `slfgenerator`: all internal regression/curve-fitting machinery removed — `perform_regression`, `_fit_regression`, and `estimate_accuracy` methods, the `regression` constructor parameter, and the `fitting_model`/`fitting_parameters_model`/`fitted_loss_model` Pydantic scaffolding. `generate()` no longer fits a parametric curve to the simulated loss cloud.
 

@@ -815,7 +815,7 @@
                 <span class="n">col_x</span> <span class="o">+</span> <span class="mf">0.11</span><span class="p">,</span>
                 <span class="n">z</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">   z = </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m   m = </span><span class="si">{</span><span class="n">m</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> t&quot;</span><span class="p">,</span>
-                <span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
                 <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span>
                 <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                 <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
@@ -841,7 +841,7 @@
                 <span class="n">bx_st</span> <span class="o">-</span> <span class="mf">0.05</span><span class="p">,</span>
                 <span class="n">z_mid</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sh</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">,</span>
-                <span class="n">fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                 <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#90A4AE&quot;</span><span class="p">,</span>
                 <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
                 <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
@@ -856,7 +856,7 @@
                 <span class="n">col_x</span> <span class="o">+</span> <span class="mf">0.09</span><span class="p">,</span>
                 <span class="n">z_mid</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s2">&quot;Ele. </span><span class="si">{</span><span class="n">ele_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">fontsize</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                 <span class="n">color</span><span class="o">=</span><span class="n">COL_SPRING</span><span class="p">,</span>
                 <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
                 <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
@@ -873,12 +873,12 @@
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total_h</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span>
             <span class="s2">&quot;Height,  z  [m]&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">6</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">6</span>
         <span class="p">)</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
             <span class="s2">&quot;Node Positions&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#1A237E&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">8</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#1A237E&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">8</span>
         <span class="p">)</span>
 
         <span class="n">ax2</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_GRID</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -918,22 +918,22 @@
         <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span>
             <span class="s2">&quot;Storey Drift Capacity,  </span><span class="se">\u03b4\u1d62</span><span class="s2">  [m]&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
             <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span>
             <span class="n">labelpad</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span>
             <span class="s2">&quot;Storey Shear Force,  V</span><span class="se">\u1d62</span><span class="s2">  [kN]&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
             <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span>
             <span class="n">labelpad</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">)</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
             <span class="s2">&quot;Storey Force</span><span class="se">\u2013</span><span class="s2">Deformation Relationships&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
             <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#1A237E&quot;</span><span class="p">,</span>
             <span class="n">pad</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
@@ -970,8 +970,7 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_st</span><span class="p">)</span>
         <span class="p">]</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.16</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">])</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 
         <span class="n">p1</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
@@ -981,7 +980,7 @@
         <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
             <span class="n">handles</span><span class="o">=</span><span class="n">handles1</span><span class="p">,</span>
             <span class="n">handler_map</span><span class="o">=</span><span class="p">{</span><span class="n">spring_handle</span><span class="p">:</span> <span class="n">_SpringHandler</span><span class="p">()},</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mf">7.5</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
             <span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
             <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower center&quot;</span><span class="p">,</span>
             <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">x0</span> <span class="o">+</span> <span class="n">p1</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">leg_y</span><span class="p">),</span>
@@ -993,7 +992,7 @@
         <span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
             <span class="n">handles</span><span class="o">=</span><span class="n">handles2</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mf">7.5</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
             <span class="n">ncol</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">n_st</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
             <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower center&quot;</span><span class="p">,</span>
             <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">x0</span> <span class="o">+</span> <span class="n">p2</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">leg_y</span><span class="p">),</span>
@@ -1008,10 +1007,9 @@
         <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;SDOF Oscillator&quot;</span> <span class="k">if</span> <span class="n">n_st</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n_st</span><span class="si">}</span><span class="s2">-Storey MDOF&quot;</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;OpenSees </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">  </span><span class="se">\u2014</span><span class="s2">  Stick-and-Mass Model&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
             <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#1A237E&quot;</span><span class="p">,</span>
-            <span class="n">y</span><span class="o">=</span><span class="mf">1.01</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Save or Show</span>
@@ -1020,7 +1018,7 @@
                 <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">export_path</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">directory</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
                     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -1884,11 +1882,41 @@
                 <span class="c1"># Data Recording (only if successful)</span>
                 <span class="k">if</span> <span class="n">ok</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">curr_disp</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">nodeDisp</span><span class="p">(</span><span class="n">control_node</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">)</span>
-                    <span class="n">cpo_top_disp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_disp</span><span class="p">)</span>
-
                     <span class="n">current_floor_disps</span> <span class="o">=</span> <span class="p">[</span>
                         <span class="n">ops</span><span class="o">.</span><span class="n">nodeDisp</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">pattern_nodes</span>
                     <span class="p">]</span>
+
+                    <span class="c1"># Direct nodal cross-check: once a spring&#39;s material</span>
+                    <span class="c1"># dies, the storeys above it can decouple into a</span>
+                    <span class="c1"># zero-stiffness mechanism that DisplacementControl</span>
+                    <span class="c1"># still reports as &quot;converged&quot;, with the affected</span>
+                    <span class="c1"># floors jumping to wildly divergent displacements</span>
+                    <span class="c1"># even though eleResponse(&#39;deformation&#39;) below stays</span>
+                    <span class="c1"># frozen under the MinMax bound (it reflects the last</span>
+                    <span class="c1"># valid material state, not the true nodal motion).</span>
+                    <span class="c1"># Catch that case from the raw nodal displacements</span>
+                    <span class="c1"># *before* recording them, so no divergent step is</span>
+                    <span class="c1"># ever appended to the results.</span>
+                    <span class="n">prev_disp</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="k">for</span> <span class="n">s_idx</span><span class="p">,</span> <span class="n">floor_disp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">current_floor_disps</span><span class="p">):</span>
+                        <span class="n">storey_disp</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">floor_disp</span> <span class="o">-</span> <span class="n">prev_disp</span><span class="p">)</span>
+                        <span class="n">prev_disp</span> <span class="o">=</span> <span class="n">floor_disp</span>
+                        <span class="k">if</span> <span class="n">storey_disp</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]:</span>
+                            <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span>
+                                    <span class="sa">f</span><span class="s2">&quot;Interstorey displacement at &quot;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;storey </span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> reached &quot;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;ultimate limit (</span><span class="si">{</span><span class="n">storey_disp</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> &quot;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;&gt;= </span><span class="si">{</span><span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">) &quot;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;— stopping CPO analysis.&quot;</span>
+                                <span class="p">)</span>
+                            <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+
+                    <span class="k">if</span> <span class="n">minmax_failed</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+                    <span class="n">cpo_top_disp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_disp</span><span class="p">)</span>
                     <span class="n">cpo_disps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_floor_disps</span><span class="p">)</span>
 
                     <span class="n">ops</span><span class="o">.</span><span class="n">reactions</span><span class="p">()</span>
@@ -1967,10 +1995,14 @@
         <span class="n">pseudo_steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">energy_steps</span><span class="p">))</span>
         <span class="n">cpo_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">pseudo_steps</span><span class="p">,</span> <span class="n">energy_steps</span><span class="p">))</span>
 
-        <span class="c1"># Calculate Interstorey Drifts</span>
+        <span class="c1"># Calculate Interstorey Drift Ratios (IDR), consistent with</span>
+        <span class="c1"># do_spo_analysis: normalise interstorey displacements by storey</span>
+        <span class="c1"># height and express as a percentage.</span>
         <span class="n">base_disps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">cpo_disps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
         <span class="n">padded_disps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">base_disps</span><span class="p">,</span> <span class="n">cpo_disps</span><span class="p">))</span>
-        <span class="n">cpo_drifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">padded_disps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">cpo_isd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">padded_disps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">storey_heights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storey_heights</span><span class="p">)</span>
+        <span class="n">cpo_drifts</span> <span class="o">=</span> <span class="p">(</span><span class="n">cpo_isd</span> <span class="o">/</span> <span class="n">storey_heights</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
         <span class="n">max_interstorey_drift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cpo_drifts</span><span class="p">))</span>
 
         <span class="n">ops</span><span class="o">.</span><span class="n">wipeAnalysis</span><span class="p">()</span>

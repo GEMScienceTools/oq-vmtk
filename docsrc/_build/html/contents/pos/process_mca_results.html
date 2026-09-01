@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.6. Modified Cloud Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+  <title>7.5. Modified Cloud Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
@@ -23,8 +23,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="7.7. Incremental Dynamic Analysis Postprocessing" href="process_ida_results.html" />
-    <link rel="prev" title="7.5. Ordinal Fragility Functions" href="calculate_ordinal_fragility.html" /> 
+    <link rel="next" title="7.6. Incremental Dynamic Analysis Postprocessing" href="process_ida_results.html" />
+    <link rel="prev" title="7.4. Ordinal Fragility Functions" href="calculate_ordinal_fragility.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,18 +57,17 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../pos.html">7. Postprocessing</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="init.html">7.1. Initialisation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.4. GLM Fragility Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">7.6. Modified Cloud Analysis Postprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.3. GLM Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.4. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.5. Modified Cloud Analysis Postprocessing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.postprocessor.postprocessor.process_mca_results"><code class="docutils literal notranslate"><span class="pre">postprocessor.process_mca_results()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_risk.html">7.10. Average Annual Risk Metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.11. References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_ida_results.html">7.6. Incremental Dynamic Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.7. Multiple Stripe Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.8. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_risk.html">7.9. Average Annual Risk Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.10. References</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
@@ -92,7 +91,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../pos.html"><span class="section-number">7. </span>Postprocessing</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7.6. </span>Modified Cloud Analysis Postprocessing</li>
+      <li class="breadcrumb-item active"><span class="section-number">7.5. </span>Modified Cloud Analysis Postprocessing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/contents/pos/process_mca_results.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,10 +102,10 @@
            <div itemprop="articleBody">
              
   <section id="modified-cloud-analysis-postprocessing">
-<h1><span class="section-number">7.6. </span>Modified Cloud Analysis Postprocessing<a class="headerlink" href="#modified-cloud-analysis-postprocessing" title="Link to this heading"></a></h1>
+<h1><span class="section-number">7.5. </span>Modified Cloud Analysis Postprocessing<a class="headerlink" href="#modified-cloud-analysis-postprocessing" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.process_mca_results">
-<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_mca_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">censored_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.geomspace(0.05,</span> <span class="pre">10,</span> <span class="pre">50)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lognormal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispersion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cloud_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bootstrap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mcmc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mcmc_burnin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_mca_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_mca_results" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_mca_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">censored_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.geomspace(0.05,</span> <span class="pre">10,</span> <span class="pre">50)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lognormal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispersion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cloud_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bootstrap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mcmc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_mcmc_burnin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_mca_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_mca_results" title="Link to this definition"></a></dt>
 <dd><p>Perform a Modified Cloud Analysis (MCA) to derive seismic
 fragility functions. This method extends classical cloud analysis
 by incorporating logistic regression to account for structural
@@ -148,11 +147,6 @@ stability (used only when <code class="docutils literal notranslate"><span class
 Default is 200.</p></li>
 <li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Seed for reproducibility of the bootstrap sampling or MCMC.
 Default is None.</p></li>
-<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to rotate the fragility curve around a specific
-percentile to adjust for target reliability. Default is
-False.</p></li>
-<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em>) – The target percentile for fragility function rotation.
-Default is 0.10.</p></li>
 <li><p><strong>fragility_method</strong> (<em>{'lognormal'</em><em>, </em><em>'ordinal'</em><em>, </em><em>'probit'</em><em>, </em><em>'logit'}</em><em>, </em><em>optional</em>) – The methodology used to fit the fragility functions.
 Default is <code class="docutils literal notranslate"><span class="pre">'lognormal'</span></code>.</p></li>
 <li><p><strong>dispersion_type</strong> (<em>{'constant'</em><em>, </em><em>'variable'}</em><em>, </em><em>optional</em>) – Dispersion model for the ordinal CLM
@@ -335,8 +329,8 @@ band (Eq. 11) bounds the predictive spread. The <code class="docutils literal no
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="calculate_ordinal_fragility.html" class="btn btn-neutral float-left" title="7.5. Ordinal Fragility Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="process_ida_results.html" class="btn btn-neutral float-right" title="7.7. Incremental Dynamic Analysis Postprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="calculate_ordinal_fragility.html" class="btn btn-neutral float-left" title="7.4. Ordinal Fragility Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="process_ida_results.html" class="btn btn-neutral float-right" title="7.6. Incremental Dynamic Analysis Postprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

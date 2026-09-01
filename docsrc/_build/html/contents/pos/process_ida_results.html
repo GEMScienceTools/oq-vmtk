@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.7. Incremental Dynamic Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+  <title>7.6. Incremental Dynamic Analysis Postprocessing &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
@@ -23,8 +23,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="7.8. Multiple Stripe Analysis Postprocessing" href="process_msa_results.html" />
-    <link rel="prev" title="7.6. Modified Cloud Analysis Postprocessing" href="process_mca_results.html" /> 
+    <link rel="next" title="7.7. Multiple Stripe Analysis Postprocessing" href="process_msa_results.html" />
+    <link rel="prev" title="7.5. Modified Cloud Analysis Postprocessing" href="process_mca_results.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,18 +57,17 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../pos.html">7. Postprocessing</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="init.html">7.1. Initialisation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_lognormal_fragility.html">7.2. Lognormal Fragility Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_rotated_fragility.html">7.3. Fragility Function Rotation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.4. GLM Fragility Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.5. Ordinal Fragility Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="process_mca_results.html">7.6. Modified Cloud Analysis Postprocessing</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">7.7. Incremental Dynamic Analysis Postprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calculate_glm_fragility.html">7.3. GLM Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_ordinal_fragility.html">7.4. Ordinal Fragility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_mca_results.html">7.5. Modified Cloud Analysis Postprocessing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.6. Incremental Dynamic Analysis Postprocessing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.postprocessor.postprocessor.process_ida_results"><code class="docutils literal notranslate"><span class="pre">postprocessor.process_ida_results()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_risk.html">7.10. Average Annual Risk Metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.11. References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.7. Multiple Stripe Analysis Postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.8. Vulnerability Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_risk.html">7.9. Average Annual Risk Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.10. References</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
@@ -92,7 +91,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../pos.html"><span class="section-number">7. </span>Postprocessing</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7.7. </span>Incremental Dynamic Analysis Postprocessing</li>
+      <li class="breadcrumb-item active"><span class="section-number">7.6. </span>Incremental Dynamic Analysis Postprocessing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/contents/pos/process_ida_results.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,10 +102,10 @@
            <div itemprop="articleBody">
              
   <section id="incremental-dynamic-analysis-postprocessing">
-<h1><span class="section-number">7.7. </span>Incremental Dynamic Analysis Postprocessing<a class="headerlink" href="#incremental-dynamic-analysis-postprocessing" title="Link to this heading"></a></h1>
+<h1><span class="section-number">7.6. </span>Incremental Dynamic Analysis Postprocessing<a class="headerlink" href="#incremental-dynamic-analysis-postprocessing" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.process_ida_results">
-<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_ida_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ansys_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">im_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(0.00,</span> <span class="pre">0.05,</span> <span class="pre">101)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragility_rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_ida_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_ida_results" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">process_ida_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ansys_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">im_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_build2build</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(0.00,</span> <span class="pre">0.05,</span> <span class="pre">101)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.process_ida_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.process_ida_results" title="Link to this definition"></a></dt>
 <dd><p>Perform fragility function fitting and statistical processing on
 Incremental Dynamic Analysis (IDA) results.</p>
 <p>This method processes raw IDA data by interpolating individual
@@ -114,9 +113,7 @@ record response curves to a continuous Engineering Demand
 Parameter (EDP) range. It accounts for “flatlining” (global
 dynamic instability) using Maximum Likelihood Estimation (MLE)
 for censored data to estimate the fragility parameters (median
-and dispersion) for multiple damage states. It also supports
-fragility curve rotation around a target percentile to account
-for modeling uncertainties.</p>
+and dispersion) for multiple damage states.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -148,11 +145,6 @@ fragility functions (POEs) will be sampled.</p></li>
 <li><p><strong>edp_range</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em><em>,</em>) – default=np.linspace(0.00, 0.05, 101) (0% to 5% drift)
 The array of engineering demand parameters over which the
 IDA curves will be evaluated.</p></li>
-<li><p><strong>fragility_rotation</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – Flag to determine if the fragility curves should be rotated
-around a specific percentile to adjust for modeling bias or
-target reliability levels.</p></li>
-<li><p><strong>rotation_percentile</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.10</em>) – The target percentile (0.0 to 1.0) around which the fragility
-curve rotation is anchored if <cite>fragility_rotation</cite> is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -194,10 +186,6 @@ building-to-building modelling uncertainty.</p></li>
 in the damage-state threshold definition.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'betas_total'</span></code> : list, length n_DS — total
 logarithmic standard deviation per damage state.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'rotation_active'</span></code> : bool — whether fragility
-rotation around a percentile was applied.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'rotation_percentile'</span></code> : float or None — the
-percentile used for rotation, or None if inactive.</p></li>
 </ul>
 </dd>
 <dt><strong>’stats’</strong><span class="classifier">dict</span></dt><dd><p>Statistical IDA curves across all records.</p>
@@ -283,8 +271,8 @@ distributed. The median <span class="math notranslate nohighlight">\(\theta_i\)<
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="process_mca_results.html" class="btn btn-neutral float-left" title="7.6. Modified Cloud Analysis Postprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="process_msa_results.html" class="btn btn-neutral float-right" title="7.8. Multiple Stripe Analysis Postprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="process_mca_results.html" class="btn btn-neutral float-left" title="7.5. Modified Cloud Analysis Postprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="process_msa_results.html" class="btn btn-neutral float-right" title="7.7. Multiple Stripe Analysis Postprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

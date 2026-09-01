@@ -31,14 +31,6 @@ class postprocessor:
         Computes the probability of exceeding a damage state using a
         lognormal cumulative distribution function (CDF).
 
-    calculate_rotated_fragility(
-        percentile, theta, sigma_record2record,
-        sigma_build2build=0.30, sigma_ds=0.30,
-        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
-        Calculates a rotated fragility function based on a lognormal
-        CDF, adjusting the median intensity to align with a specified
-        target percentile.
-
     calculate_glm_fragility(
         imls, edps, damage_thresholds,
         intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
@@ -59,16 +51,14 @@ class postprocessor:
         imls, edps, damage_thresholds, lower_limit, censored_limit,
         sigma_build2build=0.3, sigma_ds=0.3,
         intensities=np.geomspace(0.05, 10, 50), n_bootstrap=200,
-        random_seed=None, fragility_rotation=False,
-        rotation_percentile=0.10, fragility_method='lognormal')
+        random_seed=None, fragility_method='lognormal')
         Postprocess Modified Cloud Analysis (MCA) results: fits the
         probabilistic seismic demand model and derives fragility functions
         from pre-computed NLTHA outputs.
 
     process_msa_results(
         imls, edps, damage_thresholds, sigma_build2build=0.3,
-        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
-        fragility_rotation=False, rotation_percentile=0.10)
+        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
         Postprocess Multiple Stripe Analysis (MSA) results: maximum
         likelihood estimation for fragility curve fitting from
         pre-computed NLTHA stripe outputs.
@@ -164,99 +154,6 @@ class postprocessor:
 
         # Compute exceedance probabilities for each intensity level
         return lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)
-
-    def calculate_rotated_fragility(self,
-                                    percentile,
-                                    theta,
-                                    sigma_record2record,
-                                    sigma_build2build=0.30,
-                                    sigma_ds=0.30,
-                                    intensities=np.round(
-                                        np.geomspace(0.05, 10.0, 50),
-                                        3)):
-        """
-        Calculates a rotated fragility function based on a lognormal
-        cumulative distribution function (CDF), adjusting the median
-        intensity to align with a specified target percentile.
-
-        This function modifies the median intensity based on the desired
-        target percentile and total uncertainty (considering both
-        record-to-record variability and modeling variability). The
-        resulting rotated fragility curve represents the damage
-        exceedance probabilities for a range of intensity measure
-        levels, as defined by the lognormal distribution.
-
-        Parameters
-        ----------
-        percentile : float
-            The target percentile for fragility function rotation. This
-            value corresponds to the desired percentile (e.g., 0.2
-            corresponds to the 20th percentile of the fragility curve).
-            The curve is adjusted such that this percentile aligns with
-            the calculated fragility function.
-
-        theta : float
-            The median seismic intensity corresponding to the edp-based
-            damage threshold.
-
-        sigma_record2record : float
-            The uncertainty associated with record-to-record variability
-            in the seismic records used to derive the fragility.
-
-        sigma_build2build : float, optional, default=0.30
-            The uncertainty associated with modeling variability between
-            different buildings or building types.
-
-        sigma_ds : float, optional
-            The logarithmic standard deviation representing uncertainty
-            in damage-state thresholds. Default value is 0.30.
-
-        intensities : array-like, optional,
-            default=np.round(np.geomspace(0.05, 10.0, 50), 3)
-            A list or array of intensity measure levels at which to
-            evaluate the fragility function, typically representing
-            seismic intensity levels (e.g., spectral acceleration). The
-            default is a geometric space ranging from 0.05 to 10.0.
-
-        Returns
-        -------
-        theta_prime : float
-            The new median intensity after the rotation based on the
-            specified percentile.
-
-        beta_total : float
-            The total standard deviation of the lognormal distribution,
-            calculated from both record-to-record and building-to-
-            building (modelling) uncertainties.
-
-        poes : array-like
-            The probabilities of exceedance (fragility values)
-            corresponding to the input intensity measure levels. This is
-            the lognormal CDF evaluated at the given intensities with
-            the rotated median and combined uncertainty.
-
-        References
-        ----------
-        1) Porter, K. (2017), "When Addressing Epistemic Uncertainty in
-        a Lognormal Fragility Function, How Should One Adjust the
-        Median?", Proceedings of the 16th World Conference on Earthquake
-        Engineering (16WCEE), Santiago, Chile.
-
-        """
-
-        # Calculate combined log standard deviation (total uncertainty)
-        beta_total = np.sqrt(sigma_record2record**2 +
-                             sigma_build2build**2 + sigma_ds**2)
-
-        # Adjust the median intensity based on the target percentile
-        theta_prime = theta * \
-            np.exp(-stats.norm.ppf(percentile) *
-                   (beta_total - sigma_record2record))
-
-        # Return rotated lognormal CDF for the given intensities
-        return (theta_prime, beta_total,
-                stats.lognorm(
-                    s=beta_total, scale=theta_prime).cdf(intensities))
 
     def calculate_glm_fragility(self,
                                 imls,
@@ -623,8 +520,6 @@ class postprocessor:
                             intensities=np.geomspace(0.05, 10, 50),
                             n_bootstrap=200,
                             random_seed=None,
-                            fragility_rotation=False,
-                            rotation_percentile=0.10,
                             fragility_method='lognormal',
                             dispersion_type='constant',
                             cloud_method='bootstrap',
@@ -692,15 +587,6 @@ class postprocessor:
         random_seed : int, optional
             Seed for reproducibility of the bootstrap sampling or MCMC.
             Default is None.
-
-        fragility_rotation : bool, optional
-            Whether to rotate the fragility curve around a specific
-            percentile to adjust for target reliability. Default is
-            False.
-
-        rotation_percentile : float, optional
-            The target percentile for fragility function rotation.
-            Default is 0.10.
 
         fragility_method : {'lognormal', 'ordinal', 'probit', 'logit'}, optional
             The methodology used to fit the fragility functions.
@@ -1135,26 +1021,12 @@ class postprocessor:
 
                 # Recalculate lognormal fragility functions
                 for ds in range(n_ds + 1):
-                    if fragility_rotation:
-                        fragility_method = (
-                            f'lognormal - rotated around the '
-                            f'{rotation_percentile}th percentile')
-                        (medians[ds],
-                         betas_total[ds],
-                         poes_fitted[:, ds]) = (
-                            self.calculate_rotated_fragility(
-                                rotation_percentile,
-                                medians[ds],
-                                betas_total[ds],
-                                sigma_build2build=0.0,
-                                sigma_ds=0.0))
-                    else:
-                        poes_fitted[:, ds] = (
-                            self.calculate_lognormal_fragility(
-                                medians[ds],
-                                betas_total[ds],
-                                sigma_build2build=0.0,
-                                sigma_ds=0.0))
+                    poes_fitted[:, ds] = (
+                        self.calculate_lognormal_fragility(
+                            medians[ds],
+                            betas_total[ds],
+                            sigma_build2build=0.0,
+                            sigma_ds=0.0))
 
                 # Final cleanup: prevent fragility crossing
                 for i in range(n_ds - 1, -1, -1):
@@ -1445,24 +1317,9 @@ class postprocessor:
                                 break
 
                 # ---------------------------------------------------------
-                # Step 8: Optional rotation and crossing cleanup
+                # Step 8: Crossing cleanup
                 # ---------------------------------------------------------
                 poes_fitted = poes_robust.copy()
-
-                for ds in range(n_ds + 1):
-                    if fragility_rotation:
-                        fragility_method = (
-                            f'lognormal - rotated around the '
-                            f'{rotation_percentile}th percentile')
-                        (medians[ds],
-                         betas_total[ds],
-                         poes_fitted[:, ds]) = (
-                            self.calculate_rotated_fragility(
-                                rotation_percentile,
-                                medians[ds],
-                                betas_total[ds],
-                                sigma_build2build=0.0,
-                                sigma_ds=0.0))
 
                 # Final cleanup: prevent fragility crossing
                 for i in range(n_ds - 1, -1, -1):
@@ -1551,16 +1408,13 @@ class postprocessor:
                             sigma_build2build=0.3,
                             sigma_ds=0.3,
                             intensities=np.round(
-                                np.geomspace(0.05, 10.0, 50), 3),
-                            fragility_rotation=False,
-                            rotation_percentile=0.10):
+                                np.geomspace(0.05, 10.0, 50), 3)):
         """
         Perform maximum likelihood estimation (MLE) for fragility curve
         fitting following a multiple stripe analysis. This method
         calculates the fragility function by fitting to the provided
         intensity measure levels (IMLs) and engineering demand parameters
-        (EDPs) "stripes", with the option to rotate the fragility curve
-        around a target percentile.
+        (EDPs) "stripes".
 
         The method is useful for deriving fragility functions by
         determining the probability of exceedance for various damage
@@ -1600,17 +1454,6 @@ class postprocessor:
             function will be sampled. By default, this is a logarithmic
             space ranging from 0.05 to 10.0, with 50 sample points.
 
-        fragility_rotation : bool, optional, default=False
-            A boolean flag that determines whether or not to rotate the
-            fragility curve about a given percentile. If `True`, the
-            fragility curve will be adjusted based on the specified
-            `rotation_percentile`.
-
-        rotation_percentile : float, optional, default=0.10
-            The target percentile (between 0 and 1) around which the
-            fragility function will be rotated. A value of 0.10
-            corresponds to rotating the curve to the 10th percentile.
-
         Returns
         -------
         msa_dict : dict
@@ -1629,8 +1472,6 @@ class postprocessor:
                   building modelling uncertainty.
                 - ``'sigma_ds'`` : float — uncertainty in the
                   damage-state threshold definition.
-                - ``'is_rotated'`` : bool — whether fragility
-                  rotation was applied.
 
             **'fragility'** : dict
                 MLE-fitted fragility function results.
@@ -1663,10 +1504,7 @@ class postprocessor:
         -----
         This method fits the fragility curve using MLE, which minimizes
         the difference between observed and predicted exceedance
-        probabilities. The option for fragility curve rotation allows for
-        adjusting the curve to better match the expected percentile of
-        damage occurrence, offering greater flexibility in representing
-        the fragility of the structure.
+        probabilities.
         """
 
         # Convert to numpy arrays
@@ -1740,19 +1578,9 @@ class postprocessor:
         # Calculate Fragility Curves (POEs) over the full intensity range
         poes = np.zeros((len(intensities), len(damage_thresholds)))
         for i in range(len(damage_thresholds)):
-            if fragility_rotation:
-                _, _, poes[:, i] = self.calculate_rotated_fragility(
-                    rotation_percentile,
-                    thetas[i],
-                    sigmas_record2record[i],
-                    sigma_build2build=sigma_build2build,
-                    sigma_ds=sigma_ds,
-                    intensities=intensities
-                )
-            else:
-                # Standard lognormal PoE
-                poes[:, i] = stats.norm.cdf(
-                    np.log(intensities / thetas[i]) / betas_total[i])
+            # Standard lognormal PoE
+            poes[:, i] = stats.norm.cdf(
+                np.log(intensities / thetas[i]) / betas_total[i])
 
         # Formatting Output
         # observed_fractions: list of arrays (one array per DS)
@@ -1762,8 +1590,7 @@ class postprocessor:
                 'edps': edps,
                 'damage_thresholds': damage_thresholds,
                 'sigma_build2build': sigma_build2build,
-                'sigma_ds': sigma_ds,
-                'is_rotated': fragility_rotation
+                'sigma_ds': sigma_ds
             },
             'fragility': {
                 'fragility_method': 'mle',
@@ -1797,9 +1624,7 @@ class postprocessor:
                             sigma_ds=0.3,
                             intensities=np.round(
                                 np.geomspace(0.05, 10.0, 50), 3),
-                            edp_range=np.linspace(0.00, 0.05, 101),
-                            fragility_rotation=False,
-                            rotation_percentile=0.10):
+                            edp_range=np.linspace(0.00, 0.05, 101)):
         """
         Perform fragility function fitting and statistical processing on
         Incremental Dynamic Analysis (IDA) results.
@@ -1809,9 +1634,7 @@ class postprocessor:
         Parameter (EDP) range. It accounts for "flatlining" (global
         dynamic instability) using Maximum Likelihood Estimation (MLE)
         for censored data to estimate the fragility parameters (median
-        and dispersion) for multiple damage states. It also supports
-        fragility curve rotation around a target percentile to account
-        for modeling uncertainties.
+        and dispersion) for multiple damage states.
 
         Parameters
         ----------
@@ -1857,15 +1680,6 @@ class postprocessor:
             The array of engineering demand parameters over which the
             IDA curves will be evaluated.
 
-        fragility_rotation : bool, optional, default=False
-            Flag to determine if the fragility curves should be rotated
-            around a specific percentile to adjust for modeling bias or
-            target reliability levels.
-
-        rotation_percentile : float, optional, default=0.10
-            The target percentile (0.0 to 1.0) around which the fragility
-            curve rotation is anchored if `fragility_rotation` is True.
-
         Returns
         -------
         ida_dict : dict
@@ -1908,10 +1722,6 @@ class postprocessor:
                   in the damage-state threshold definition.
                 - ``'betas_total'`` : list, length n_DS — total
                   logarithmic standard deviation per damage state.
-                - ``'rotation_active'`` : bool — whether fragility
-                  rotation around a percentile was applied.
-                - ``'rotation_percentile'`` : float or None — the
-                  percentile used for rotation, or None if inactive.
 
             **'stats'** : dict
                 Statistical IDA curves across all records.
@@ -2033,7 +1843,7 @@ class postprocessor:
             sigmas_build2build.append(sigma_build2build)
             sigmas_ds.append(sigma_ds)
 
-        # Generate Probabilities of Exceedance with Rotation Option
+        # Generate Probabilities of Exceedance
         poes = np.zeros((len(intensities), len(damage_thresholds)))
         betas_total = []
 
@@ -2041,25 +1851,11 @@ class postprocessor:
             theta = thetas[i]
             beta_rec = sigmas_rec2rec[i]
 
-            if fragility_rotation:
-                # Combined uncertainty isn't a simple SRSS in rotation,
-                # but we report total for consistency in dict
-                betas_total.append(
-                    np.sqrt(beta_rec**2 + sigma_build2build**2 + sigma_ds**2))
-                (_, _, poes[:, i]) = (
-                    self.calculate_rotated_fragility(
-                        theta,
-                        rotation_percentile,
-                        beta_rec,
-                        sigma_build2build,
-                        sigma_ds,
-                        intensities))
-            else:
-                beta_total = np.sqrt(
-                    beta_rec**2 + sigma_build2build**2 + sigma_ds**2)
-                betas_total.append(beta_total)
-                poes[:, i] = self.calculate_lognormal_fragility(
-                    theta, beta_total)
+            beta_total = np.sqrt(
+                beta_rec**2 + sigma_build2build**2 + sigma_ds**2)
+            betas_total.append(beta_total)
+            poes[:, i] = self.calculate_lognormal_fragility(
+                theta, beta_total)
 
         # 5. Construct the final nested dictionary (Cloud-style)
         ida_dict = {
@@ -2080,11 +1876,7 @@ class postprocessor:
                 'sigma_record2record': sigmas_rec2rec,
                 'sigma_build2build': sigmas_build2build,
                 'sigma_ds': sigmas_ds,
-                'betas_total': betas_total,
-                'rotation_active': fragility_rotation,
-                'rotation_percentile': (
-                    rotation_percentile if fragility_rotation
-                    else None)
+                'betas_total': betas_total
             },
 
             'stats': {

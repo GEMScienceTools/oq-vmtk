@@ -63,8 +63,8 @@ Available Demos
    * - ``IncrementalDynamicAnalysis``
      - Incremental dynamic analysis (IDA) with collapse-fragility derivation.
    * - ``FragilityAnalysis``
-     - Multiple fragility-fitting approaches (lognormal CDF, GLM, ordinal),
-       fragility rotation, and additional epistemic uncertainty.
+     - Multiple fragility-fitting approaches (lognormal CDF, GLM, ordinal)
+       and additional epistemic uncertainty.
    * - ``StoreyLossFunctionGeneration``
      - Generate Storey Loss Functions from a component inventory using the
        ``slfgenerator`` module. Bundled inventories live in
