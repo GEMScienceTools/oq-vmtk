@@ -131,9 +131,12 @@
 
 <span class="sd">    calculate_ordinal_fragility(</span>
 <span class="sd">        imls, edps, damage_thresholds,</span>
-<span class="sd">        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))</span>
-<span class="sd">        Fits an ordinal (cumulative) probit model to estimate fragility</span>
-<span class="sd">        curves for different damage states.</span>
+<span class="sd">        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),</span>
+<span class="sd">        dispersion_type=&#39;constant&#39;)</span>
+<span class="sd">        Fits a hierarchical (cumulative link) probit model to estimate</span>
+<span class="sd">        fragility curves for ordered damage states. Supports constant</span>
+<span class="sd">        dispersion (shared slope, fully-ordered special case) and variable</span>
+<span class="sd">        dispersion (per-DS probit fits with isotonic ordering on medians).</span>
 
 <span class="sd">    process_mca_results(</span>
 <span class="sd">        imls, edps, damage_thresholds, lower_limit, censored_limit,</span>
@@ -155,22 +158,17 @@
 
 <span class="sd">    calculate_vulnerability_function(</span>
 <span class="sd">        poes, consequence_model, cov_consequence=None,</span>
-<span class="sd">        uncertainty=True, method=None,</span>
+<span class="sd">        uncertainty=True,</span>
 <span class="sd">        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))</span>
 <span class="sd">        Compute a vulnerability function by convolving fragility</span>
 <span class="sd">        functions with a consequence (damage-to-loss) model.</span>
 
-<span class="sd">    calculate_average_annual_damage_probability(</span>
-<span class="sd">        fragility_array, hazard_array, return_period=1,</span>
+<span class="sd">    calculate_risk(</span>
+<span class="sd">        input_array, hazard_array, return_period=1,</span>
 <span class="sd">        max_return_period=5000)</span>
-<span class="sd">        Calculate the Average Annual Damage State Probability (AADP)</span>
-<span class="sd">        based on fragility and hazard curves.</span>
-
-<span class="sd">    calculate_average_annual_loss(</span>
-<span class="sd">        vulnerability_array, hazard_array, return_period=1,</span>
-<span class="sd">        max_return_period=5000)</span>
-<span class="sd">        Calculate the Average Annual Loss (AAL) based on vulnerability</span>
-<span class="sd">        and hazard curves.</span>
+<span class="sd">        Calculate an average annual risk metric (Average Annual Damage</span>
+<span class="sd">        Probability or Average Annual Loss Ratio) by integrating a</span>
+<span class="sd">        fragility or vulnerability curve against a hazard curve.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -483,15 +481,64 @@
                                     <span class="n">damage_thresholds</span><span class="p">,</span>
                                     <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
                                         <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
-                                        <span class="mi">3</span><span class="p">)):</span>
+                                        <span class="mi">3</span><span class="p">),</span>
+                                    <span class="n">dispersion_type</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fits an ordinal (cumulative) probit model to estimate fragility</span>
-<span class="sd">        curves for different damage states.</span>
+<span class="sd">        Fits a hierarchical (cumulative link) probit model to estimate</span>
+<span class="sd">        fragility curves for ordered damage states.</span>
 
-<span class="sd">        This function estimates the probability of exceeding various</span>
-<span class="sd">        damage states using an ordinal regression model based on observed</span>
-<span class="sd">        Engineering Demand Parameters (EDPs) and corresponding Intensity</span>
-<span class="sd">        Measure Levels (IMLs).</span>
+<span class="sd">        This function implements the hierarchical fragility modelling</span>
+<span class="sd">        framework for ordinal damage levels, in which the probability of</span>
+<span class="sd">        equalling or exceeding damage state :math:`i` given intensity</span>
+<span class="sd">        measure level IM is expressed as a lognormal CDF:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           P(\\mathrm{DS} \\geq ds_i \\mid \\mathrm{IM}) =</span>
+<span class="sd">           \\Phi\\!\\left(\\frac{\\ln(\\mathrm{IM}) - \\ln(\\theta_i)}{\\beta_i}\\right),</span>
+<span class="sd">           \\quad i = 1, \\ldots, k</span>
+
+<span class="sd">        where :math:`\\theta_i` is the median IM capacity for damage state</span>
+<span class="sd">        :math:`i` and :math:`\\beta_i` is the associated dispersion. The</span>
+<span class="sd">        **hierarchical** property—i.e., that curves do not cross at the</span>
+<span class="sd">        median—is maintained through the constraint</span>
+<span class="sd">        :math:`\\theta_1 \\leq \\theta_2 \\leq \\cdots \\leq \\theta_k`.</span>
+
+<span class="sd">        Two dispersion models are supported via ``dispersion_type``:</span>
+
+<span class="sd">        **Constant dispersion** (``dispersion_type=&#39;constant&#39;``, default)</span>
+
+<span class="sd">            All damage states share a single slope :math:`\\beta`, i.e.</span>
+<span class="sd">            :math:`\\beta_i = \\beta` for all :math:`i`. This is the</span>
+<span class="sd">            &quot;fully ordered&quot; special case. The model is parameterised by</span>
+<span class="sd">            :math:`k` ordered intercepts :math:`\\alpha_i` and one common</span>
+<span class="sd">            slope:</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">               P(\\mathrm{DS} \\geq ds_i \\mid \\mathrm{IM}) =</span>
+<span class="sd">               \\Phi(\\alpha_i - \\beta\\,\\ln \\mathrm{IM}),</span>
+<span class="sd">               \\quad \\alpha_1 \\leq \\cdots \\leq \\alpha_k</span>
+
+<span class="sd">            The shared slope is enforced by fitting a single</span>
+<span class="sd">            ``statsmodels.OrderedModel`` (probit distribution) to all</span>
+<span class="sd">            damage state observations simultaneously. This prevents</span>
+<span class="sd">            fragility curve crossings everywhere along the IM axis.</span>
+
+<span class="sd">        **Variable dispersion** (``dispersion_type=&#39;variable&#39;``)</span>
+
+<span class="sd">            Each damage state :math:`i` has its own dispersion</span>
+<span class="sd">            :math:`\\beta_i`, making the model more realistic when damage</span>
+<span class="sd">            states differ in their sensitivity to ground-motion intensity.</span>
+<span class="sd">            :math:`k` independent binary probit regressions are fitted,</span>
+<span class="sd">            one per damage state, yielding damage-state-specific medians</span>
+<span class="sd">            :math:`\\theta_i` and dispersions :math:`\\beta_i`. To restore</span>
+<span class="sd">            the hierarchical ordering constraint, isotonic regression</span>
+<span class="sd">            (Pool-Adjacent Violators Algorithm) is applied to</span>
+<span class="sd">            :math:`\\ln(\\theta_i)` after fitting, ensuring</span>
+<span class="sd">            :math:`\\theta_1 \\leq \\cdots \\leq \\theta_k`. Curves may</span>
+<span class="sd">            cross in the tails (beyond the median), but the ordering of</span>
+<span class="sd">            50th-percentile capacities is guaranteed.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -509,68 +556,159 @@
 <span class="sd">            Intensity measure levels for which fragility curves are</span>
 <span class="sd">            evaluated (default: np.geomspace(0.05, 10.0, 50)).</span>
 
+<span class="sd">        dispersion_type : {&#39;constant&#39;, &#39;variable&#39;}, optional</span>
+<span class="sd">            Controls whether a single dispersion parameter is shared across</span>
+<span class="sd">            all damage states (&#39;constant&#39;, default) or each damage state</span>
+<span class="sd">            receives its own dispersion estimated independently</span>
+<span class="sd">            (&#39;variable&#39;).</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        poes : numpy.ndarray</span>
 <span class="sd">            A 2D array of exceedance probabilities (CDF values) for each</span>
-<span class="sd">            intensity level. Shape: (len(intensities),</span>
-<span class="sd">            len(damage_thresholds) + 1), where the last column represents</span>
-<span class="sd">            the probability of exceeding the highest damage state.</span>
+<span class="sd">            intensity level.</span>
+
+<span class="sd">            - ``dispersion_type=&#39;constant&#39;``: shape</span>
+<span class="sd">              ``(len(intensities), n_categories)`` where ``n_categories``</span>
+<span class="sd">              is the number of distinct damage states observed in the data</span>
+<span class="sd">              (typically ``len(damage_thresholds) + 1`` when the no-damage</span>
+<span class="sd">              state DS=0 is present).</span>
+<span class="sd">            - ``dispersion_type=&#39;variable&#39;``: shape</span>
+<span class="sd">              ``(len(intensities), len(damage_thresholds))``.</span>
 
 <span class="sd">        References</span>
-<span class="sd">        -----</span>
-<span class="sd">        1) Lallemant, D., Kiremidjian, A., and Burton, H. (2015),</span>
-<span class="sd">        Statistical procedures for developing earthquake damage fragility</span>
-<span class="sd">        curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.</span>
-<span class="sd">        doi: 10.1002/eqe.2522.</span>
+<span class="sd">        ----------</span>
+<span class="sd">        1) Jalayer, F., Ebrahimian, H., Trevlopoulos, K., and Bradley, B.</span>
+<span class="sd">        (2023). Empirical tsunami fragility modelling for hierarchical</span>
+<span class="sd">        damage levels. Natural Hazards and Earth System Sciences, 23(2),</span>
+<span class="sd">        909-931. https://doi.org/10.5194/nhess-23-909-2023</span>
 
-<span class="sd">        2) Nguyen, M. and Lallemant, D. (2022), Order Matters: The</span>
+<span class="sd">        2) Nguyen, M. and Lallemant, D. (2022). Order Matters: The</span>
 <span class="sd">        Benefits of Ordinal Fragility Curves for Damage and Loss</span>
 <span class="sd">        Estimation. Risk Analysis, 42: 1136-1148.</span>
 <span class="sd">        https://doi.org/10.1111/risa.13815</span>
 
+<span class="sd">        3) Lallemant, D., Kiremidjian, A., and Burton, H. (2015).</span>
+<span class="sd">        Statistical procedures for developing earthquake damage fragility</span>
+<span class="sd">        curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.</span>
+<span class="sd">        doi: 10.1002/eqe.2522.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Create probabilities of exceedance array</span>
-        <span class="c1"># +1 to include the highest damage state</span>
-        <span class="n">poes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">dispersion_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span><span class="p">:</span>
 
-        <span class="c1"># Initialize damage state assignments</span>
-        <span class="n">damage_states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edps</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="c1"># Initialize damage state assignments</span>
+            <span class="n">damage_states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edps</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
-        <span class="c1"># Loop over each EDP and determine the highest exceeded damage state</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">edp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edps</span><span class="p">):</span>
-            <span class="c1"># Indices where EDP exceeds thresholds</span>
-            <span class="n">exceeded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">edp</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="c1"># Assign highest exceeded state (0-based)</span>
-            <span class="n">damage_states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">exceeded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">exceeded</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="c1"># Loop over each EDP and determine the highest exceeded damage</span>
+            <span class="c1"># state</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">edp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edps</span><span class="p">):</span>
+                <span class="c1"># Indices where EDP exceeds thresholds</span>
+                <span class="n">exceeded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">edp</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># Assign highest exceeded state (0-based)</span>
+                <span class="n">damage_states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">exceeded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">exceeded</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="c1"># Assemble DataFrame containing log(IM) and damage state assignment</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;IM&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">imls</span><span class="p">),</span> <span class="s1">&#39;Damage State&#39;</span><span class="p">:</span> <span class="n">damage_states</span><span class="p">})</span>
+            <span class="c1"># Assemble DataFrame containing log(IM) and damage state</span>
+            <span class="c1"># assignment</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="p">{</span><span class="s1">&#39;IM&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">imls</span><span class="p">),</span> <span class="s1">&#39;Damage State&#39;</span><span class="p">:</span> <span class="n">damage_states</span><span class="p">})</span>
 
-        <span class="c1"># Fit the Cumulative Probit Model</span>
-        <span class="n">X_ordinal</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;IM&#39;</span><span class="p">]]</span>
-        <span class="n">y_ordinal</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Damage State&#39;</span><span class="p">]</span>
+            <span class="c1"># Fit the Cumulative Probit Model</span>
+            <span class="n">X_ordinal</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;IM&#39;</span><span class="p">]]</span>
+            <span class="n">y_ordinal</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Damage State&#39;</span><span class="p">]</span>
 
-        <span class="c1"># Create and fit the OrderedModel</span>
-        <span class="n">ordinal_model</span> <span class="o">=</span> <span class="n">OrderedModel</span><span class="p">(</span><span class="n">y_ordinal</span><span class="p">,</span> <span class="n">X_ordinal</span><span class="p">,</span> <span class="n">distr</span><span class="o">=</span><span class="s1">&#39;probit&#39;</span><span class="p">)</span>
-        <span class="n">ordinal_results</span> <span class="o">=</span> <span class="n">ordinal_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-            <span class="n">method</span><span class="o">=</span><span class="s1">&#39;bfgs&#39;</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># Silent optimization</span>
+            <span class="c1"># Create and fit the OrderedModel</span>
+            <span class="n">ordinal_model</span> <span class="o">=</span> <span class="n">OrderedModel</span><span class="p">(</span><span class="n">y_ordinal</span><span class="p">,</span> <span class="n">X_ordinal</span><span class="p">,</span> <span class="n">distr</span><span class="o">=</span><span class="s1">&#39;probit&#39;</span><span class="p">)</span>
+            <span class="n">ordinal_results</span> <span class="o">=</span> <span class="n">ordinal_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">method</span><span class="o">=</span><span class="s1">&#39;bfgs&#39;</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># Silent optimization</span>
 
-        <span class="c1"># Generate log-transformed IM values for prediction</span>
-        <span class="n">log_IM_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
-        <span class="n">X_range_ordinal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;IM&#39;</span><span class="p">:</span> <span class="n">log_IM_range</span><span class="p">})</span>
+            <span class="c1"># Generate log-transformed IM values for prediction</span>
+            <span class="n">log_IM_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
+            <span class="n">X_range_ordinal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;IM&#39;</span><span class="p">:</span> <span class="n">log_IM_range</span><span class="p">})</span>
 
-        <span class="c1"># Predict probabilities for each damage state (PMF)</span>
-        <span class="c1"># Shape: (len(intensities), num_damage_states)</span>
-        <span class="n">pmf_values</span> <span class="o">=</span> <span class="n">ordinal_results</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_range_ordinal</span><span class="p">)</span>
+            <span class="c1"># Predict probabilities for each damage state (PMF)</span>
+            <span class="c1"># Shape: (len(intensities), num_damage_states)</span>
+            <span class="n">pmf_values</span> <span class="o">=</span> <span class="n">ordinal_results</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_range_ordinal</span><span class="p">)</span>
 
-        <span class="c1"># Convert PMF to CDF (exceedance probabilities) by cumulative sum</span>
-        <span class="c1"># Cumulative sum along damage state axis</span>
-        <span class="n">poes</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pmf_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Convert PMF to CDF (exceedance probabilities) by cumulative sum</span>
+            <span class="c1"># Cumulative sum along damage state axis</span>
+            <span class="n">poes</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pmf_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">poes</span><span class="o">.</span><span class="n">values</span></div>
+            <span class="k">return</span> <span class="n">poes</span><span class="o">.</span><span class="n">values</span>
 
+        <span class="k">elif</span> <span class="n">dispersion_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;variable&#39;</span><span class="p">:</span>
+
+            <span class="n">poes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">)))</span>
+            <span class="n">log_thetas</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">betas</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Fit one independent binary probit model per damage state</span>
+            <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">damage_thresholds</span><span class="p">):</span>
+                <span class="n">exceedances</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">edps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">df_tmp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                    <span class="p">{</span><span class="s1">&#39;IM&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">imls</span><span class="p">),</span> <span class="s1">&#39;Damage&#39;</span><span class="p">:</span> <span class="n">exceedances</span><span class="p">})</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">df_tmp</span><span class="p">[</span><span class="s1">&#39;IM&#39;</span><span class="p">])</span>
+                <span class="n">probit_model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">GLM</span><span class="p">(</span>
+                    <span class="n">df_tmp</span><span class="p">[</span><span class="s1">&#39;Damage&#39;</span><span class="p">],</span> <span class="n">X</span><span class="p">,</span>
+                    <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">(</span>
+                        <span class="n">link</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">Probit</span><span class="p">()))</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">probit_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">b0</span><span class="p">,</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">params</span>   <span class="c1"># intercept, slope</span>
+                <span class="c1"># P = Φ(b0 + b1·ln(IM))  →  θ = exp(-b0/b1), β = 1/b1</span>
+                <span class="n">log_thetas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="n">b0</span> <span class="o">/</span> <span class="n">b1</span><span class="p">)</span>
+                <span class="n">betas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">b1</span><span class="p">)</span>
+
+            <span class="c1"># Enforce non-decreasing medians (hierarchical ordering</span>
+            <span class="c1"># constraint) via the pool-adjacent violators algorithm</span>
+            <span class="n">log_thetas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isotonic_regression</span><span class="p">(</span><span class="n">log_thetas</span><span class="p">)</span>
+
+            <span class="n">log_IM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="p">(</span><span class="n">lnth</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">log_thetas</span><span class="p">,</span> <span class="n">betas</span><span class="p">)):</span>
+                <span class="n">poes</span><span class="p">[:,</span> <span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">((</span><span class="n">log_IM</span> <span class="o">-</span> <span class="n">lnth</span><span class="p">)</span> <span class="o">/</span> <span class="n">beta</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">poes</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_isotonic_regression</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Non-decreasing isotonic regression via the pool-adjacent violators</span>
+<span class="sd">        algorithm (PAVA).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : array-like</span>
+<span class="sd">            Input sequence to be made non-decreasing.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : numpy.ndarray</span>
+<span class="sd">            Isotonic (non-decreasing) version of y.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">wts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">wts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">wts</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">wts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">wts</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span>
+                <span class="n">wts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
+                <span class="k">del</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">wts</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">wts</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">idx</span><span class="p">:</span><span class="n">idx</span> <span class="o">+</span> <span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="n">w</span>
+        <span class="k">return</span> <span class="n">result</span>
 
 <div class="viewcode-block" id="postprocessor.process_mca_results">
 <a class="viewcode-back" href="../../../contents/pos/process_mca_results.html#openquake.vmtk.postprocessor.postprocessor.process_mca_results">[docs]</a>
@@ -588,6 +726,7 @@
                             <span class="n">fragility_rotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">rotation_percentile</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
                             <span class="n">fragility_method</span><span class="o">=</span><span class="s1">&#39;lognormal&#39;</span><span class="p">,</span>
+                            <span class="n">dispersion_type</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
                             <span class="n">cloud_method</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span>
                             <span class="n">n_mcmc</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
                             <span class="n">n_mcmc_burnin</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
@@ -666,6 +805,14 @@
 <span class="sd">        fragility_method : {&#39;lognormal&#39;, &#39;ordinal&#39;, &#39;probit&#39;, &#39;logit&#39;}, optional</span>
 <span class="sd">            The methodology used to fit the fragility functions.</span>
 <span class="sd">            Default is ``&#39;lognormal&#39;``.</span>
+
+<span class="sd">        dispersion_type : {&#39;constant&#39;, &#39;variable&#39;}, optional</span>
+<span class="sd">            Dispersion model for the ordinal CLM</span>
+<span class="sd">            (``fragility_method=&#39;ordinal&#39;`` only). ``&#39;constant&#39;`` (default)</span>
+<span class="sd">            enforces a shared slope across all damage states (fully-ordered</span>
+<span class="sd">            special case). ``&#39;variable&#39;`` fits independent binary probit</span>
+<span class="sd">            models per damage state and applies isotonic regression to</span>
+<span class="sd">            enforce the hierarchical ordering of medians.</span>
 
 <span class="sd">        cloud_method : {&#39;bootstrap&#39;, &#39;classical&#39;}, optional</span>
 <span class="sd">            When ``fragility_method=&#39;lognormal&#39;``, selects the uncertainty</span>
@@ -868,7 +1015,8 @@
 
             <span class="c1"># Compute exceedance probabilities via ordinal fragility</span>
             <span class="n">poes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_ordinal_fragility</span><span class="p">(</span>
-                <span class="n">imls</span><span class="p">,</span> <span class="n">edps</span><span class="p">,</span> <span class="n">damage_thresholds</span><span class="p">)</span>
+                <span class="n">imls</span><span class="p">,</span> <span class="n">edps</span><span class="p">,</span> <span class="n">damage_thresholds</span><span class="p">,</span>
+                <span class="n">dispersion_type</span><span class="o">=</span><span class="n">dispersion_type</span><span class="p">)</span>
 
             <span class="c1"># Compute lognormal equivalent fragility parameters</span>
             <span class="c1"># Equivalent median intensities</span>
@@ -2063,7 +2211,6 @@
                                          <span class="n">consequence_model</span><span class="p">,</span>
                                          <span class="n">cov_consequence</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                          <span class="n">uncertainty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                         <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                          <span class="n">intensities</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
                                              <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span>
                                                  <span class="mf">0.05</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
@@ -2076,8 +2223,8 @@
 <span class="sd">        The expected loss ratio is computed as the convolution of mutually</span>
 <span class="sd">        exclusive damage-state probabilities with damage-to-loss ratios.</span>
 <span class="sd">        Uncertainty in the loss ratio conditional on intensity measure</span>
-<span class="sd">        level (Loss | IM) can be computed either explicitly using the law</span>
-<span class="sd">        of total variance or via an empirical Silva-type envelope.</span>
+<span class="sd">        level (Loss | IM) is computed explicitly using the law of total</span>
+<span class="sd">        variance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2092,30 +2239,15 @@
 
 <span class="sd">        cov_consequence : array-like, length n_DS, optional</span>
 <span class="sd">            Coefficient of variation of the damage-to-loss ratio for each</span>
-<span class="sd">            damage state. Required when ``method=&quot;explicit&quot;``. Each entry</span>
+<span class="sd">            damage state. Required when ``uncertainty=True``. Each entry</span>
 <span class="sd">            represents the conditional uncertainty of loss given the</span>
 <span class="sd">            damage state.</span>
 
 <span class="sd">        uncertainty : bool, optional</span>
 <span class="sd">            Flag indicating whether to compute uncertainty (coefficient of</span>
-<span class="sd">            variation) of the loss ratio conditional on IM. If False, the</span>
-<span class="sd">            COV column is still returned and filled with zeros.</span>
-<span class="sd">            Default is True.</span>
-
-<span class="sd">        method : {&quot;explicit&quot;, &quot;silva&quot;}, optional</span>
-<span class="sd">            Method used to compute uncertainty when ``uncertainty=True``.</span>
-
-<span class="sd">            - &quot;explicit&quot; (default):</span>
-<span class="sd">              Computes uncertainty using the law of total variance,</span>
-<span class="sd">              accounting for both damage-state mixing and uncertainty</span>
-<span class="sd">              within each damage state. Requires ``cov_consequence``.</span>
-
-<span class="sd">            - &quot;silva&quot;:</span>
-<span class="sd">              Computes uncertainty using a Silva-type empirical envelope</span>
-<span class="sd">              based only on the mean loss ratio.</span>
-
-<span class="sd">            If ``uncertainty=True`` and ``method=None``, the method</span>
-<span class="sd">            defaults to &quot;explicit&quot;.</span>
+<span class="sd">            variation) of the loss ratio conditional on IM using the law</span>
+<span class="sd">            of total variance. If False, the COV column is still returned</span>
+<span class="sd">            and filled with zeros. Default is True.</span>
 
 <span class="sd">        intensities : ndarray, optional</span>
 <span class="sd">            Intensity measure levels corresponding to the rows of</span>
@@ -2140,13 +2272,13 @@
 <span class="sd">        Exception</span>
 <span class="sd">            If the dimensions of ``poes``, ``consequence_model``, or</span>
 <span class="sd">            ``cov_consequence`` are inconsistent, or if</span>
-<span class="sd">            ``method=&quot;explicit&quot;`` is selected without providing</span>
+<span class="sd">            ``uncertainty=True`` is selected without providing</span>
 <span class="sd">            ``cov_consequence``.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        For the explicit uncertainty method, the variance of the loss</span>
-<span class="sd">        ratio is computed using the law of total variance:</span>
+<span class="sd">        The variance of the loss ratio is computed using the law of</span>
+<span class="sd">        total variance:</span>
 
 <span class="sd">        Var(LR | IM) = sum_k p_k [ sigma_k^2 + (mu_k - mu)^2 ]</span>
 
@@ -2163,70 +2295,6 @@
 <span class="sd">        IM-dependent uncertainty.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">calculate_sigma_silva</span><span class="p">(</span><span class="n">loss</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Helper function to calculate uncertainty in the loss</span>
-<span class="sd">            estimates based on the method proposed in Silva (2019),</span>
-<span class="sd">            which incorporates the sigma (standard deviation) for loss</span>
-<span class="sd">            ratios within seismic vulnerability functions.</span>
-
-<span class="sd">            This method computes the sigma loss ratio for expected loss</span>
-<span class="sd">            ratios and also estimates the parameters of a beta</span>
-<span class="sd">            distribution (coefficients a and b), which describe the</span>
-<span class="sd">            uncertainty and variability in the loss estimates. The</span>
-<span class="sd">            formula used is derived from seismic vulnerability research.</span>
-
-<span class="sd">            Parameters:</span>
-<span class="sd">            -----------</span>
-<span class="sd">            loss : list or array</span>
-<span class="sd">                A list or array of expected loss ratios. The expected</span>
-<span class="sd">                loss ratio represents the proportion of the building&#39;s</span>
-<span class="sd">                value that is expected to be lost due to an earthquake</span>
-<span class="sd">                event, ranging from 0 to 1.</span>
-
-<span class="sd">            Returns:</span>
-<span class="sd">            --------</span>
-<span class="sd">            sigma_loss_ratio : list or array</span>
-<span class="sd">                The calculated uncertainty (sigma) associated with the</span>
-<span class="sd">                mean loss ratio for each input loss value. The sigma</span>
-<span class="sd">                loss ratio represents the variability of the loss</span>
-<span class="sd">                estimates and is computed based on the loss ratios</span>
-<span class="sd">                provided.</span>
-
-<span class="sd">            a_beta_dist : list or array</span>
-<span class="sd">                The coefficient &#39;a&#39; of the beta distribution for each</span>
-<span class="sd">                loss ratio. This parameter represents the shape of the</span>
-<span class="sd">                beta distribution and is used to model the uncertainty</span>
-<span class="sd">                in the loss estimates.</span>
-
-<span class="sd">            b_beta_dist : list or array</span>
-<span class="sd">                The coefficient &#39;b&#39; of the beta distribution for each</span>
-<span class="sd">                loss ratio. This parameter also represents the shape of</span>
-<span class="sd">                the beta distribution, complementing the coefficient &#39;a&#39;</span>
-<span class="sd">                to fully describe the distribution&#39;s behavior.</span>
-
-<span class="sd">            References:</span>
-<span class="sd">            ----------</span>
-<span class="sd">            1) Silva, V. (2019) &quot;Uncertainty and correlation in seismic</span>
-<span class="sd">            vulnerability functions of building classes.&quot; Earthquake</span>
-<span class="sd">            Spectra. DOI: 10.1193/013018eqs031m.</span>
-
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="n">sigma_loss_ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                <span class="n">loss</span> <span class="o">==</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                    <span class="n">loss</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
-                    <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
-                        <span class="n">loss</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.7</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">loss</span>
-                                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.8</span> <span class="o">*</span> <span class="n">loss</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)))))</span>
-            <span class="n">a_beta_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">b_beta_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">sigma_loss_ratio</span><span class="p">,</span> <span class="n">a_beta_dist</span><span class="p">,</span> <span class="n">b_beta_dist</span>
-
-        <span class="c1"># Default behavior</span>
-        <span class="k">if</span> <span class="n">uncertainty</span> <span class="ow">and</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
-
         <span class="c1"># Consistency checks</span>
         <span class="n">n_im</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">=</span> <span class="n">poes</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">consequence_model</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_ds</span><span class="p">:</span>
@@ -2237,10 +2305,10 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s1">&#39;ERROR! Mismatch between number of IMLs and fragility models!&#39;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">uncertainty</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;explicit&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">uncertainty</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">cov_consequence</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                    <span class="s1">&#39;ERROR! Explicit uncertainty method requires &#39;</span>
+                    <span class="s1">&#39;ERROR! Uncertainty calculation requires &#39;</span>
                     <span class="s1">&#39;cov_consequence.&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cov_consequence</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_ds</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -2270,20 +2338,10 @@
         <span class="c1"># Initialize COV</span>
         <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">uncertainty</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;explicit&quot;</span><span class="p">:</span>
-                <span class="c1"># Law of total variance</span>
-                <span class="n">diff</span> <span class="o">=</span> <span class="n">mu_k</span> <span class="o">-</span> <span class="n">loss</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
-                <span class="n">var_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_ds</span> <span class="o">*</span> <span class="p">(</span><span class="n">var_k</span> <span class="o">+</span> <span class="n">diff</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var_loss</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">loss</span> <span class="o">+</span> <span class="mf">1e-12</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;silva&quot;</span><span class="p">:</span>
-                <span class="c1"># Semi-empirical derivatoin</span>
-                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mu</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loss</span><span class="p">):</span>
-                    <span class="n">sigma_loss_ratio</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">calculate_sigma_silva</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
-                    <span class="n">cov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span>
-                        <span class="p">[</span><span class="n">sigma_loss_ratio</span> <span class="o">/</span> <span class="n">mu</span><span class="p">,</span>
-                         <span class="mf">0.90</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">))</span> <span class="o">/</span> <span class="n">mu</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR! Unknown uncertainty method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Law of total variance</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">mu_k</span> <span class="o">-</span> <span class="n">loss</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">var_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_ds</span> <span class="o">*</span> <span class="p">(</span><span class="n">var_k</span> <span class="o">+</span> <span class="n">diff</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var_loss</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">loss</span> <span class="o">+</span> <span class="mf">1e-12</span><span class="p">)</span>
 
         <span class="c1"># Output</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;IML&#39;</span><span class="p">:</span> <span class="n">intensities</span><span class="p">,</span>
@@ -2293,34 +2351,45 @@
         <span class="k">return</span> <span class="n">df</span></div>
 
 
-<div class="viewcode-block" id="postprocessor.calculate_average_annual_damage_probability">
-<a class="viewcode-back" href="../../../contents/pos/calculate_average_annual_damage_probability.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_damage_probability">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_average_annual_damage_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                                    <span class="n">fragility_array</span><span class="p">,</span>
-                                                    <span class="n">hazard_array</span><span class="p">,</span>
-                                                    <span class="n">return_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                                    <span class="n">max_return_period</span><span class="o">=</span><span class="mi">5000</span><span class="p">):</span>
+<div class="viewcode-block" id="postprocessor.calculate_risk">
+<a class="viewcode-back" href="../../../contents/pos/calculate_risk.html#openquake.vmtk.postprocessor.postprocessor.calculate_risk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_risk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">input_array</span><span class="p">,</span>
+                       <span class="n">hazard_array</span><span class="p">,</span>
+                       <span class="n">return_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="n">max_return_period</span><span class="o">=</span><span class="mi">5000</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the Average Annual Damage State Probability (AADP)</span>
-<span class="sd">        based on fragility and hazard curves.</span>
+<span class="sd">        Calculate an average annual risk metric by integrating a</span>
+<span class="sd">        fragility or vulnerability curve against a seismic hazard curve.</span>
 
-<span class="sd">        This function estimates the average annual probability of damage</span>
-<span class="sd">        states occurring over a given return period, using the fragility</span>
-<span class="sd">        curve (which relates intensity measure levels to damage state</span>
-<span class="sd">        probabilities) and the hazard curve (which relates intensity</span>
-<span class="sd">        measure levels to annual rates of exceedance).</span>
+<span class="sd">        This function estimates the average annual value of ``input_array``</span>
+<span class="sd">        occurring over a given return period (typically annual where</span>
+<span class="sd">        return_period = 1), using the hazard curve (which relates</span>
+<span class="sd">        intensity measure levels to annual rates of exceedance). The</span>
+<span class="sd">        interpretation of the result depends on what ``input_array``</span>
+<span class="sd">        represents:</span>
 
-<span class="sd">        The calculation integrates the product of the fragility function</span>
-<span class="sd">        and the hazard curve over the specified range of intensity measure</span>
+<span class="sd">        - If ``input_array`` is a fragility curve (intensity measure</span>
+<span class="sd">          level vs. probability of exceeding a damage state), the result</span>
+<span class="sd">          is the Average Annual Damage [State] Probability (AADP).</span>
+<span class="sd">        - If ``input_array`` is a vulnerability curve (intensity measure</span>
+<span class="sd">          level vs. expected loss ratio), the result is the Average</span>
+<span class="sd">          Annual Loss Ratio (AALR).</span>
+
+<span class="sd">        The calculation integrates the product of ``input_array`` and the</span>
+<span class="sd">        hazard curve over the specified range of intensity measure</span>
 <span class="sd">        levels, accounting for the return period and a maximum return</span>
 <span class="sd">        period threshold.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        fragility_array : 2D array</span>
+<span class="sd">        input_array : 2D array</span>
 <span class="sd">            A 2D array where the first column contains intensity measure</span>
-<span class="sd">            levels, and the second column contains the corresponding</span>
-<span class="sd">            probabilities of exceedance for each intensity level.</span>
+<span class="sd">            levels, and the second column contains either the</span>
+<span class="sd">            probability of exceedance of a damage state (a fragility</span>
+<span class="sd">            curve, yielding the AADP) or the expected loss ratio (a</span>
+<span class="sd">            vulnerability curve, yielding the AALR) for each intensity</span>
+<span class="sd">            level.</span>
 
 <span class="sd">        hazard_array : 2D array</span>
 <span class="sd">            A 2D array where the first column contains intensity measure</span>
@@ -2330,9 +2399,9 @@
 
 <span class="sd">        return_period : float, optional, default=1</span>
 <span class="sd">            The return period used to scale the hazard rate. This is the</span>
-<span class="sd">            time span (in years) over which the average annual damage</span>
-<span class="sd">            probability is calculated. A typical value is 1 year, but</span>
-<span class="sd">            longer periods can be used for multi-year assessments.</span>
+<span class="sd">            time span (in years) over which the average annual value is</span>
+<span class="sd">            calculated. A typical value is 1 year, but longer periods</span>
+<span class="sd">            can be used for multi-year assessments.</span>
 
 <span class="sd">        max_return_period : float, optional, default=5000</span>
 <span class="sd">            The maximum return period threshold used to filter out very</span>
@@ -2342,109 +2411,24 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        average_annual_damage_probability : float</span>
-<span class="sd">            The average annual damage state probability, calculated by</span>
-<span class="sd">            integrating the product of the fragility function and the</span>
-<span class="sd">            hazard curve over the given intensity measure levels.</span>
+<span class="sd">        average_annual_value : float</span>
+<span class="sd">            The average annual value of ``input_array``, calculated by</span>
+<span class="sd">            integrating the product of ``input_array`` and the hazard</span>
+<span class="sd">            curve over the given intensity measure levels. This is the</span>
+<span class="sd">            AADP when ``input_array`` is a fragility curve, or the AALR</span>
+<span class="sd">            when it is a vulnerability curve.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Ensure arrays are sorted by Intensity (Column 0)</span>
+        <span class="c1"># Ensure arrays are sorted by Intensity Measure (IM)</span>
         <span class="n">hazard_array</span> <span class="o">=</span> <span class="n">hazard_array</span><span class="p">[</span><span class="n">hazard_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
-        <span class="n">fragility_array</span> <span class="o">=</span> <span class="n">fragility_array</span><span class="p">[</span><span class="n">fragility_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
-
-        <span class="c1"># Filter hazard based on return period threshold</span>
-        <span class="n">max_integration</span> <span class="o">=</span> <span class="n">return_period</span> <span class="o">/</span> <span class="n">max_return_period</span>
-        <span class="n">hazard_array</span> <span class="o">=</span> <span class="n">hazard_array</span><span class="p">[</span><span class="n">hazard_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">max_integration</span><span class="p">]</span>
-
-        <span class="c1"># Need at least 2 points to calculate a rate difference</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hazard_array</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mf">0.0</span>
-
-        <span class="c1"># Compute midpoints and rate of occurrences (|d_lambda|)</span>
-        <span class="n">mean_imls</span> <span class="o">=</span> <span class="p">(</span><span class="n">hazard_array</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">hazard_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-        <span class="c1"># abs ensures positive probability mass regardless of sort order</span>
-        <span class="n">rate_occ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">hazard_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">return_period</span>
-
-        <span class="c1"># Define fragility curve with dynamic upper boundary</span>
-        <span class="c1"># We assume Probability=0 at IM=0 and Probability=1 at high IM</span>
-        <span class="n">upper_im_bound</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">fragility_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">)</span>
-        <span class="n">curve_imls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
-            <span class="p">([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">fragility_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">upper_im_bound</span><span class="p">]))</span>
-        <span class="n">curve_ordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">fragility_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]))</span>
-
-        <span class="c1"># Interpolate and Integrate</span>
-        <span class="n">interpolated_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">mean_imls</span><span class="p">,</span> <span class="n">curve_imls</span><span class="p">,</span> <span class="n">curve_ordinates</span><span class="p">)</span>
-
-        <span class="c1"># Result: Sum of (Probability of Damage * Frequency of Occurrence)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">interpolated_values</span><span class="p">,</span> <span class="n">rate_occ</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="postprocessor.calculate_average_annual_loss">
-<a class="viewcode-back" href="../../../contents/pos/calculate_average_annual_loss.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_loss">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_average_annual_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                      <span class="n">vulnerability_array</span><span class="p">,</span>
-                                      <span class="n">hazard_array</span><span class="p">,</span>
-                                      <span class="n">return_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                      <span class="n">max_return_period</span><span class="o">=</span><span class="mi">5000</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the Average Annual Loss Ratio (AALR) based on</span>
-<span class="sd">        vulnerability and hazard curves.</span>
-
-<span class="sd">        This function estimates the average loss ratio occurring over a</span>
-<span class="sd">        given return period (typically annual where return_period = 1),</span>
-<span class="sd">        using the vulnerability curve (which relates intensity measure</span>
-<span class="sd">        levels to an expected loss ratio) and the hazard curve (which</span>
-<span class="sd">        relates intensity measure levels to annual rates of exceedance).</span>
-
-<span class="sd">        The calculation integrates the product of the vulnerability</span>
-<span class="sd">        function and the hazard curve over the specified range of</span>
-<span class="sd">        intensity measure levels, accounting for the return period and</span>
-<span class="sd">        a maximum return period threshold.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        vulnerability_array : 2D array</span>
-<span class="sd">            A 2D array where the first column contains intensity measure</span>
-<span class="sd">            levels, and the second column contains the corresponding</span>
-<span class="sd">            expected loss ratios for each intensity level.</span>
-
-<span class="sd">        hazard_array : 2D array</span>
-<span class="sd">            A 2D array where the first column contains intensity measure</span>
-<span class="sd">            levels, and the second column contains the annual rates of</span>
-<span class="sd">            exceedance (i.e., the probability of exceedance per year)</span>
-<span class="sd">            for each intensity level.</span>
-
-<span class="sd">        return_period : float, optional, default=1</span>
-<span class="sd">            The return period used to scale the hazard rate. This is the</span>
-<span class="sd">            time span (in years) over which the average annual damage</span>
-<span class="sd">            probability is calculated. A typical value is 1 year, but</span>
-<span class="sd">            longer periods can be used for multi-year assessments.</span>
-
-<span class="sd">        max_return_period : float, optional, default=5000</span>
-<span class="sd">            The maximum return period threshold used to filter out very</span>
-<span class="sd">            low hazard rates. The hazard curve is truncated to include</span>
-<span class="sd">            only intensity levels with exceedance rates above this</span>
-<span class="sd">            threshold.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        average_annual_loss_ratio : float</span>
-<span class="sd">            The average annual loss ratio, calculated by integrating</span>
-<span class="sd">            the product of the vulnerability function and the hazard</span>
-<span class="sd">            curve over the given intensity measure levels.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Ensure hazard data is sorted by Intensity Measure (IM)</span>
-        <span class="n">hazard_array</span> <span class="o">=</span> <span class="n">hazard_array</span><span class="p">[</span><span class="n">hazard_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
-        <span class="n">vulnerability_array</span> <span class="o">=</span> <span class="n">vulnerability_array</span><span class="p">[</span>
-            <span class="n">vulnerability_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
+        <span class="n">input_array</span> <span class="o">=</span> <span class="n">input_array</span><span class="p">[</span><span class="n">input_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
 
         <span class="c1"># Filter hazard based on max return period (min frequency threshold)</span>
         <span class="n">min_rate_threshold</span> <span class="o">=</span> <span class="n">return_period</span> <span class="o">/</span> <span class="n">max_return_period</span>
         <span class="n">hazard_filtered</span> <span class="o">=</span> <span class="n">hazard_array</span><span class="p">[</span><span class="n">hazard_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
                                        <span class="o">&gt;=</span> <span class="n">min_rate_threshold</span><span class="p">]</span>
 
+        <span class="c1"># Need at least 2 points to calculate a rate difference</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hazard_filtered</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
@@ -2453,22 +2437,22 @@
         <span class="n">mean_imls</span> <span class="o">=</span> <span class="p">(</span><span class="n">hazard_filtered</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">hazard_filtered</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="n">rate_occ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">hazard_filtered</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">return_period</span>
 
-        <span class="c1"># Prepare vulnerability curve for interpolation</span>
-        <span class="c1"># Anchoring the curve at IM=0 (Loss=0) and a high IM cap (Loss=1.0)</span>
-        <span class="n">v_im</span> <span class="o">=</span> <span class="n">vulnerability_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">v_loss</span> <span class="o">=</span> <span class="n">vulnerability_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Prepare the input curve for interpolation</span>
+        <span class="c1"># Anchoring the curve at IM=0 (value=0) and a high IM cap (value=1.0)</span>
+        <span class="n">input_im</span> <span class="o">=</span> <span class="n">input_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">input_value</span> <span class="o">=</span> <span class="n">input_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
 
         <span class="n">curve_imls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
-            <span class="p">([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">v_im</span><span class="p">,</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">v_im</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">)]))</span>
-        <span class="n">curve_ordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">v_loss</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]))</span>
+            <span class="p">([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">input_im</span><span class="p">,</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">input_im</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">)]))</span>
+        <span class="n">curve_ordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">input_value</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]))</span>
 
-        <span class="c1"># Interpolate vulnerability at the hazard midpoints</span>
-        <span class="n">interpolated_losses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">mean_imls</span><span class="p">,</span> <span class="n">curve_imls</span><span class="p">,</span> <span class="n">curve_ordinates</span><span class="p">)</span>
+        <span class="c1"># Interpolate the input curve at the hazard midpoints</span>
+        <span class="n">interpolated_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">mean_imls</span><span class="p">,</span> <span class="n">curve_imls</span><span class="p">,</span> <span class="n">curve_ordinates</span><span class="p">)</span>
 
-        <span class="c1"># Final Integration (Dot product of Losses and Probabilities)</span>
-        <span class="n">average_annual_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">interpolated_losses</span><span class="p">,</span> <span class="n">rate_occ</span><span class="p">)</span>
+        <span class="c1"># Final Integration (Dot product of values and rates of occurrence)</span>
+        <span class="n">average_annual_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">interpolated_values</span><span class="p">,</span> <span class="n">rate_occ</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">average_annual_loss</span></div>
+        <span class="k">return</span> <span class="n">average_annual_value</span></div>
 
 </pre></div>
 

@@ -75,22 +75,17 @@ class postprocessor:
 
     calculate_vulnerability_function(
         poes, consequence_model, cov_consequence=None,
-        uncertainty=True, method=None,
+        uncertainty=True,
         intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
         Compute a vulnerability function by convolving fragility
         functions with a consequence (damage-to-loss) model.
 
-    calculate_average_annual_damage_probability(
-        fragility_array, hazard_array, return_period=1,
+    calculate_risk(
+        input_array, hazard_array, return_period=1,
         max_return_period=5000)
-        Calculate the Average Annual Damage State Probability (AADP)
-        based on fragility and hazard curves.
-
-    calculate_average_annual_loss(
-        vulnerability_array, hazard_array, return_period=1,
-        max_return_period=5000)
-        Calculate the Average Annual Loss (AAL) based on vulnerability
-        and hazard curves.
+        Calculate an average annual risk metric (Average Annual Damage
+        Probability or Average Annual Loss Ratio) by integrating a
+        fragility or vulnerability curve against a hazard curve.
 
     """
 
@@ -2107,7 +2102,6 @@ class postprocessor:
                                          consequence_model,
                                          cov_consequence=None,
                                          uncertainty=True,
-                                         method=None,
                                          intensities=np.round(
                                              np.geomspace(
                                                  0.05, 10.0, 50),
@@ -2120,8 +2114,8 @@ class postprocessor:
         The expected loss ratio is computed as the convolution of mutually
         exclusive damage-state probabilities with damage-to-loss ratios.
         Uncertainty in the loss ratio conditional on intensity measure
-        level (Loss | IM) can be computed either explicitly using the law
-        of total variance or via an empirical Silva-type envelope.
+        level (Loss | IM) is computed explicitly using the law of total
+        variance.
 
         Parameters
         ----------
@@ -2136,30 +2130,15 @@ class postprocessor:
 
         cov_consequence : array-like, length n_DS, optional
             Coefficient of variation of the damage-to-loss ratio for each
-            damage state. Required when ``method="explicit"``. Each entry
+            damage state. Required when ``uncertainty=True``. Each entry
             represents the conditional uncertainty of loss given the
             damage state.
 
         uncertainty : bool, optional
             Flag indicating whether to compute uncertainty (coefficient of
-            variation) of the loss ratio conditional on IM. If False, the
-            COV column is still returned and filled with zeros.
-            Default is True.
-
-        method : {"explicit", "silva"}, optional
-            Method used to compute uncertainty when ``uncertainty=True``.
-
-            - "explicit" (default):
-              Computes uncertainty using the law of total variance,
-              accounting for both damage-state mixing and uncertainty
-              within each damage state. Requires ``cov_consequence``.
-
-            - "silva":
-              Computes uncertainty using a Silva-type empirical envelope
-              based only on the mean loss ratio.
-
-            If ``uncertainty=True`` and ``method=None``, the method
-            defaults to "explicit".
+            variation) of the loss ratio conditional on IM using the law
+            of total variance. If False, the COV column is still returned
+            and filled with zeros. Default is True.
 
         intensities : ndarray, optional
             Intensity measure levels corresponding to the rows of
@@ -2184,13 +2163,13 @@ class postprocessor:
         Exception
             If the dimensions of ``poes``, ``consequence_model``, or
             ``cov_consequence`` are inconsistent, or if
-            ``method="explicit"`` is selected without providing
+            ``uncertainty=True`` is selected without providing
             ``cov_consequence``.
 
         Notes
         -----
-        For the explicit uncertainty method, the variance of the loss
-        ratio is computed using the law of total variance:
+        The variance of the loss ratio is computed using the law of
+        total variance:
 
         Var(LR | IM) = sum_k p_k [ sigma_k^2 + (mu_k - mu)^2 ]
 
@@ -2207,70 +2186,6 @@ class postprocessor:
         IM-dependent uncertainty.
         """
 
-        def calculate_sigma_silva(loss):
-            """
-            Helper function to calculate uncertainty in the loss
-            estimates based on the method proposed in Silva (2019),
-            which incorporates the sigma (standard deviation) for loss
-            ratios within seismic vulnerability functions.
-
-            This method computes the sigma loss ratio for expected loss
-            ratios and also estimates the parameters of a beta
-            distribution (coefficients a and b), which describe the
-            uncertainty and variability in the loss estimates. The
-            formula used is derived from seismic vulnerability research.
-
-            Parameters:
-            -----------
-            loss : list or array
-                A list or array of expected loss ratios. The expected
-                loss ratio represents the proportion of the building's
-                value that is expected to be lost due to an earthquake
-                event, ranging from 0 to 1.
-
-            Returns:
-            --------
-            sigma_loss_ratio : list or array
-                The calculated uncertainty (sigma) associated with the
-                mean loss ratio for each input loss value. The sigma
-                loss ratio represents the variability of the loss
-                estimates and is computed based on the loss ratios
-                provided.
-
-            a_beta_dist : list or array
-                The coefficient 'a' of the beta distribution for each
-                loss ratio. This parameter represents the shape of the
-                beta distribution and is used to model the uncertainty
-                in the loss estimates.
-
-            b_beta_dist : list or array
-                The coefficient 'b' of the beta distribution for each
-                loss ratio. This parameter also represents the shape of
-                the beta distribution, complementing the coefficient 'a'
-                to fully describe the distribution's behavior.
-
-            References:
-            ----------
-            1) Silva, V. (2019) "Uncertainty and correlation in seismic
-            vulnerability functions of building classes." Earthquake
-            Spectra. DOI: 10.1193/013018eqs031m.
-
-            """
-            sigma_loss_ratio = np.where(
-                loss == 1e-8, 1e-8, np.where(
-                    loss == 1, 1,
-                    0.5 * np.sqrt(
-                        loss * (-0.7 - 2 * loss
-                                + np.sqrt(6.8 * loss + 0.5)))))
-            a_beta_dist = np.zeros(loss.shape)
-            b_beta_dist = np.zeros(loss.shape)
-
-            return sigma_loss_ratio, a_beta_dist, b_beta_dist
-
-        # Default behavior
-        if uncertainty and method is None:
-            method = "explicit"
-
         # Consistency checks
         n_im, n_ds = poes.shape
         if len(consequence_model) != n_ds:
@@ -2281,10 +2196,10 @@ class postprocessor:
             raise Exception(
                 'ERROR! Mismatch between number of IMLs and fragility models!')
 
-        if uncertainty and method == "explicit":
+        if uncertainty:
             if cov_consequence is None:
                 raise Exception(
-                    'ERROR! Explicit uncertainty method requires '
+                    'ERROR! Uncertainty calculation requires '
                     'cov_consequence.')
             if len(cov_consequence) != n_ds:
                 raise Exception(
@@ -2314,20 +2229,10 @@ class postprocessor:
         # Initialize COV
         cov = np.zeros_like(loss)
         if uncertainty:
-            if method.lower() == "explicit":
-                # Law of total variance
-                diff = mu_k - loss[:, None]
-                var_loss = np.sum(p_ds * (var_k + diff ** 2), axis=1)
-                cov = np.sqrt(var_loss) / (loss + 1e-12)
-            elif method.lower() == "silva":
-                # Semi-empirical derivatoin
-                for i, mu in enumerate(loss):
-                    sigma_loss_ratio, _, _ = calculate_sigma_silva(mu)
-                    cov[i] = np.min(
-                        [sigma_loss_ratio / mu,
-                         0.90 * np.sqrt(mu * (1 - mu)) / mu])
-            else:
-                raise Exception(f"ERROR! Unknown uncertainty method: {method}")
+            # Law of total variance
+            diff = mu_k - loss[:, None]
+            var_loss = np.sum(p_ds * (var_k + diff ** 2), axis=1)
+            cov = np.sqrt(var_loss) / (loss + 1e-12)
 
         # Output
         df = pd.DataFrame({'IML': intensities,
@@ -2336,32 +2241,43 @@ class postprocessor:
 
         return df
 
-    def calculate_average_annual_damage_probability(self,
-                                                    fragility_array,
-                                                    hazard_array,
-                                                    return_period=1,
-                                                    max_return_period=5000):
+    def calculate_risk(self,
+                       input_array,
+                       hazard_array,
+                       return_period=1,
+                       max_return_period=5000):
         """
-        Calculate the Average Annual Damage State Probability (AADP)
-        based on fragility and hazard curves.
+        Calculate an average annual risk metric by integrating a
+        fragility or vulnerability curve against a seismic hazard curve.
 
-        This function estimates the average annual probability of damage
-        states occurring over a given return period, using the fragility
-        curve (which relates intensity measure levels to damage state
-        probabilities) and the hazard curve (which relates intensity
-        measure levels to annual rates of exceedance).
+        This function estimates the average annual value of ``input_array``
+        occurring over a given return period (typically annual where
+        return_period = 1), using the hazard curve (which relates
+        intensity measure levels to annual rates of exceedance). The
+        interpretation of the result depends on what ``input_array``
+        represents:
 
-        The calculation integrates the product of the fragility function
-        and the hazard curve over the specified range of intensity measure
+        - If ``input_array`` is a fragility curve (intensity measure
+          level vs. probability of exceeding a damage state), the result
+          is the Average Annual Damage [State] Probability (AADP).
+        - If ``input_array`` is a vulnerability curve (intensity measure
+          level vs. expected loss ratio), the result is the Average
+          Annual Loss Ratio (AALR).
+
+        The calculation integrates the product of ``input_array`` and the
+        hazard curve over the specified range of intensity measure
         levels, accounting for the return period and a maximum return
         period threshold.
 
         Parameters
         ----------
-        fragility_array : 2D array
+        input_array : 2D array
             A 2D array where the first column contains intensity measure
-            levels, and the second column contains the corresponding
-            probabilities of exceedance for each intensity level.
+            levels, and the second column contains either the
+            probability of exceedance of a damage state (a fragility
+            curve, yielding the AADP) or the expected loss ratio (a
+            vulnerability curve, yielding the AALR) for each intensity
+            level.
 
         hazard_array : 2D array
             A 2D array where the first column contains intensity measure
@@ -2371,9 +2287,9 @@ class postprocessor:
 
         return_period : float, optional, default=1
             The return period used to scale the hazard rate. This is the
-            time span (in years) over which the average annual damage
-            probability is calculated. A typical value is 1 year, but
-            longer periods can be used for multi-year assessments.
+            time span (in years) over which the average annual value is
+            calculated. A typical value is 1 year, but longer periods
+            can be used for multi-year assessments.
 
         max_return_period : float, optional, default=5000
             The maximum return period threshold used to filter out very
@@ -2383,106 +2299,24 @@ class postprocessor:
 
         Returns
         -------
-        average_annual_damage_probability : float
-            The average annual damage state probability, calculated by
-            integrating the product of the fragility function and the
-            hazard curve over the given intensity measure levels.
+        average_annual_value : float
+            The average annual value of ``input_array``, calculated by
+            integrating the product of ``input_array`` and the hazard
+            curve over the given intensity measure levels. This is the
+            AADP when ``input_array`` is a fragility curve, or the AALR
+            when it is a vulnerability curve.
 
         """
-
-        # Ensure arrays are sorted by Intensity (Column 0)
+        # Ensure arrays are sorted by Intensity Measure (IM)
         hazard_array = hazard_array[hazard_array[:, 0].argsort()]
-        fragility_array = fragility_array[fragility_array[:, 0].argsort()]
-
-        # Filter hazard based on return period threshold
-        max_integration = return_period / max_return_period
-        hazard_array = hazard_array[hazard_array[:, 1] >= max_integration]
-
-        # Need at least 2 points to calculate a rate difference
-        if len(hazard_array) < 2:
-            return 0.0
-
-        # Compute midpoints and rate of occurrences (|d_lambda|)
-        mean_imls = (hazard_array[:-1, 0] + hazard_array[1:, 0]) / 2
-        # abs ensures positive probability mass regardless of sort order
-        rate_occ = np.abs(np.diff(hazard_array[:, 1])) / return_period
-
-        # Define fragility curve with dynamic upper boundary
-        # We assume Probability=0 at IM=0 and Probability=1 at high IM
-        upper_im_bound = max(20.0, fragility_array[:, 0].max() * 1.5)
-        curve_imls = np.hstack(
-            ([0.0], fragility_array[:, 0], [upper_im_bound]))
-        curve_ordinates = np.hstack(([0.0], fragility_array[:, 1], [1.0]))
-
-        # Interpolate and Integrate
-        interpolated_values = np.interp(mean_imls, curve_imls, curve_ordinates)
-
-        # Result: Sum of (Probability of Damage * Frequency of Occurrence)
-        return np.dot(interpolated_values, rate_occ)
-
-    def calculate_average_annual_loss(self,
-                                      vulnerability_array,
-                                      hazard_array,
-                                      return_period=1,
-                                      max_return_period=5000):
-        """
-        Calculate the Average Annual Loss Ratio (AALR) based on
-        vulnerability and hazard curves.
-
-        This function estimates the average loss ratio occurring over a
-        given return period (typically annual where return_period = 1),
-        using the vulnerability curve (which relates intensity measure
-        levels to an expected loss ratio) and the hazard curve (which
-        relates intensity measure levels to annual rates of exceedance).
-
-        The calculation integrates the product of the vulnerability
-        function and the hazard curve over the specified range of
-        intensity measure levels, accounting for the return period and
-        a maximum return period threshold.
-
-        Parameters
-        ----------
-        vulnerability_array : 2D array
-            A 2D array where the first column contains intensity measure
-            levels, and the second column contains the corresponding
-            expected loss ratios for each intensity level.
-
-        hazard_array : 2D array
-            A 2D array where the first column contains intensity measure
-            levels, and the second column contains the annual rates of
-            exceedance (i.e., the probability of exceedance per year)
-            for each intensity level.
-
-        return_period : float, optional, default=1
-            The return period used to scale the hazard rate. This is the
-            time span (in years) over which the average annual damage
-            probability is calculated. A typical value is 1 year, but
-            longer periods can be used for multi-year assessments.
-
-        max_return_period : float, optional, default=5000
-            The maximum return period threshold used to filter out very
-            low hazard rates. The hazard curve is truncated to include
-            only intensity levels with exceedance rates above this
-            threshold.
-
-        Returns
-        -------
-        average_annual_loss_ratio : float
-            The average annual loss ratio, calculated by integrating
-            the product of the vulnerability function and the hazard
-            curve over the given intensity measure levels.
-
-        """
-        # Ensure hazard data is sorted by Intensity Measure (IM)
-        hazard_array = hazard_array[hazard_array[:, 0].argsort()]
-        vulnerability_array = vulnerability_array[
-            vulnerability_array[:, 0].argsort()]
+        input_array = input_array[input_array[:, 0].argsort()]
 
         # Filter hazard based on max return period (min frequency threshold)
         min_rate_threshold = return_period / max_return_period
         hazard_filtered = hazard_array[hazard_array[:, 1]
                                        >= min_rate_threshold]
 
+        # Need at least 2 points to calculate a rate difference
         if len(hazard_filtered) < 2:
             return 0.0
 
@@ -2491,19 +2325,19 @@ class postprocessor:
         mean_imls = (hazard_filtered[:-1, 0] + hazard_filtered[1:, 0]) / 2
         rate_occ = np.abs(np.diff(hazard_filtered[:, 1])) / return_period
 
-        # Prepare vulnerability curve for interpolation
-        # Anchoring the curve at IM=0 (Loss=0) and a high IM cap (Loss=1.0)
-        v_im = vulnerability_array[:, 0]
-        v_loss = vulnerability_array[:, 1]
+        # Prepare the input curve for interpolation
+        # Anchoring the curve at IM=0 (value=0) and a high IM cap (value=1.0)
+        input_im = input_array[:, 0]
+        input_value = input_array[:, 1]
 
         curve_imls = np.concatenate(
-            ([0.0], v_im, [max(20.0, v_im.max() * 1.5)]))
-        curve_ordinates = np.concatenate(([0.0], v_loss, [1.0]))
+            ([0.0], input_im, [max(20.0, input_im.max() * 1.5)]))
+        curve_ordinates = np.concatenate(([0.0], input_value, [1.0]))
 
-        # Interpolate vulnerability at the hazard midpoints
-        interpolated_losses = np.interp(mean_imls, curve_imls, curve_ordinates)
+        # Interpolate the input curve at the hazard midpoints
+        interpolated_values = np.interp(mean_imls, curve_imls, curve_ordinates)
 
-        # Final Integration (Dot product of Losses and Probabilities)
-        average_annual_loss = np.dot(interpolated_losses, rate_occ)
+        # Final Integration (Dot product of values and rates of occurrence)
+        average_annual_value = np.dot(interpolated_values, rate_occ)
 
-        return average_annual_loss
+        return average_annual_value

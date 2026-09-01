@@ -75,9 +75,9 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 - Nine fragility fitting approaches including lognormal CDF variants, GLM (logit/probit), ordinal CLMs (constant and variable dispersion), and MCMC.
 
 ### Vulnerability & Loss Assessment
-- Combine fragility functions with consequence models (damage-to-loss ratios) to derive mean vulnerability functions with explicit uncertainty treatment (Beta distribution, explicit and Silva 2019 COV methods).
+- Combine fragility functions with consequence models (damage-to-loss ratios) to derive mean vulnerability functions with explicit uncertainty treatment (Beta distribution, law-of-total-variance COV method).
 - Apply storey loss functions to derive component-level and system-level vulnerability models.
-- Compute Average Annual Damage Probability (AADP) and Average Annual Loss Ratio (AALR) by integrating with site hazard curves.
+- Compute Average Annual Damage Probability (AADP) and Average Annual Loss Ratio (AALR) via a single `calculate_risk` method, by integrating fragility or vulnerability curves with site hazard curves.
 
 ---
 

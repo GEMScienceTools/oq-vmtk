@@ -67,9 +67,8 @@
 <li class="toctree-l2"><a class="reference internal" href="process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.12. References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_risk.html">7.10. Average Annual Risk Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pos.html#references">7.11. References</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
@@ -107,13 +106,54 @@
 <h1><span class="section-number">7.5. </span>Ordinal Fragility Functions<a class="headerlink" href="#ordinal-fragility-functions" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.postprocessor.postprocessor.calculate_ordinal_fragility">
-<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">calculate_ordinal_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.calculate_ordinal_fragility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.calculate_ordinal_fragility" title="Link to this definition"></a></dt>
-<dd><p>Fits an ordinal (cumulative) probit model to estimate fragility
-curves for different damage states.</p>
-<p>This function estimates the probability of exceeding various
-damage states using an ordinal regression model based on observed
-Engineering Demand Parameters (EDPs) and corresponding Intensity
-Measure Levels (IMLs).</p>
+<span class="sig-prename descclassname"><span class="pre">postprocessor.</span></span><span class="sig-name descname"><span class="pre">calculate_ordinal_fragility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage_thresholds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.round(np.geomspace(0.05,</span> <span class="pre">10.0,</span> <span class="pre">50),</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispersion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/postprocessor.html#postprocessor.calculate_ordinal_fragility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.postprocessor.postprocessor.calculate_ordinal_fragility" title="Link to this definition"></a></dt>
+<dd><p>Fits a hierarchical (cumulative link) probit model to estimate
+fragility curves for ordered damage states.</p>
+<p>This function implements the hierarchical fragility modelling
+framework for ordinal damage levels, in which the probability of
+equalling or exceeding damage state <span class="math notranslate nohighlight">\(i\)</span> given intensity
+measure level IM is expressed as a lognormal CDF:</p>
+<div class="math notranslate nohighlight">
+\[P(\mathrm{DS} \geq ds_i \mid \mathrm{IM}) =
+\Phi\!\left(\frac{\ln(\mathrm{IM}) - \ln(\theta_i)}{\beta_i}\right),
+\quad i = 1, \ldots, k\]</div>
+<p>where <span class="math notranslate nohighlight">\(\theta_i\)</span> is the median IM capacity for damage state
+<span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(\beta_i\)</span> is the associated dispersion. The
+<strong>hierarchical</strong> property—i.e., that curves do not cross at the
+median—is maintained through the constraint
+<span class="math notranslate nohighlight">\(\theta_1 \leq \theta_2 \leq \cdots \leq \theta_k\)</span>.</p>
+<p>Two dispersion models are supported via <code class="docutils literal notranslate"><span class="pre">dispersion_type</span></code>:</p>
+<p><strong>Constant dispersion</strong> (<code class="docutils literal notranslate"><span class="pre">dispersion_type='constant'</span></code>, default)</p>
+<blockquote>
+<div><p>All damage states share a single slope <span class="math notranslate nohighlight">\(\beta\)</span>, i.e.
+<span class="math notranslate nohighlight">\(\beta_i = \beta\)</span> for all <span class="math notranslate nohighlight">\(i\)</span>. This is the
+“fully ordered” special case. The model is parameterised by
+<span class="math notranslate nohighlight">\(k\)</span> ordered intercepts <span class="math notranslate nohighlight">\(\alpha_i\)</span> and one common
+slope:</p>
+<div class="math notranslate nohighlight">
+\[P(\mathrm{DS} \geq ds_i \mid \mathrm{IM}) =
+\Phi(\alpha_i - \beta\,\ln \mathrm{IM}),
+\quad \alpha_1 \leq \cdots \leq \alpha_k\]</div>
+<p>The shared slope is enforced by fitting a single
+<code class="docutils literal notranslate"><span class="pre">statsmodels.OrderedModel</span></code> (probit distribution) to all
+damage state observations simultaneously. This prevents
+fragility curve crossings everywhere along the IM axis.</p>
+</div></blockquote>
+<p><strong>Variable dispersion</strong> (<code class="docutils literal notranslate"><span class="pre">dispersion_type='variable'</span></code>)</p>
+<blockquote>
+<div><p>Each damage state <span class="math notranslate nohighlight">\(i\)</span> has its own dispersion
+<span class="math notranslate nohighlight">\(\beta_i\)</span>, making the model more realistic when damage
+states differ in their sensitivity to ground-motion intensity.
+<span class="math notranslate nohighlight">\(k\)</span> independent binary probit regressions are fitted,
+one per damage state, yielding damage-state-specific medians
+<span class="math notranslate nohighlight">\(\theta_i\)</span> and dispersions <span class="math notranslate nohighlight">\(\beta_i\)</span>. To restore
+the hierarchical ordering constraint, isotonic regression
+(Pool-Adjacent Violators Algorithm) is applied to
+<span class="math notranslate nohighlight">\(\ln(\theta_i)\)</span> after fitting, ensuring
+<span class="math notranslate nohighlight">\(\theta_1 \leq \cdots \leq \theta_k\)</span>. Curves may
+cross in the tails (beyond the median), but the ordering of
+50th-percentile capacities is guaranteed.</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -123,57 +163,118 @@ responses.</p></li>
 <li><p><strong>damage_thresholds</strong> (<em>array-like</em>) – Damage state thresholds for classifying exceedance levels.</p></li>
 <li><p><strong>intensities</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Intensity measure levels for which fragility curves are
 evaluated (default: np.geomspace(0.05, 10.0, 50)).</p></li>
+<li><p><strong>dispersion_type</strong> (<em>{'constant'</em><em>, </em><em>'variable'}</em><em>, </em><em>optional</em>) – Controls whether a single dispersion parameter is shared across
+all damage states (‘constant’, default) or each damage state
+receives its own dispersion estimated independently
+(‘variable’).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>poes</strong> – A 2D array of exceedance probabilities (CDF values) for each
-intensity level. Shape: (len(intensities),
-len(damage_thresholds) + 1), where the last column represents
-the probability of exceeding the highest damage state.</p>
+<dd class="field-even"><p><p><strong>poes</strong> – A 2D array of exceedance probabilities (CDF values) for each
+intensity level.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dispersion_type='constant'</span></code>: shape
+<code class="docutils literal notranslate"><span class="pre">(len(intensities),</span> <span class="pre">n_categories)</span></code> where <code class="docutils literal notranslate"><span class="pre">n_categories</span></code>
+is the number of distinct damage states observed in the data
+(typically <code class="docutils literal notranslate"><span class="pre">len(damage_thresholds)</span> <span class="pre">+</span> <span class="pre">1</span></code> when the no-damage
+state DS=0 is present).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dispersion_type='variable'</span></code>: shape
+<code class="docutils literal notranslate"><span class="pre">(len(intensities),</span> <span class="pre">len(damage_thresholds))</span></code>.</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 <p class="rubric">References</p>
-<p>1) Lallemant, D., Kiremidjian, A., and Burton, H. (2015),
-Statistical procedures for developing earthquake damage fragility
-curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.
-doi: 10.1002/eqe.2522.</p>
-<p>2) Nguyen, M. and Lallemant, D. (2022), Order Matters: The
+<p>1) Jalayer, F., Ebrahimian, H., Trevlopoulos, K., and Bradley, B.
+(2023). Empirical tsunami fragility modelling for hierarchical
+damage levels. Natural Hazards and Earth System Sciences, 23(2),
+909-931. <a class="reference external" href="https://doi.org/10.5194/nhess-23-909-2023">https://doi.org/10.5194/nhess-23-909-2023</a></p>
+<p>2) Nguyen, M. and Lallemant, D. (2022). Order Matters: The
 Benefits of Ordinal Fragility Curves for Damage and Loss
 Estimation. Risk Analysis, 42: 1136-1148.
 <a class="reference external" href="https://doi.org/10.1111/risa.13815">https://doi.org/10.1111/risa.13815</a></p>
+<p>3) Lallemant, D., Kiremidjian, A., and Burton, H. (2015).
+Statistical procedures for developing earthquake damage fragility
+curves. Earthquake Engng Struct. Dyn., 44, 1373-1389.
+doi: 10.1002/eqe.2522.</p>
 </dd></dl>
 
 <div class="admonition-theoretical-background admonition">
 <p class="admonition-title">Theoretical Background</p>
-<p>The ordinal regression approach treats damage state assignment as an ordered
-categorical outcome, jointly fitting all damage states in a single model while
-respecting their natural ordering (Nguyen &amp; Lallemant, 2022).</p>
-<p><strong>Ordered response model</strong></p>
-<p>Let <span class="math notranslate nohighlight">\(D \in \{0, 1, \ldots, k\}\)</span> be the observed damage state (0 = no damage,
-<span class="math notranslate nohighlight">\(k\)</span> = highest damage state). The cumulative exceedance probability for
-damage state <span class="math notranslate nohighlight">\(i\)</span> is:</p>
+<p><strong>Hierarchical fragility model</strong></p>
+<p>The hierarchical (cumulative link) approach treats the probability of
+equalling or exceeding damage state <span class="math notranslate nohighlight">\(i\)</span> given intensity measure
+level IM as a lognormal CDF:</p>
 <div class="math notranslate nohighlight">
-\[P(D \geq i \mid \text{IM}) = g^{-1}(\alpha_i - \beta \ln \text{IM}),
+\[P(\mathrm{DS} \geq ds_i \mid \mathrm{IM}) =
+\Phi\!\left(\frac{\ln(\mathrm{IM}) - \ln(\theta_i)}{\beta_i}\right),
 \quad i = 1, \ldots, k\]</div>
-<p>where <span class="math notranslate nohighlight">\(\alpha_i\)</span> are ordered thresholds satisfying
-<span class="math notranslate nohighlight">\(\alpha_1 \leq \alpha_2 \leq \cdots \leq \alpha_k\)</span>,
-<span class="math notranslate nohighlight">\(\beta\)</span> is a shared slope common to all damage states, and
-<span class="math notranslate nohighlight">\(g\)</span> is a link function (logit or probit).</p>
-<p><strong>Shared slope constraint</strong></p>
-<p>Unlike fitting each damage state independently, ordinal regression enforces a
-single slope <span class="math notranslate nohighlight">\(\beta\)</span> across all damage states. This prevents fragility
-curve crossings and improves statistical efficiency by using all damage
-observations simultaneously.</p>
+<p>where <span class="math notranslate nohighlight">\(\theta_i\)</span> is the median IM capacity for damage state
+<span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(\beta_i\)</span> is its associated dispersion. All damage
+states are fitted simultaneously (or with an ordering constraint
+applied post-fit), exploiting the ordinal structure of the damage
+scale. The <strong>hierarchical constraint</strong></p>
+<div class="math notranslate nohighlight">
+\[\theta_1 \leq \theta_2 \leq \cdots \leq \theta_k\]</div>
+<p>ensures that the 50th-percentile capacities are ordered, i.e. higher
+damage states are first exceeded at larger intensity levels
+(Jalayer et al., 2023; Nguyen &amp; Lallemant, 2022).</p>
+<p><strong>Constant dispersion</strong> (<code class="docutils literal notranslate"><span class="pre">dispersion_type='constant'</span></code>, default)</p>
+<p>When a single dispersion <span class="math notranslate nohighlight">\(\beta_i = \beta\)</span> is assumed for all
+damage states — the <em>fully ordered</em> special case — the model reduces
+to the standard ordered-probit parameterisation with <span class="math notranslate nohighlight">\(k\)</span> ordered
+intercepts <span class="math notranslate nohighlight">\(\alpha_i\)</span> and one common slope:</p>
+<div class="math notranslate nohighlight">
+\[P(\mathrm{DS} \geq ds_i \mid \mathrm{IM}) =
+\Phi(\alpha_i - \beta\,\ln \mathrm{IM}),
+\quad \alpha_1 \leq \cdots \leq \alpha_k\]</div>
+<p>The shared slope is estimated by fitting a single
+<code class="docutils literal notranslate"><span class="pre">statsmodels.OrderedModel</span></code> (probit distribution) to all
+damage-state observations simultaneously. Because every curve has
+identical shape and only the threshold differs, crossings are
+strictly impossible <strong>everywhere</strong> along the IM axis.</p>
+<p><strong>Variable dispersion</strong> (<code class="docutils literal notranslate"><span class="pre">dispersion_type='variable'</span></code>)</p>
+<p>In general, each damage state may exhibit its own sensitivity to
+ground-motion intensity, yielding damage-state-specific dispersions
+<span class="math notranslate nohighlight">\(\beta_i\)</span>. This is the more realistic formulation and does not
+sacrifice the hierarchical property. Here <span class="math notranslate nohighlight">\(k\)</span> independent binary
+probit regressions are fitted, one per damage state:</p>
+<div class="math notranslate nohighlight">
+\[P(\mathrm{DS} \geq ds_i \mid \mathrm{IM}) =
+\Phi(b_{0,i} + b_{1,i}\,\ln \mathrm{IM})\]</div>
+<p>Median and dispersion for each DS are recovered as
+<span class="math notranslate nohighlight">\(\theta_i = \exp(-b_{0,i}/b_{1,i})\)</span> and
+<span class="math notranslate nohighlight">\(\beta_i = 1/b_{1,i}\)</span>. After fitting, isotonic regression
+(Pool-Adjacent Violators Algorithm, PAVA) is applied to
+<span class="math notranslate nohighlight">\(\ln(\theta_i)\)</span> to restore the hierarchical ordering constraint.
+Curves may cross in the tails but the ordering of 50th-percentile
+capacities is guaranteed.</p>
 <p><strong>Fragility curves</strong></p>
 <p>The probability of being in exactly damage state <span class="math notranslate nohighlight">\(i\)</span> is:</p>
 <div class="math notranslate nohighlight">
-\[P(D = i \mid \text{IM}) =
-P(D \geq i \mid \text{IM}) - P(D \geq i+1 \mid \text{IM})\]</div>
-<p>The exceedance fragility curves <span class="math notranslate nohighlight">\(P(D \geq i \mid \text{IM})\)</span> are obtained
-directly from the fitted cumulative model.</p>
+\[P(D = i \mid \mathrm{IM}) =
+P(D \geq i \mid \mathrm{IM}) - P(D \geq i+1 \mid \mathrm{IM})\]</div>
+<p>The exceedance fragility curves <span class="math notranslate nohighlight">\(P(D \geq i \mid \mathrm{IM})\)</span>
+are obtained directly from the fitted cumulative model.</p>
+</div>
+<div class="admonition-references admonition">
+<p class="admonition-title">References</p>
+<ol class="arabic simple">
+<li><p>Jalayer, F., Ebrahimian, H., Trevlopoulos, K., and Bradley, B.
+(2023). Empirical tsunami fragility modelling for hierarchical
+damage levels. <em>Natural Hazards and Earth System Sciences</em>, 23(2),
+909–931. <a class="reference external" href="https://doi.org/10.5194/nhess-23-909-2023">https://doi.org/10.5194/nhess-23-909-2023</a></p></li>
+<li><p>Nguyen, M. and Lallemant, D. (2022). Order Matters: The Benefits of
+Ordinal Fragility Curves for Damage and Loss Estimation. <em>Risk
+Analysis</em>, 42: 1136–1148. <a class="reference external" href="https://doi.org/10.1111/risa.13815">https://doi.org/10.1111/risa.13815</a></p></li>
+<li><p>Lallemant, D., Kiremidjian, A., and Burton, H. (2015). Statistical
+procedures for developing earthquake damage fragility curves.
+<em>Earthquake Engineering &amp; Structural Dynamics</em>, 44, 1373–1389.
+<a class="reference external" href="https://doi.org/10.1002/eqe.2522">https://doi.org/10.1002/eqe.2522</a></p></li>
+</ol>
 </div>
 <div class="note admonition">
 <p class="admonition-title">Example</p>
@@ -182,11 +283,28 @@ directly from the fitted cumulative model.</p>
 
 <span class="n">pp</span> <span class="o">=</span> <span class="n">postprocessor</span><span class="p">()</span>
 <span class="n">intensities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
-<span class="c1"># imls: 1-D array of IM levels; damage_states: integer array (0, 1, 2, …)</span>
-<span class="n">poes</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calculate_ordinal_fragility</span><span class="p">(</span>
+<span class="n">damage_thresholds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.040</span><span class="p">,</span> <span class="mf">0.080</span><span class="p">]</span>
+
+<span class="c1"># Constant dispersion — fully-ordered special case (default)</span>
+<span class="c1"># shape: (50, n_categories), where n_categories is the number of</span>
+<span class="c1"># distinct damage states observed (typically n_DS + 1 when DS=0</span>
+<span class="c1"># is present in the data)</span>
+<span class="n">poes_const</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calculate_ordinal_fragility</span><span class="p">(</span>
     <span class="n">imls</span><span class="o">=</span><span class="n">imls</span><span class="p">,</span>
-    <span class="n">damage_states</span><span class="o">=</span><span class="n">damage_states</span><span class="p">,</span>
+    <span class="n">edps</span><span class="o">=</span><span class="n">edps</span><span class="p">,</span>
+    <span class="n">damage_thresholds</span><span class="o">=</span><span class="n">damage_thresholds</span><span class="p">,</span>
     <span class="n">intensities</span><span class="o">=</span><span class="n">intensities</span><span class="p">,</span>
+    <span class="n">dispersion_type</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Variable dispersion — general hierarchical case</span>
+<span class="c1"># shape: (50, len(damage_thresholds)) = (50, 4)</span>
+<span class="n">poes_var</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calculate_ordinal_fragility</span><span class="p">(</span>
+    <span class="n">imls</span><span class="o">=</span><span class="n">imls</span><span class="p">,</span>
+    <span class="n">edps</span><span class="o">=</span><span class="n">edps</span><span class="p">,</span>
+    <span class="n">damage_thresholds</span><span class="o">=</span><span class="n">damage_thresholds</span><span class="p">,</span>
+    <span class="n">intensities</span><span class="o">=</span><span class="n">intensities</span><span class="p">,</span>
+    <span class="n">dispersion_type</span><span class="o">=</span><span class="s1">&#39;variable&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>

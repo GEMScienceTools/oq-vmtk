@@ -5,8 +5,8 @@ The ``postprocessor`` class derives fragility and vulnerability models from
 nonlinear time-history analysis (NTHA) outputs. Supported workflows include
 Modified Cloud Analysis (MCA), Multiple Stripe Analysis (MSA), and Incremental
 Dynamic Analysis (IDA). Fragility fitting options are lognormal (with bootstrap or classical Bayesian
-MCMC estimation), probit, logit, and ordinal models. Vulnerability functions and average annual loss (AAL) are
-also computed.
+MCMC estimation), probit, logit, and ordinal models. Vulnerability functions and average annual risk
+metrics (AAL and AADP) are also computed.
 
 .. toctree::
 
@@ -19,8 +19,7 @@ also computed.
    pos/process_ida_results
    pos/process_msa_results
    pos/calculate_vulnerability_function
-   pos/calculate_average_annual_damage_probability
-   pos/calculate_average_annual_loss
+   pos/calculate_risk
 
 References
 ----------
@@ -43,25 +42,22 @@ References
 5. Nguyen, M., and Lallemant, D. (2022). "Order Matters: The Benefits of Ordinal Fragility Curves for
    Damage and Loss Estimation". *Risk Analysis*, 42: 1136-1148. https://doi.org/10.1111/risa.13815
 
-6. Silva, V. (2019). "Uncertainty and correlation in seismic vulnerability functions of building classes."
-   *Earthquake Spectra*. DOI: 10.1193/013018eqs031m.
-
-7. Jalayer, F., De Risi, R., and Manfredi, G. (2015). "Bayesian Cloud Analysis: efficient structural
+6. Jalayer, F., De Risi, R., and Manfredi, G. (2015). "Bayesian Cloud Analysis: efficient structural
    fragility assessment using linear regression." *Bulletin of Earthquake Engineering*, 13(4), 1183–1203.
 
-8. Cornell, C.A., Jalayer, F., Hamburger, R.O., and Foutch, D.A. (2002). "Probabilistic basis for 2000
+7. Cornell, C.A., Jalayer, F., Hamburger, R.O., and Foutch, D.A. (2002). "Probabilistic basis for 2000
    SAC Federal Emergency Management Agency steel moment frame guidelines." *Journal of Structural
    Engineering*, 128(4), 526–533.
 
-9. Vamvatsikos, D. and Cornell, C.A. (2002). "Incremental dynamic analysis." *Earthquake Engineering
+8. Vamvatsikos, D. and Cornell, C.A. (2002). "Incremental dynamic analysis." *Earthquake Engineering
    and Structural Dynamics*, 31(3), 491–514.
 
-10. McGuire, R.K. (2004). *Seismic Hazard and Risk Analysis*. Earthquake Engineering Research
-    Institute, MNO-10, Oakland, CA.
+9. McGuire, R.K. (2004). *Seismic Hazard and Risk Analysis*. Earthquake Engineering Research
+   Institute, MNO-10, Oakland, CA.
 
-11. Cornell, C.A. and Krawinkler, H. (2000). "Progress and challenges in seismic performance
+10. Cornell, C.A. and Krawinkler, H. (2000). "Progress and challenges in seismic performance
     assessment." *PEER Center News*, 3(2), 1–3.
 
-12. Jalayer, F., Ebrahimian, H., Miano, A., Manfredi, G., and Sezen, H. (2017). "Analytical
+11. Jalayer, F., Ebrahimian, H., Miano, A., Manfredi, G., and Sezen, H. (2017). "Analytical
     fragility assessment using unscaled ground motion records." *Earthquake Engineering and
     Structural Dynamics*, 46: 2639–2663. https://doi.org/10.1002/eqe.2922

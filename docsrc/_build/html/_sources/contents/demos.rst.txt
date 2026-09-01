@@ -68,10 +68,13 @@ Available Demos
    * - ``StoreyLossFunctionGeneration``
      - Generate Storey Loss Functions from a component inventory using the
        ``slfgenerator`` module. Bundled inventories live in
-       ``demos/StoreyLossFunctionGeneration/in/``.
+       ``demos/StoreyLossFunctionGeneration/in/``. Includes Example A
+       (independent components) and Example B (correlated components via
+       correlation trees).
    * - ``StoreyLossFunctionApplication``
      - Apply previously generated SLFs to derive nonstructural-component
-       vulnerability functions.
+       vulnerability functions. Compares the resulting vulnerability models
+       and AALRs between Example A and Example B.
 
 Each demo folder contains a short ``README.md`` describing the inputs,
 outputs, and the modules being exercised.

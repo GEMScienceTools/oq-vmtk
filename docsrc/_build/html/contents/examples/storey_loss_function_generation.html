@@ -67,10 +67,7 @@
 <li class="toctree-l2"><a class="reference internal" href="multiple_stripe_analysis.html">11.8. Multiple Stripe Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="incremental_dynamic_analysis.html">11.9. Incremental Dynamic Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fragility_analysis.html">11.10. Fragility Analysis</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">11.11. Storey Loss Function Generation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#self-contained-code">11.11.1. Self-contained code</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">11.11. Storey Loss Function Generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="storey_loss_function_application.html">11.12. Storey Loss Function Application</a></li>
 </ul>
 </li>
@@ -105,16 +102,14 @@
 <h1><span class="section-number">11.11. </span>Storey Loss Function Generation<a class="headerlink" href="#storey-loss-function-generation" title="Link to this heading"></a></h1>
 <p>Demonstrates how to generate Storey Loss Functions (SLFs) using the
 <code class="docutils literal notranslate"><span class="pre">slfgenerator</span></code> class. Covers component inventory input, Monte Carlo
-simulation of damage states, and regression fitting of SLF curves.</p>
+simulation of damage states, empirical 16th/50th/84th-percentile storey loss
+statistics, and optional correlation trees between dependent components.</p>
 <p>The full notebook is at
 <a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk/blob/incremental-dynamic-analysis/demos/StoreyLossFunctionGeneration/StoreyLossFunctionGeneration.ipynb">demos/StoreyLossFunctionGeneration/StoreyLossFunctionGeneration.ipynb</a>.
 The required inventory CSVs are bundled at
 <a class="reference external" href="https://github.com/GEMScienceTools/oq-vmtk/tree/main/demos/StoreyLossFunctionGeneration/in">demos/StoreyLossFunctionGeneration/in/</a>.</p>
-<section id="self-contained-code">
-<h2><span class="section-number">11.11.1. </span>Self-contained code<a class="headerlink" href="#self-contained-code" title="Link to this heading"></a></h2>
-<p>Run the snippet below from the repository root after <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code>.
-It is the same workflow as the notebook, condensed into a single
-copy-pasteable script.</p>
+<p>The snippet below reproduces the same workflow and can be run from the
+repository root after <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -136,7 +131,6 @@ copy-pasteable script.</p>
     <span class="n">conversion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">realizations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
     <span class="n">replacement_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">regression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>        <span class="c1"># auto-select the best fit</span>
 <span class="p">)</span>
 
 <span class="c1"># 3. Drift-sensitive SLF</span>
@@ -164,18 +158,17 @@ copy-pasteable script.</p>
 <span class="n">pl</span><span class="o">.</span><span class="n">plot_slf_model</span><span class="p">(</span>
     <span class="n">psd_slf</span><span class="p">,</span> <span class="n">psd_cache</span><span class="p">,</span>
     <span class="n">edp_label</span><span class="o">=</span><span class="s2">&quot;Interstorey Drift Ratio [-]&quot;</span><span class="p">,</span>
-    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive NSC Storey Loss&quot;</span><span class="p">,</span>
-    <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive SLF&quot;</span><span class="p">,</span>
+    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive NSC Storey Loss Ratio&quot;</span><span class="p">,</span>
+    <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span> <span class="n">ylims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive SLF&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">pl</span><span class="o">.</span><span class="n">plot_slf_model</span><span class="p">(</span>
     <span class="n">pfa_slf</span><span class="p">,</span> <span class="n">pfa_cache</span><span class="p">,</span>
     <span class="n">edp_label</span><span class="o">=</span><span class="s2">&quot;Peak Floor Acceleration [g]&quot;</span><span class="p">,</span>
-    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Acceleration-Sensitive NSC Storey Loss&quot;</span><span class="p">,</span>
-    <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Acceleration-Sensitive SLF&quot;</span><span class="p">,</span>
+    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Acceleration-Sensitive NSC Storey Loss Ratio&quot;</span><span class="p">,</span>
+    <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="n">ylims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Acceleration-Sensitive SLF&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-</section>
 </section>
 
 

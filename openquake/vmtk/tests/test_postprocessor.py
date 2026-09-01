@@ -565,18 +565,9 @@ class TestVulnerabilityFunction(unittest.TestCase):
         df = self._vuln()
         self.assertTrue(np.all(df['COV'].values == 0.0))
 
-    def test_silva_uncertainty_accepted(self):
-        df = self.pp.calculate_vulnerability_function(
-            self.poes, self.consequence_model,
-            uncertainty=True, method='silva',
-            intensities=self.ims)
-        self.assertIn('COV', df.columns)
-        self.assertTrue(np.all(df['COV'].values >= 0.0))
-
 
 # ---------------------------------------------------------------------------
-# calculate_average_annual_damage_probability /
-# calculate_average_annual_loss
+# calculate_risk
 # ---------------------------------------------------------------------------
 class TestAverageAnnualMetrics(unittest.TestCase):
 
@@ -593,23 +584,23 @@ class TestAverageAnnualMetrics(unittest.TestCase):
         self.vulnerability = np.column_stack([im_vals, poes])
 
     def test_aadp_returns_scalar(self):
-        result = self.pp.calculate_average_annual_damage_probability(
+        result = self.pp.calculate_risk(
             self.fragility, self.hazard)
         self.assertIsInstance(float(result), float)
 
     def test_aadp_bounded(self):
-        result = self.pp.calculate_average_annual_damage_probability(
+        result = self.pp.calculate_risk(
             self.fragility, self.hazard)
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
 
     def test_aal_returns_scalar(self):
-        result = self.pp.calculate_average_annual_loss(
+        result = self.pp.calculate_risk(
             self.vulnerability, self.hazard)
         self.assertIsInstance(float(result), float)
 
     def test_aal_bounded(self):
-        result = self.pp.calculate_average_annual_loss(
+        result = self.pp.calculate_risk(
             self.vulnerability, self.hazard)
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
@@ -619,7 +610,7 @@ class TestAverageAnnualMetrics(unittest.TestCase):
         low_hazard = np.array([
             [0.05, 0.0001],
             [0.10, 0.00005]])
-        result = self.pp.calculate_average_annual_damage_probability(
+        result = self.pp.calculate_risk(
             self.fragility, low_hazard,
             max_return_period=100)
         self.assertEqual(result, 0.0)
@@ -629,7 +620,7 @@ class TestAverageAnnualMetrics(unittest.TestCase):
         low_hazard = np.array([
             [0.05, 0.0001],
             [0.10, 0.00005]])
-        result = self.pp.calculate_average_annual_loss(
+        result = self.pp.calculate_risk(
             self.vulnerability, low_hazard,
             max_return_period=100)
         self.assertEqual(result, 0.0)

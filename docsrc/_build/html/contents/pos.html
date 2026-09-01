@@ -62,9 +62,8 @@
 <li class="toctree-l2"><a class="reference internal" href="pos/process_ida_results.html">7.7. Incremental Dynamic Analysis Postprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pos/process_msa_results.html">7.8. Multiple Stripe Analysis Postprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pos/calculate_vulnerability_function.html">7.9. Vulnerability Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pos/calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pos/calculate_average_annual_loss.html">7.11. Average Annual Loss</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#references">7.12. References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pos/calculate_risk.html">7.10. Average Annual Risk Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">7.11. References</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
@@ -103,8 +102,8 @@
 nonlinear time-history analysis (NTHA) outputs. Supported workflows include
 Modified Cloud Analysis (MCA), Multiple Stripe Analysis (MSA), and Incremental
 Dynamic Analysis (IDA). Fragility fitting options are lognormal (with bootstrap or classical Bayesian
-MCMC estimation), probit, logit, and ordinal models. Vulnerability functions and average annual loss (AAL) are
-also computed.</p>
+MCMC estimation), probit, logit, and ordinal models. Vulnerability functions and average annual risk
+metrics (AAL and AADP) are also computed.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pos/init.html">7.1. Initialisation</a><ul>
@@ -143,18 +142,14 @@ also computed.</p>
 <li class="toctree-l2"><a class="reference internal" href="pos/calculate_vulnerability_function.html#openquake.vmtk.postprocessor.postprocessor.calculate_vulnerability_function"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_vulnerability_function()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="pos/calculate_average_annual_damage_probability.html">7.10. Average Annual Damage Probabilities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pos/calculate_average_annual_damage_probability.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_damage_probability"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_average_annual_damage_probability()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pos/calculate_average_annual_loss.html">7.11. Average Annual Loss</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pos/calculate_average_annual_loss.html#openquake.vmtk.postprocessor.postprocessor.calculate_average_annual_loss"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_average_annual_loss()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos/calculate_risk.html">7.10. Average Annual Risk Metrics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pos/calculate_risk.html#openquake.vmtk.postprocessor.postprocessor.calculate_risk"><code class="docutils literal notranslate"><span class="pre">postprocessor.calculate_risk()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </div>
 <section id="references">
-<h2><span class="section-number">7.12. </span>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<h2><span class="section-number">7.11. </span>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p>Porter, K. (2017). “When Addressing Epistemic Uncertainty in a Lognormal Fragility Function,
 How Should One Adjust the Median?”, <em>Proceedings of the 16th World Conference on Earthquake Engineering
@@ -169,8 +164,6 @@ doi: 10.1002/eqe.2522.</p></li>
 <em>Earthquake Spectra</em>. 31(1):579-599. doi:10.1193/021113EQS025M</p></li>
 <li><p>Nguyen, M., and Lallemant, D. (2022). “Order Matters: The Benefits of Ordinal Fragility Curves for
 Damage and Loss Estimation”. <em>Risk Analysis</em>, 42: 1136-1148. <a class="reference external" href="https://doi.org/10.1111/risa.13815">https://doi.org/10.1111/risa.13815</a></p></li>
-<li><p>Silva, V. (2019). “Uncertainty and correlation in seismic vulnerability functions of building classes.”
-<em>Earthquake Spectra</em>. DOI: 10.1193/013018eqs031m.</p></li>
 <li><p>Jalayer, F., De Risi, R., and Manfredi, G. (2015). “Bayesian Cloud Analysis: efficient structural
 fragility assessment using linear regression.” <em>Bulletin of Earthquake Engineering</em>, 13(4), 1183–1203.</p></li>
 <li><p>Cornell, C.A., Jalayer, F., Hamburger, R.O., and Foutch, D.A. (2002). “Probabilistic basis for 2000

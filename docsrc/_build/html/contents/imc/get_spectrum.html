@@ -108,29 +108,30 @@
 <h1><span class="section-number">3.2. </span>Response Spectrum<a class="headerlink" href="#response-spectrum" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.imcalculator.imcalculator.get_spectrum">
-<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(1e-5,</span> <span class="pre">4.0,</span> <span class="pre">500)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_spectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_spectrum" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(1e-5,</span> <span class="pre">4.0,</span> <span class="pre">500)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_spectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_spectrum" title="Link to this definition"></a></dt>
 <dd><p>Computes the response spectrum using the Newmark-beta method.</p>
 <p>The method performs Newmark constant-average-acceleration
 time integration (gamma = 0.5, beta = 0.25) for a unit-mass
 single-degree-of-freedom oscillator at each requested period,
-returning the spectral displacement, pseudo-velocity, and
-pseudo-acceleration.</p>
+returning the spectral displacement, pseudo-spectral velocity
+(psv), and pseudo-spectral acceleration (psa).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>periods</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Array of periods at which to compute the spectral response
 (s). Default is 500 points linearly spaced from 1e-5 to
 4.0 s.</p></li>
-<li><p><strong>damping_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Damping ratio for the SDOF oscillator. Default is 0.05
-(5%).</p></li>
+<li><p><strong>damping_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Damping ratio for the SDOF oscillator. Defaults to
+<code class="docutils literal notranslate"><span class="pre">self.damping</span></code> (the damping ratio supplied at
+construction, itself 0.05 / 5% by default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>periods</strong> (<em>numpy.ndarray</em>) – Periods of the response spectrum (s).</p></li>
 <li><p><strong>sd</strong> (<em>numpy.ndarray</em>) – Spectral displacement (m).</p></li>
-<li><p><strong>sv</strong> (<em>numpy.ndarray</em>) – Pseudo spectral velocity (m/s).</p></li>
-<li><p><strong>sa</strong> (<em>numpy.ndarray</em>) – Pseudo spectral acceleration (g).</p></li>
+<li><p><strong>psv</strong> (<em>numpy.ndarray</em>) – Pseudo spectral velocity (m/s).</p></li>
+<li><p><strong>psa</strong> (<em>numpy.ndarray</em>) – Pseudo spectral acceleration (g).</p></li>
 </ul>
 </p>
 </dd>
@@ -167,10 +168,13 @@ derived from the Newmark parameters.</p>
 <p>The peak responses over the record duration yield the spectral values at period <span class="math notranslate nohighlight">\(T\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[S_d(T) = \max_t |u(t)|, \qquad
-S_v(T) = \omega\,S_d(T), \qquad
-S_a(T) = \omega^2 S_d(T) / g\]</div>
-<p>where <span class="math notranslate nohighlight">\(S_d\)</span>, <span class="math notranslate nohighlight">\(S_v\)</span>, and <span class="math notranslate nohighlight">\(S_a\)</span> are the spectral displacement,
-pseudo-velocity, and pseudo-acceleration respectively.</p>
+PSV(T) = \omega\,S_d(T), \qquad
+PSA(T) = \omega^2 S_d(T) / g\]</div>
+<p>where <span class="math notranslate nohighlight">\(S_d\)</span> is the (exact) spectral displacement, and <span class="math notranslate nohighlight">\(PSV\)</span>,
+<span class="math notranslate nohighlight">\(PSA\)</span> are the pseudo-spectral velocity and pseudo-spectral
+acceleration respectively — algebraic approximations derived from
+<span class="math notranslate nohighlight">\(S_d\)</span>, not the true peak relative velocity or peak total
+acceleration of the oscillator.</p>
 </div>
 <div class="note admonition">
 <p class="admonition-title">Example</p>
@@ -180,8 +184,8 @@ pseudo-velocity, and pseudo-acceleration respectively.</p>
 <span class="n">acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;openquake/vmtk/tests/test_data/acceleration.txt&quot;</span><span class="p">)</span>
 <span class="n">im</span> <span class="o">=</span> <span class="n">imcalculator</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.005</span><span class="p">)</span>
 
-<span class="n">periods</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">sv</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Peak Sa = </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">sa</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> g at T = </span><span class="si">{</span><span class="n">periods</span><span class="p">[</span><span class="n">sa</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
+<span class="n">periods</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">psv</span><span class="p">,</span> <span class="n">psa</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Peak PSA = </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">psa</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> g at T = </span><span class="si">{</span><span class="n">periods</span><span class="p">[</span><span class="n">psa</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

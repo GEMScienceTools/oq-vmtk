@@ -6,6 +6,7 @@
 - `plotter.plot_vulnerability_function`: new optional `xlims` parameter (`[min, max]`) to restrict the plotted intensity range. Data arrays are filtered before plot creation so the violin axis is never distorted.
 
 ### Changed
+- `postprocessor.calculate_average_annual_loss` and `postprocessor.calculate_average_annual_damage_probability` merged into a single `postprocessor.calculate_risk(input_array, hazard_array, return_period=1, max_return_period=5000)` method. `input_array` accepts either a fragility curve (yielding the AADP) or a vulnerability curve (yielding the AALR); the integration logic is unchanged. Demos and docs updated accordingly.
 - `plotter.plot_modes`: mode titles are now placed via `fig.text()` centred over both the X- and Y-displacement panels instead of being attached only to the left panel. Font sizes for node annotations, axis labels, tick marks, and panel titles, and the vertical spacing parameters (`hspace`, `top`), now scale adaptively with the number of grid rows and nodes per panel, preventing text and title overlap when plotting many modes.
 - `plotter.plot_vulnerability_function`: x-axis tick label font size reduced to prevent overlap when many intensity levels are present.
 - Demo `NonlinearTimeHistoryAnalysis`: introduction and section descriptions updated to match the concise style used across other demos; verbose bullet-point input/output argument lists removed.
@@ -21,6 +22,7 @@
 - Demo `StoreyLossFunctionApplication`: re-themed from "Fitted vs. Empirical" to "Example A vs. Example B" throughout (demand interpolation, vulnerability fitting, collapse conditioning, AALR comparison).
 
 ### Removed
+- `postprocessor.calculate_vulnerability_function`: the `method='silva'` empirical COV option (Silva, 2019) is removed, along with the `method` parameter. Explicit law-of-total-variance uncertainty propagation is now always used when `uncertainty=True`.
 - `slfgenerator`: all internal regression/curve-fitting machinery removed — `perform_regression`, `_fit_regression`, and `estimate_accuracy` methods, the `regression` constructor parameter, and the `fitting_model`/`fitting_parameters_model`/`fitted_loss_model` Pydantic scaffolding. `generate()` no longer fits a parametric curve to the simulated loss cloud.
 
 ### Fixed

@@ -108,7 +108,7 @@
 <h1><span class="section-number">3.12. </span>Orientation-Independent Spectral Acceleration (RotDxx)<a class="headerlink" href="#orientation-independent-spectral-acceleration-rotdxx" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.imcalculator.imcalculator.get_rotdxx">
-<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_rotdxx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(1e-5,</span> <span class="pre">4.0,</span> <span class="pre">500)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_rotdxx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_rotdxx" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_rotdxx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">np.linspace(1e-5,</span> <span class="pre">4.0,</span> <span class="pre">500)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_rotdxx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_rotdxx" title="Link to this definition"></a></dt>
 <dd><p>Computes the RotDxx orientation-independent spectral
 acceleration from two horizontal ground-motion components.</p>
 <p>RotDxx is the <em>xx</em>-th percentile of the single-component
@@ -141,14 +141,15 @@ RotD100 (maximum). Default is 50.</p></li>
 <li><p><strong>periods</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Array of periods at which to compute RotDxx (s).
 Default is 500 points linearly spaced from 1e-5 to
 4.0 s.</p></li>
-<li><p><strong>damping_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Damping ratio for the SDOF oscillator. Default is
-0.05 (5%).</p></li>
+<li><p><strong>damping_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Damping ratio for the SDOF oscillator. Defaults to
+<code class="docutils literal notranslate"><span class="pre">self.damping</span></code> (the damping ratio supplied at
+construction, itself 0.05 / 5% by default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>periods</strong> (<em>numpy.ndarray</em>) – Periods of the RotDxx spectrum (s).</p></li>
-<li><p><strong>rotdxx</strong> (<em>numpy.ndarray</em>) – RotDxx spectral acceleration (g) at each period.</p></li>
+<li><p><strong>rotdxx</strong> (<em>numpy.ndarray</em>) – RotDxx pseudo-spectral acceleration (g) at each period.</p></li>
 </ul>
 </p>
 </dd>
@@ -160,7 +161,7 @@ used as the reference IM in ASCE 7-22 ground-motion
 selection, and RotD100 (<code class="docutils literal notranslate"><span class="pre">percentile=100</span></code>), the
 orientation-independent maximum.</p>
 <p>When the second component is zero, RotD100 equals the
-single-component SA and RotD50 equals SA · √2/2 (the
+single-component PSA and RotD50 equals PSA · √2/2 (the
 median of abs(cos θ) over 180 uniformly spaced angles).</p>
 </div>
 <p class="rubric">References</p>
@@ -198,13 +199,13 @@ regardless of the number of rotation angles.</p>
 <p>The pseudo-spectral acceleration at period <span class="math notranslate nohighlight">\(T\)</span> for rotation angle
 <span class="math notranslate nohighlight">\(\theta\)</span> is:</p>
 <div class="math notranslate nohighlight">
-\[SA(T,\theta) = \omega^2\,\max_t\bigl|u(t,\theta)\bigr|\Big/g\]</div>
+\[PSA(T,\theta) = \omega^2\,\max_t\bigl|u(t,\theta)\bigr|\Big/g\]</div>
 <p>where <span class="math notranslate nohighlight">\(\omega = 2\pi/T\)</span>.</p>
 <p><strong>RotDxx definition</strong></p>
-<p>RotDxx is the <em>xx</em>-th percentile of <span class="math notranslate nohighlight">\(SA(T, \theta)\)</span> over all 180
+<p>RotDxx is the <em>xx</em>-th percentile of <span class="math notranslate nohighlight">\(PSA(T, \theta)\)</span> over all 180
 rotation angles:</p>
 <div class="math notranslate nohighlight">
-\[\text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{SA(T,\theta) :
+\[\text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{PSA(T,\theta) :
 \theta \in \{0°, 1°, \ldots, 179°\}\bigr\}\]</div>
 <p>Common choices are <strong>RotD50</strong> (median, used as reference IM in ASCE 7-22)
 and <strong>RotD100</strong> (maximum, the largest possible single-component response).</p>
