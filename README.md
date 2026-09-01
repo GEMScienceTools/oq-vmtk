@@ -60,7 +60,7 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 
 ### Structural Modelling
 - Compile idealised SDOF and MDOF stick-and-mass models directly in Python via OpenSeesPy.
-- Calibrate MDOF inter-storey properties from SDOF capacity curves to achieve consistency in fundamental period and modal participation.
+- Calibrate MDOF inter-storey force-deformation properties from SDOF capacity curves via a first-mode shape assumption (power-law for frame buildings, eigenvector-derived otherwise) and modal participation.
 - Run modal analysis, static/cyclic pushover, gravity analysis, and nonlinear time-history analysis within a unified API.
 
 ### Ground Motion Processing
