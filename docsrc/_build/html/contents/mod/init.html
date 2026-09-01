@@ -101,7 +101,7 @@
 <h1><span class="section-number">6.1. </span>Initialisation<a class="headerlink" href="#initialisation" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.modeller.modeller.__init__">
-<span class="sig-prename descclassname"><span class="pre">modeller.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_storeys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_heights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor_masses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_drifts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_forces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degradation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/modeller.html#modeller.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.modeller.modeller.__init__" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">modeller.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_storeys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_heights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor_masses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_drifts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storey_forces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degradation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pinching4_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minmax_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/modeller.html#modeller.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.modeller.modeller.__init__" title="Link to this definition"></a></dt>
 <dd><p>Initializes the modeller object and validates the input parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -113,6 +113,16 @@
 (size = number of storeys, CapPoints).</p></li>
 <li><p><strong>storey_forces</strong> (<em>np.array</em>) – Array of storey forces (size = number of storeys, CapPoints).</p></li>
 <li><p><strong>degradation</strong> (<em>bool</em>) – Boolean to enable or disable hysteresis degradation.</p></li>
+<li><p><strong>pinching4_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Overrides for the Pinching4 material parameters (rDispP,
+rForceP, uForceP, rDispN, rForceN, uForceN, gK1-4, gKLim,
+gD1-4, gDLim, gF1-4, gFLim, gE, dmgType). Any key omitted
+falls back to the toolkit’s default value. Default
+<code class="docutils literal notranslate"><span class="pre">None</span></code> reproduces today’s hardcoded values exactly for
+both <code class="docutils literal notranslate"><span class="pre">degradation=True</span></code> and <code class="docutils literal notranslate"><span class="pre">degradation=False</span></code>.</p></li>
+<li><p><strong>minmax_multiplier</strong> (<em>float</em><em>, </em><em>optional</em>) – Factor applied to each storey’s ultimate displacement
+(<code class="docutils literal notranslate"><span class="pre">storey_drifts[:,</span> <span class="pre">-1]</span></code>) to set the MinMax
+collapse-detection bound. Must be a positive number.
+Default <code class="docutils literal notranslate"><span class="pre">1.0</span></code> (today’s hardcoded behaviour).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
@@ -137,6 +147,10 @@
                             <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">]]),</span>
     <span class="n">storey_forces</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">250.</span><span class="p">,</span> <span class="mf">320.</span><span class="p">,</span> <span class="mf">200.</span><span class="p">],</span>
                             <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">220.</span><span class="p">,</span> <span class="mf">280.</span><span class="p">,</span> <span class="mf">180.</span><span class="p">]]),</span>
+    <span class="n">degradation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># Optional: override individual Pinching4 parameters; any</span>
+    <span class="c1"># key not provided falls back to the toolkit&#39;s default.</span>
+    <span class="n">pinching4_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;gK2&#39;</span><span class="p">:</span> <span class="mf">0.15</span><span class="p">,</span> <span class="s1">&#39;gFLim&#39;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>

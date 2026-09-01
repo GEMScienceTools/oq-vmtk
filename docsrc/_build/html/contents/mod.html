@@ -97,7 +97,9 @@
 <h1><span class="section-number">6. </span>Model Building and Analysis<a class="headerlink" href="#model-building-and-analysis" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">modeller</span></code> class builds and analyses stick-and-mass MDOF structural models
 using the OpenSees framework. Each storey is represented by a Pinching4 hysteretic
-spring. Supported analysis types include gravity analysis, modal analysis, static
+spring; its pinching and damage parameters are configurable via the
+<code class="docutils literal notranslate"><span class="pre">pinching4_params</span></code> argument to <code class="docutils literal notranslate"><span class="pre">modeller.__init__</span></code>, defaulting to the toolkit’s
+standard values. Supported analysis types include gravity analysis, modal analysis, static
 pushover (SPO), and nonlinear time-history analysis (NRHA).</p>
 <div class="toctree-wrapper compound">
 <ul>

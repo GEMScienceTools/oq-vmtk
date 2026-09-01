@@ -14,6 +14,22 @@ from openquake.vmtk.units import units
 from openquake.vmtk.plotter import plotter
 
 
+# Default Pinching4 pinching/damage parameters, matching the values every
+# storey used unconditionally before these became user-configurable (see
+# modeller.__init__'s pinching4_params argument). rDispP/rForceP/uForceP
+# (and their negative-side mirrors) and gE/dmgType apply regardless of the
+# degradation flag; the gK/gD/gF damage-accumulation group is zeroed by
+# create_Pinching4_material when degradation=False.
+_DEFAULT_PINCHING4_PARAMS = {
+    'rDispP': 0.5, 'rForceP': 0.25, 'uForceP': 0.05,
+    'rDispN': 0.5, 'rForceN': 0.25, 'uForceN': 0.05,
+    'gK1': 0, 'gK2': 0.1, 'gK3': 0, 'gK4': 0, 'gKLim': 0.2,
+    'gD1': 0, 'gD2': 0.1, 'gD3': 0, 'gD4': 0, 'gDLim': 0.2,
+    'gF1': 0, 'gF2': 0.4, 'gF3': 0, 'gF4': 0.4, 'gFLim': 0.9,
+    'gE': 10, 'dmgType': 'energy',
+}
+
+
 class modeller:
     """
     Model and analyse multi-degree-of-freedom (MDOF) oscillators
@@ -51,6 +67,13 @@ class modeller:
         as *storey_drifts*.
     degradation : bool
         If ``True``, Pinching4 hysteretic degradation is enabled.
+    pinching4_params : dict
+        Pinching4 pinching/damage parameters used for every storey,
+        merged from ``_DEFAULT_PINCHING4_PARAMS`` and any user
+        overrides passed to ``__init__``.
+    minmax_multiplier : float
+        Factor applied to each storey's ultimate displacement to set
+        the MinMax collapse-detection bound.
 
     Methods
     -------
@@ -110,6 +133,8 @@ class modeller:
         storey_drifts,
         storey_forces,
         degradation,
+        pinching4_params=None,
+        minmax_multiplier=1.0,
     ):
         """
         Initializes the modeller object and validates the input parameters.
@@ -134,6 +159,20 @@ class modeller:
 
         degradation : bool
             Boolean to enable or disable hysteresis degradation.
+
+        pinching4_params : dict, optional
+            Overrides for the Pinching4 material parameters (rDispP,
+            rForceP, uForceP, rDispN, rForceN, uForceN, gK1-4, gKLim,
+            gD1-4, gDLim, gF1-4, gFLim, gE, dmgType). Any key omitted
+            falls back to the toolkit's default value. Default
+            ``None`` reproduces today's hardcoded values exactly for
+            both ``degradation=True`` and ``degradation=False``.
+
+        minmax_multiplier : float, optional
+            Factor applied to each storey's ultimate displacement
+            (``storey_drifts[:, -1]``) to set the MinMax
+            collapse-detection bound. Must be a positive number.
+            Default ``1.0`` (today's hardcoded behaviour).
 
         Raises
         ------
@@ -214,12 +253,36 @@ class modeller:
                 f"'degradation' must be a bool, "
                 f"got {type(degradation).__name__}.")
 
+        # pinching4_params check
+        if pinching4_params is not None:
+            if not isinstance(pinching4_params, dict):
+                raise TypeError(
+                    f"'pinching4_params' must be a dict, "
+                    f"got {type(pinching4_params).__name__}.")
+            unknown = set(pinching4_params) - set(_DEFAULT_PINCHING4_PARAMS)
+            if unknown:
+                raise ValueError(
+                    f"'pinching4_params' has unknown keys: {sorted(unknown)}. "
+                    f"Expected a subset of "
+                    f"{sorted(_DEFAULT_PINCHING4_PARAMS)}."
+                )
+
+        # minmax_multiplier check
+        if not isinstance(minmax_multiplier, (int, float)) or \
+                isinstance(minmax_multiplier, bool) or minmax_multiplier <= 0:
+            raise ValueError(
+                "'minmax_multiplier' must be a positive number.")
+
         self.number_storeys = number_storeys
         self.storey_heights = storey_heights
         self.floor_masses = floor_masses
         self.storey_drifts = storey_drifts
         self.storey_forces = storey_forces
         self.degradation = degradation
+        self.pinching4_params = {
+            **_DEFAULT_PINCHING4_PARAMS, **(pinching4_params or {})
+        }
+        self.minmax_multiplier = minmax_multiplier
 
     def create_Pinching4_material(
         self,
@@ -285,7 +348,11 @@ class modeller:
         -----
         The `mat1Tag` and `mat2Tag` represent different materials used in
         the Pinching4 hysteretic model, where the degradation flag controls
-        the material's degradation behavior during the simulation.
+        the material's degradation behavior during the simulation. The
+        pinching/damage parameters are sourced from `self.pinching4_params`
+        (set at construction time via the `pinching4_params` argument of
+        `__init__`), and the MinMax bound is scaled by
+        `self.minmax_multiplier`.
         """
 
         force = np.zeros([5, 1])
@@ -341,90 +408,29 @@ class modeller:
             force[3] = storey_forces[2]
             disp[3] = storey_drifts[2]
 
+        p4 = self.pinching4_params
+        envelope = [
+            force[1, 0], disp[1, 0], force[2, 0], disp[2, 0],
+            force[3, 0], disp[3, 0], force[4, 0], disp[4, 0],
+            -1 * force[1, 0], -1 * disp[1, 0],
+            -1 * force[2, 0], -1 * disp[2, 0],
+            -1 * force[3, 0], -1 * disp[3, 0],
+            -1 * force[4, 0], -1 * disp[4, 0],
+        ]
+        pinching = [
+            p4['rDispP'], p4['rForceP'], p4['uForceP'],
+            p4['rDispN'], p4['rForceN'], p4['uForceN'],
+        ]
+
         if degradation is True:
-            matargs = [
-                force[1, 0],
-                disp[1, 0],
-                force[2, 0],
-                disp[2, 0],
-                force[3, 0],
-                disp[3, 0],
-                force[4, 0],
-                disp[4, 0],
-                -1 * force[1, 0],
-                -1 * disp[1, 0],
-                -1 * force[2, 0],
-                -1 * disp[2, 0],
-                -1 * force[3, 0],
-                -1 * disp[3, 0],
-                -1 * force[4, 0],
-                -1 * disp[4, 0],
-                0.5,
-                0.25,
-                0.05,
-                0.5,
-                0.25,
-                0.05,
-                0,
-                0.1,
-                0,
-                0,
-                0.2,
-                0,
-                0.1,
-                0,
-                0,
-                0.2,
-                0,
-                0.4,
-                0,
-                0.4,
-                0.9,
-                10,
-                "energy",
+            damage = [
+                p4['gK1'], p4['gK2'], p4['gK3'], p4['gK4'], p4['gKLim'],
+                p4['gD1'], p4['gD2'], p4['gD3'], p4['gD4'], p4['gDLim'],
+                p4['gF1'], p4['gF2'], p4['gF3'], p4['gF4'], p4['gFLim'],
             ]
         else:
-            matargs = [
-                force[1, 0],
-                disp[1, 0],
-                force[2, 0],
-                disp[2, 0],
-                force[3, 0],
-                disp[3, 0],
-                force[4, 0],
-                disp[4, 0],
-                -1 * force[1, 0],
-                -1 * disp[1, 0],
-                -1 * force[2, 0],
-                -1 * disp[2, 0],
-                -1 * force[3, 0],
-                -1 * disp[3, 0],
-                -1 * force[4, 0],
-                -1 * disp[4, 0],
-                0.5,
-                0.25,
-                0.05,
-                0.5,
-                0.25,
-                0.05,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                10,
-                "energy",
-            ]
+            damage = [0] * 15
+        matargs = envelope + pinching + damage + [p4['gE'], p4['dmgType']]
 
         # Create the Pinching4 material in OpenSees with the defined parameters
         ops.uniaxialMaterial("Pinching4", mat1Tag, *matargs)
@@ -433,8 +439,9 @@ class modeller:
         # displacements, ensuring that the material response is constrained
         # within these bounds during the analysis
         ops.uniaxialMaterial(
-            "MinMax", mat2Tag, mat1Tag, "-min", -1 * disp[-1, 0], "-max",
-            disp[-1, 0]
+            "MinMax", mat2Tag, mat1Tag,
+            "-min", -1 * self.minmax_multiplier * disp[-1, 0],
+            "-max", self.minmax_multiplier * disp[-1, 0]
         )
 
     def compile_model(self):

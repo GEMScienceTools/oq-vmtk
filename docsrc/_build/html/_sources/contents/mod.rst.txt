@@ -3,7 +3,9 @@ Model Building and Analysis
 
 The ``modeller`` class builds and analyses stick-and-mass MDOF structural models
 using the OpenSees framework. Each storey is represented by a Pinching4 hysteretic
-spring. Supported analysis types include gravity analysis, modal analysis, static
+spring; its pinching and damage parameters are configurable via the
+``pinching4_params`` argument to ``modeller.__init__``, defaulting to the toolkit's
+standard values. Supported analysis types include gravity analysis, modal analysis, static
 pushover (SPO), and nonlinear time-history analysis (NRHA).
 
 .. toctree::

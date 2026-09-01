@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("openseespy.opensees",
                     reason="openseespy not installed — modeller tests skipped")
 
-from openquake.vmtk.modeller import modeller
+from openquake.vmtk.modeller import modeller, _DEFAULT_PINCHING4_PARAMS
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +218,45 @@ class TestModellerInit(unittest.TestCase):
     def test_degradation_string_raises(self):
         with self.assertRaises(TypeError):
             make_modeller(degradation="True")
+
+    # --- pinching4_params -----------------------------------------------------
+
+    def test_pinching4_params_default_matches_module_defaults(self):
+        m = make_modeller()
+        self.assertEqual(m.pinching4_params, _DEFAULT_PINCHING4_PARAMS)
+
+    def test_pinching4_params_partial_override_merges_with_defaults(self):
+        m = make_modeller(pinching4_params={'gK2': 0.5})
+        self.assertEqual(m.pinching4_params['gK2'], 0.5)
+        for key, value in _DEFAULT_PINCHING4_PARAMS.items():
+            if key != 'gK2':
+                self.assertEqual(m.pinching4_params[key], value)
+
+    def test_pinching4_params_unknown_key_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(pinching4_params={'bogus': 1.0})
+
+    def test_pinching4_params_non_dict_raises(self):
+        with self.assertRaises(TypeError):
+            make_modeller(pinching4_params=[1, 2, 3])
+
+    # --- minmax_multiplier ---------------------------------------------------
+
+    def test_minmax_multiplier_default(self):
+        m = make_modeller()
+        self.assertEqual(m.minmax_multiplier, 1.0)
+
+    def test_minmax_multiplier_zero_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(minmax_multiplier=0)
+
+    def test_minmax_multiplier_negative_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(minmax_multiplier=-1.5)
+
+    def test_minmax_multiplier_string_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(minmax_multiplier="1.5")
 
 
 # ---------------------------------------------------------------------------

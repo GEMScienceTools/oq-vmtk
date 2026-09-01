@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- `modeller.__init__`: new optional `pinching4_params` (dict overriding Pinching4 pinching/damage parameters — `rDispP/N`, `rForceP/N`, `uForceP/N`, `gK1-4`/`gKLim`, `gD1-4`/`gDLim`, `gF1-4`/`gFLim`, `gE`, `dmgType`) and `minmax_multiplier` (scales the MinMax collapse-detection bound) arguments. Both default to today's hardcoded values (identical behaviour for `degradation=True` and `degradation=False` when omitted).
 - `plotter.plot_vulnerability_function`: new optional `xlims` parameter (`[min, max]`) to restrict the plotted intensity range. Data arrays are filtered before plot creation so the violin axis is never distorted.
 
 ### Changed

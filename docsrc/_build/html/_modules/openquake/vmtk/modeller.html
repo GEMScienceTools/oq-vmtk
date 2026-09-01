@@ -97,6 +97,22 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotter</span>
 
 
+<span class="c1"># Default Pinching4 pinching/damage parameters, matching the values every</span>
+<span class="c1"># storey used unconditionally before these became user-configurable (see</span>
+<span class="c1"># modeller.__init__&#39;s pinching4_params argument). rDispP/rForceP/uForceP</span>
+<span class="c1"># (and their negative-side mirrors) and gE/dmgType apply regardless of the</span>
+<span class="c1"># degradation flag; the gK/gD/gF damage-accumulation group is zeroed by</span>
+<span class="c1"># create_Pinching4_material when degradation=False.</span>
+<span class="n">_DEFAULT_PINCHING4_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;rDispP&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;rForceP&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;uForceP&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="s1">&#39;rDispN&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;rForceN&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;uForceN&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="s1">&#39;gK1&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gK2&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;gK3&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gK4&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gKLim&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="s1">&#39;gD1&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gD2&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;gD3&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gD4&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gDLim&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="s1">&#39;gF1&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gF2&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;gF3&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;gF4&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;gFLim&#39;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+    <span class="s1">&#39;gE&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;dmgType&#39;</span><span class="p">:</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">modeller</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Model and analyse multi-degree-of-freedom (MDOF) oscillators</span>
@@ -134,6 +150,13 @@
 <span class="sd">        as *storey_drifts*.</span>
 <span class="sd">    degradation : bool</span>
 <span class="sd">        If ``True``, Pinching4 hysteretic degradation is enabled.</span>
+<span class="sd">    pinching4_params : dict</span>
+<span class="sd">        Pinching4 pinching/damage parameters used for every storey,</span>
+<span class="sd">        merged from ``_DEFAULT_PINCHING4_PARAMS`` and any user</span>
+<span class="sd">        overrides passed to ``__init__``.</span>
+<span class="sd">    minmax_multiplier : float</span>
+<span class="sd">        Factor applied to each storey&#39;s ultimate displacement to set</span>
+<span class="sd">        the MinMax collapse-detection bound.</span>
 
 <span class="sd">    Methods</span>
 <span class="sd">    -------</span>
@@ -195,6 +218,8 @@
         <span class="n">storey_drifts</span><span class="p">,</span>
         <span class="n">storey_forces</span><span class="p">,</span>
         <span class="n">degradation</span><span class="p">,</span>
+        <span class="n">pinching4_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">minmax_multiplier</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initializes the modeller object and validates the input parameters.</span>
@@ -219,6 +244,20 @@
 
 <span class="sd">        degradation : bool</span>
 <span class="sd">            Boolean to enable or disable hysteresis degradation.</span>
+
+<span class="sd">        pinching4_params : dict, optional</span>
+<span class="sd">            Overrides for the Pinching4 material parameters (rDispP,</span>
+<span class="sd">            rForceP, uForceP, rDispN, rForceN, uForceN, gK1-4, gKLim,</span>
+<span class="sd">            gD1-4, gDLim, gF1-4, gFLim, gE, dmgType). Any key omitted</span>
+<span class="sd">            falls back to the toolkit&#39;s default value. Default</span>
+<span class="sd">            ``None`` reproduces today&#39;s hardcoded values exactly for</span>
+<span class="sd">            both ``degradation=True`` and ``degradation=False``.</span>
+
+<span class="sd">        minmax_multiplier : float, optional</span>
+<span class="sd">            Factor applied to each storey&#39;s ultimate displacement</span>
+<span class="sd">            (``storey_drifts[:, -1]``) to set the MinMax</span>
+<span class="sd">            collapse-detection bound. Must be a positive number.</span>
+<span class="sd">            Default ``1.0`` (today&#39;s hardcoded behaviour).</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -299,12 +338,36 @@
                 <span class="sa">f</span><span class="s2">&quot;&#39;degradation&#39; must be a bool, &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">degradation</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
+        <span class="c1"># pinching4_params check</span>
+        <span class="k">if</span> <span class="n">pinching4_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pinching4_params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;pinching4_params&#39; must be a dict, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pinching4_params</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">unknown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">pinching4_params</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">_DEFAULT_PINCHING4_PARAMS</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;pinching4_params&#39; has unknown keys: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Expected a subset of &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_DEFAULT_PINCHING4_PARAMS</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># minmax_multiplier check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minmax_multiplier</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> \
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">minmax_multiplier</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="n">minmax_multiplier</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;minmax_multiplier&#39; must be a positive number.&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">number_storeys</span> <span class="o">=</span> <span class="n">number_storeys</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">storey_heights</span> <span class="o">=</span> <span class="n">storey_heights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">floor_masses</span> <span class="o">=</span> <span class="n">floor_masses</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span> <span class="o">=</span> <span class="n">storey_drifts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">storey_forces</span> <span class="o">=</span> <span class="n">storey_forces</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span> <span class="o">=</span> <span class="n">degradation</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span> <span class="o">=</span> <span class="n">degradation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pinching4_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">_DEFAULT_PINCHING4_PARAMS</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">pinching4_params</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">=</span> <span class="n">minmax_multiplier</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">create_Pinching4_material</span><span class="p">(</span>
@@ -371,7 +434,11 @@
 <span class="sd">        -----</span>
 <span class="sd">        The `mat1Tag` and `mat2Tag` represent different materials used in</span>
 <span class="sd">        the Pinching4 hysteretic model, where the degradation flag controls</span>
-<span class="sd">        the material&#39;s degradation behavior during the simulation.</span>
+<span class="sd">        the material&#39;s degradation behavior during the simulation. The</span>
+<span class="sd">        pinching/damage parameters are sourced from `self.pinching4_params`</span>
+<span class="sd">        (set at construction time via the `pinching4_params` argument of</span>
+<span class="sd">        `__init__`), and the MinMax bound is scaled by</span>
+<span class="sd">        `self.minmax_multiplier`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">force</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
@@ -427,90 +494,29 @@
             <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">storey_forces</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
             <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">storey_drifts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
+        <span class="n">p4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pinching4_params</span>
+        <span class="n">envelope</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">force</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">disp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">force</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">disp</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">force</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">disp</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">pinching</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;rDispP&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;rForceP&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;uForceP&#39;</span><span class="p">],</span>
+            <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;rDispN&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;rForceN&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;uForceN&#39;</span><span class="p">],</span>
+        <span class="p">]</span>
+
         <span class="k">if</span> <span class="n">degradation</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">matargs</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="mf">0.5</span><span class="p">,</span>
-                <span class="mf">0.25</span><span class="p">,</span>
-                <span class="mf">0.05</span><span class="p">,</span>
-                <span class="mf">0.5</span><span class="p">,</span>
-                <span class="mf">0.25</span><span class="p">,</span>
-                <span class="mf">0.05</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mf">0.1</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mf">0.2</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mf">0.1</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mf">0.2</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mf">0.4</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mf">0.4</span><span class="p">,</span>
-                <span class="mf">0.9</span><span class="p">,</span>
-                <span class="mi">10</span><span class="p">,</span>
-                <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">damage</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gK1&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gK2&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gK3&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gK4&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gKLim&#39;</span><span class="p">],</span>
+                <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gD1&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gD2&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gD3&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gD4&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gDLim&#39;</span><span class="p">],</span>
+                <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gF1&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gF2&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gF3&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gF4&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gFLim&#39;</span><span class="p">],</span>
             <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">matargs</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">force</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="n">disp</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">force</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                <span class="mf">0.5</span><span class="p">,</span>
-                <span class="mf">0.25</span><span class="p">,</span>
-                <span class="mf">0.05</span><span class="p">,</span>
-                <span class="mf">0.5</span><span class="p">,</span>
-                <span class="mf">0.25</span><span class="p">,</span>
-                <span class="mf">0.05</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">0</span><span class="p">,</span>
-                <span class="mi">10</span><span class="p">,</span>
-                <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="p">]</span>
+            <span class="n">damage</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">15</span>
+        <span class="n">matargs</span> <span class="o">=</span> <span class="n">envelope</span> <span class="o">+</span> <span class="n">pinching</span> <span class="o">+</span> <span class="n">damage</span> <span class="o">+</span> <span class="p">[</span><span class="n">p4</span><span class="p">[</span><span class="s1">&#39;gE&#39;</span><span class="p">],</span> <span class="n">p4</span><span class="p">[</span><span class="s1">&#39;dmgType&#39;</span><span class="p">]]</span>
 
         <span class="c1"># Create the Pinching4 material in OpenSees with the defined parameters</span>
         <span class="n">ops</span><span class="o">.</span><span class="n">uniaxialMaterial</span><span class="p">(</span><span class="s2">&quot;Pinching4&quot;</span><span class="p">,</span> <span class="n">mat1Tag</span><span class="p">,</span> <span class="o">*</span><span class="n">matargs</span><span class="p">)</span>
@@ -519,8 +525,9 @@
         <span class="c1"># displacements, ensuring that the material response is constrained</span>
         <span class="c1"># within these bounds during the analysis</span>
         <span class="n">ops</span><span class="o">.</span><span class="n">uniaxialMaterial</span><span class="p">(</span>
-            <span class="s2">&quot;MinMax&quot;</span><span class="p">,</span> <span class="n">mat2Tag</span><span class="p">,</span> <span class="n">mat1Tag</span><span class="p">,</span> <span class="s2">&quot;-min&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;-max&quot;</span><span class="p">,</span>
-            <span class="n">disp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="s2">&quot;MinMax&quot;</span><span class="p">,</span> <span class="n">mat2Tag</span><span class="p">,</span> <span class="n">mat1Tag</span><span class="p">,</span>
+            <span class="s2">&quot;-min&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;-max&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">*</span> <span class="n">disp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="modeller.compile_model">
