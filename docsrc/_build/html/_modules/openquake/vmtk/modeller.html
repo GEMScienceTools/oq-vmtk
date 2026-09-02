@@ -1381,6 +1381,7 @@
 <span class="sd">            - ``&#39;spo_forces_spring&#39;``: array, shape (TimeSteps × Springs) — spring shear forces.</span>
 <span class="sd">            - ``&#39;spo_idr&#39;``: array, shape (TimeSteps × Storeys) — interstorey drift ratio history.</span>
 <span class="sd">            - ``&#39;spo_midr&#39;``: array, shape (TimeSteps,) — maximum IDR across all storeys.</span>
+<span class="sd">            - ``&#39;conv_index&#39;``: int — collapse/convergence status: 0 = success, -1 = failure (MinMax spring limit reached or non-convergence).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Set up linear time series and plain load pattern</span>
@@ -1427,6 +1428,13 @@
         <span class="c1"># Get element list for spring force/displacement recording</span>
         <span class="n">elementList</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">getEleTags</span><span class="p">()</span>
 
+        <span class="c1"># MinMax deformation limits (self.minmax_multiplier * ultimate</span>
+        <span class="c1"># storey disp), matching the actual OpenSees MinMax material</span>
+        <span class="c1"># bound set in create_Pinching4_material, and the same approach</span>
+        <span class="c1"># used for collapse detection in do_cpo_analysis/do_nrha_analysis.</span>
+        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
         <span class="c1"># Print analysis header if requested</span>
         <span class="k">if</span> <span class="n">pFlag</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
@@ -1436,6 +1444,7 @@
 
         <span class="c1"># Initialize convergence flag, step counter, and load factor</span>
         <span class="n">ok</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">conv_index</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c1"># -1 = failure/collapse, 0 = success</span>
         <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">loadf</span> <span class="o">=</span> <span class="mf">1.0</span>
 
@@ -1449,10 +1458,12 @@
             <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">nodeResponse</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">pattern_nodes</span><span class="p">]]</span>
         <span class="p">)</span>
         <span class="n">spo_disps_spring</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;deformation&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">elementList</span><span class="p">]]</span>
+            <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;deformation&quot;</span><span class="p">)[</span><span class="n">push_dir</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+              <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">elementList</span><span class="p">]]</span>
         <span class="p">)</span>
         <span class="n">spo_forces_spring</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;force&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">elementList</span><span class="p">]]</span>
+            <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;force&quot;</span><span class="p">)[</span><span class="n">push_dir</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+              <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">elementList</span><span class="p">]]</span>
         <span class="p">)</span>
 
         <span class="c1"># Main pushover loop: step to target displacement</span>
@@ -1507,6 +1518,7 @@
                 <span class="n">ops</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_type</span><span class="p">,</span> <span class="n">init_tol</span><span class="p">,</span> <span class="n">init_iter</span><span class="p">)</span>
                 <span class="c1"># Final check before breaking</span>
                 <span class="k">if</span> <span class="n">ok</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
                     <span class="k">break</span>
 
             <span class="c1"># Get current load factor (time)</span>
@@ -1523,20 +1535,51 @@
             <span class="c1"># Advance step counter</span>
             <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
 
+            <span class="n">current_disps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">ops</span><span class="o">.</span><span class="n">nodeResponse</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">pattern_nodes</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Direct nodal cross-check: once a spring&#39;s material dies, the</span>
+            <span class="c1"># storeys above it can decouple into a zero-stiffness mechanism</span>
+            <span class="c1"># that DisplacementControl still reports as &quot;converged&quot;, with</span>
+            <span class="c1"># the affected floors jumping to wildly divergent displacements</span>
+            <span class="c1"># even though eleResponse(&#39;deformation&#39;) below stays frozen</span>
+            <span class="c1"># under the MinMax bound (it reflects the last valid material</span>
+            <span class="c1"># state, not the true nodal motion). Catch that case from the</span>
+            <span class="c1"># raw nodal displacements *before* recording them, mirroring</span>
+            <span class="c1"># do_cpo_analysis.</span>
+            <span class="n">prev_disp</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">s_idx</span><span class="p">,</span> <span class="n">floor_disp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">current_disps</span><span class="p">):</span>
+                <span class="n">storey_disp</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">floor_disp</span> <span class="o">-</span> <span class="n">prev_disp</span><span class="p">)</span>
+                <span class="n">prev_disp</span> <span class="o">=</span> <span class="n">floor_disp</span>
+                <span class="k">if</span> <span class="n">storey_disp</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Interstorey displacement at storey &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> reached ultimate limit &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">storey_disp</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> &gt;= &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">) &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;— stopping SPO analysis.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">minmax_failed</span><span class="p">:</span>
+                <span class="k">break</span>
+
             <span class="c1"># Record results: base shear, displacements, spring forces</span>
             <span class="n">spo_top_disp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">spo_top_disp</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">nodeResponse</span><span class="p">(</span><span class="n">control_node</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="n">current_disps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">ops</span><span class="o">.</span><span class="n">nodeResponse</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">pattern_nodes</span><span class="p">]</span>
-            <span class="p">)</span>
             <span class="n">spo_disps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spo_disps</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">current_disps</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
             <span class="n">spo_disps_spring</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">spo_disps_spring</span><span class="p">,</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                    <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;deformation&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="p">[[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;deformation&quot;</span><span class="p">)[</span><span class="n">push_dir</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
                       <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">elementList</span><span class="p">]]</span>
                 <span class="p">),</span>
                 <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1544,7 +1587,7 @@
 
             <span class="n">spo_forces_spring</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">spo_forces_spring</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;force&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;force&quot;</span><span class="p">)[</span><span class="n">push_dir</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
                          <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">elementList</span><span class="p">]]),</span>
                 <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1555,10 +1598,53 @@
                 <span class="n">temp</span> <span class="o">+=</span> <span class="n">ops</span><span class="o">.</span><span class="n">nodeReaction</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">push_dir</span><span class="p">)</span>
             <span class="n">spo_rxn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spo_rxn</span><span class="p">,</span> <span class="o">-</span><span class="n">temp</span><span class="p">)</span>
 
+            <span class="c1"># MinMax material check (second line of defense) — catches a</span>
+            <span class="c1"># spring OpenSees itself flags as dead (None/exception), as</span>
+            <span class="c1"># distinct from the decoupled-mechanism case caught above.</span>
+            <span class="k">for</span> <span class="n">s_idx</span><span class="p">,</span> <span class="n">ele</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">elementList</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">deform_result</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">eleResponse</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;deformation&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">deform_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;MinMax material killed spring at &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;storey </span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;— stopping SPO analysis.&quot;</span>
+                            <span class="p">)</span>
+                        <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                        <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                    <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="n">push_dir</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">spring_deform</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;MinMax material failed at storey &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> (deform=&quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spring_deform</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> &gt;= &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;limit=</span><span class="si">{</span><span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">) &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;— stopping SPO analysis.&quot;</span>
+                            <span class="p">)</span>
+                        <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                        <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;MinMax material killed spring at &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;storey </span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> (eleResponse failed) &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;— stopping SPO analysis.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">minmax_failed</span><span class="p">:</span>
+                <span class="k">break</span>
+
         <span class="c1"># Check final convergence status and print results if pFlag is True</span>
-        <span class="k">if</span> <span class="n">ok</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ok</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">conv_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------ ANALYSIS FAILED! --------&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">ok</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;~~~~~~~ ANALYSIS SUCCESSFUL! ~~~~~~~~~&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">loadf</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Stopped because of load factor below zero&quot;</span><span class="p">)</span>
@@ -1608,6 +1694,7 @@
             <span class="s2">&quot;spo_forces_spring&quot;</span><span class="p">:</span> <span class="n">spo_forces_spring</span><span class="p">,</span>
             <span class="s2">&quot;spo_idr&quot;</span><span class="p">:</span> <span class="n">spo_idr</span><span class="p">,</span>
             <span class="s2">&quot;spo_midr&quot;</span><span class="p">:</span> <span class="n">spo_midr</span><span class="p">,</span>
+            <span class="s2">&quot;conv_index&quot;</span><span class="p">:</span> <span class="n">conv_index</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">return</span> <span class="n">spo_dict</span></div>
@@ -1784,10 +1871,13 @@
                 <span class="sa">f</span><span class="s2">&quot;levels: </span><span class="si">{</span><span class="n">mu_levels</span><span class="si">}</span><span class="s2"> ------&quot;</span><span class="p">)</span>
 
         <span class="c1"># MinMax deformation limits — same approach as do_nrha_analysis.</span>
-        <span class="c1"># The MinMax material kills the spring once deformation exceeds the</span>
-        <span class="c1"># ultimate displacement (last column of storey_drifts).  We use the</span>
-        <span class="c1"># same 1.5x limit so CPO and NRHA collapse detection are consistent.</span>
-        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># (n_storeys,)</span>
+        <span class="c1"># The MinMax material kills the spring once deformation exceeds</span>
+        <span class="c1"># self.minmax_multiplier times the ultimate displacement (last</span>
+        <span class="c1"># column of storey_drifts); this Python-side check uses the same</span>
+        <span class="c1"># multiplier so CPO and NRHA collapse detection stay consistent</span>
+        <span class="c1"># with the actual OpenSees material bound.</span>
+        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># (n_storeys,)</span>
         <span class="n">elementList_cpo</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">getEleTags</span><span class="p">()</span>
 
         <span class="c1"># Recording data arrays</span>
@@ -1957,7 +2047,7 @@
                                     <span class="p">)</span>
                                 <span class="n">minmax_failed</span> <span class="o">=</span> <span class="kc">True</span>
                                 <span class="k">break</span>
-                            <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                            <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="n">push_dir</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
                             <span class="k">if</span> <span class="n">spring_deform</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]:</span>
                                 <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
                                     <span class="nb">print</span><span class="p">(</span>
@@ -2054,7 +2144,11 @@
 <span class="sd">        non-structural components. Hysteretic energy dissipation is</span>
 <span class="sd">        computed via signed force-velocity integration (trapezoidal</span>
 <span class="sd">        rule), correctly capturing only dissipated energy and not</span>
-<span class="sd">        elastic recovery.</span>
+<span class="sd">        elastic recovery. Collapse is detected via both the MinMax</span>
+<span class="sd">        material response and an independent nodal-displacement</span>
+<span class="sd">        cross-check (catching cases where a decoupled, zero-stiffness</span>
+<span class="sd">        mechanism keeps the material response frozen while the true</span>
+<span class="sd">        nodal displacement diverges).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2167,10 +2261,13 @@
 <span class="sd">            storeys (kN·m).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># MinMax deformation limits (1.0 * ultimate storey disp) per element</span>
-        <span class="c1"># storey_drifts shape: (number_storeys, CapPoints); last col = ult.</span>
-        <span class="c1"># one limit per storey</span>
-        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># MinMax deformation limits (self.minmax_multiplier * ultimate</span>
+        <span class="c1"># storey disp) per element, matching the actual OpenSees MinMax</span>
+        <span class="c1"># material bound set in create_Pinching4_material. storey_drifts</span>
+        <span class="c1"># shape: (number_storeys, CapPoints); last col = ultimate. One</span>
+        <span class="c1"># limit per storey.</span>
+        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="c1">#  Determine loading directions from fnames</span>
         <span class="n">bidir</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fnames</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span>   <span class="c1"># True -&gt; apply both X and Y ground motions</span>
@@ -2406,6 +2503,33 @@
                 <span class="n">mask_y</span> <span class="o">=</span> <span class="n">idr_y</span> <span class="o">&gt;</span> <span class="n">peak_drift</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
                 <span class="n">peak_drift</span><span class="p">[</span><span class="n">mask_y</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">idr_y</span><span class="p">[</span><span class="n">mask_y</span><span class="p">]</span>
 
+                <span class="c1"># Direct nodal cross-check: once a spring&#39;s material dies,</span>
+                <span class="c1"># the storeys above it can decouple into a zero-stiffness</span>
+                <span class="c1"># mechanism that the transient integrator still reports as</span>
+                <span class="c1"># &quot;converged&quot;, with displacements diverging to physically</span>
+                <span class="c1"># absurd values even though eleResponse(&#39;deformation&#39;)</span>
+                <span class="c1"># below stays frozen under the MinMax bound (it reflects</span>
+                <span class="c1"># the last valid material state, not the true nodal</span>
+                <span class="c1"># motion). Catch that case from the raw nodal</span>
+                <span class="c1"># displacements directly, mirroring do_cpo_analysis.</span>
+                <span class="n">storey_disp_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dx_top</span> <span class="o">-</span> <span class="n">dx_bottom</span><span class="p">)</span>
+                <span class="n">storey_disp_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy_top</span> <span class="o">-</span> <span class="n">dy_bottom</span><span class="p">)</span>
+                <span class="n">exceed</span> <span class="o">=</span> <span class="p">((</span><span class="n">storey_disp_x</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">)</span> <span class="o">|</span>
+                          <span class="p">(</span><span class="n">storey_disp_y</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">exceed</span><span class="p">):</span>
+                    <span class="n">s_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">exceed</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s1">&#39;COLLAPSE DETECTED: Storey </span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1"> &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;interstorey displacement diverged &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;(nodal cross-check, &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">storey_disp_x</span><span class="p">[</span><span class="n">s_idx</span><span class="p">],</span><span class="w"> </span><span class="n">storey_disp_y</span><span class="p">[</span><span class="n">s_idx</span><span class="p">])</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39; &gt;= </span><span class="si">{</span><span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">) &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;at t=</span><span class="si">{</span><span class="n">control_time</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">s.&#39;</span><span class="p">)</span>
+                    <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="n">collapse_time</span> <span class="o">=</span> <span class="n">control_time</span>
+                    <span class="k">break</span>
+
             <span class="c1"># Hysteretic energy — signed F·v trapezoidal integration</span>
             <span class="c1"># Energy = ∫ F · v_interstory dt</span>
             <span class="c1"># Positive when force and velocity are in the same direction</span>
@@ -2464,6 +2588,9 @@
                         <span class="n">collapse_time</span> <span class="o">=</span> <span class="n">control_time</span>
                         <span class="k">break</span>
                     <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">bidir</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">deform_result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                            <span class="n">spring_deform</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
                     <span class="k">if</span> <span class="n">spring_deform</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]:</span>
                         <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span>
@@ -2819,7 +2946,11 @@
 <span class="sd">        the base. Hysteretic energy dissipation is computed via</span>
 <span class="sd">        signed force-velocity integration (trapezoidal rule),</span>
 <span class="sd">        correctly capturing only dissipated energy and not elastic</span>
-<span class="sd">        recovery.</span>
+<span class="sd">        recovery. Collapse is detected via both the MinMax material</span>
+<span class="sd">        response and an independent nodal-displacement cross-check</span>
+<span class="sd">        (catching cases where a decoupled, zero-stiffness mechanism</span>
+<span class="sd">        keeps the material response frozen while the true nodal</span>
+<span class="sd">        displacement diverges).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -3102,9 +3233,12 @@
                       <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ts</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> – </span><span class="si">{</span><span class="n">te</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s&#39;</span><span class="p">)</span>
 
         <span class="c1"># --------------------------------------------------------</span>
-        <span class="c1">#  MinMax deformation limits</span>
+        <span class="c1">#  MinMax deformation limits (self.minmax_multiplier * ultimate</span>
+        <span class="c1">#  storey disp), matching the actual OpenSees MinMax material</span>
+        <span class="c1">#  bound set in create_Pinching4_material.</span>
         <span class="c1"># --------------------------------------------------------</span>
-        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">minmax_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minmax_multiplier</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storey_drifts</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="c1"># --------------------------------------------------------</span>
         <span class="c1">#  Determine loading directions</span>
@@ -3405,6 +3539,33 @@
                     <span class="n">mask_sy</span> <span class="o">=</span> <span class="n">idr_y</span> <span class="o">&gt;</span> <span class="n">pd_seq</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
                     <span class="n">pd_seq</span><span class="p">[</span><span class="n">mask_sy</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">idr_y</span><span class="p">[</span><span class="n">mask_sy</span><span class="p">]</span>
 
+                <span class="c1"># Direct nodal cross-check: once a spring&#39;s material dies,</span>
+                <span class="c1"># the storeys above it can decouple into a zero-stiffness</span>
+                <span class="c1"># mechanism that the transient integrator still reports as</span>
+                <span class="c1"># &quot;converged&quot;, with displacements diverging to physically</span>
+                <span class="c1"># absurd values even though eleResponse(&#39;deformation&#39;)</span>
+                <span class="c1"># below stays frozen under the MinMax bound (it reflects</span>
+                <span class="c1"># the last valid material state, not the true nodal</span>
+                <span class="c1"># motion). Catch that case from the raw nodal</span>
+                <span class="c1"># displacements directly, mirroring do_cpo_analysis.</span>
+                <span class="n">storey_disp_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dx_top</span> <span class="o">-</span> <span class="n">dx_bot</span><span class="p">)</span>
+                <span class="n">storey_disp_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy_top</span> <span class="o">-</span> <span class="n">dy_bot</span><span class="p">)</span>
+                <span class="n">exceed</span> <span class="o">=</span> <span class="p">((</span><span class="n">storey_disp_x</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">)</span> <span class="o">|</span>
+                          <span class="p">(</span><span class="n">storey_disp_y</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">exceed</span><span class="p">):</span>
+                    <span class="n">s_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">exceed</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s1">&#39;COLLAPSE DETECTED: Storey </span><span class="si">{</span><span class="n">s_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1"> &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;interstorey displacement diverged &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;(nodal cross-check, &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">storey_disp_x</span><span class="p">[</span><span class="n">s_idx</span><span class="p">],</span><span class="w"> </span><span class="n">storey_disp_y</span><span class="p">[</span><span class="n">s_idx</span><span class="p">])</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39; &gt;= </span><span class="si">{</span><span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">) &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;at t=</span><span class="si">{</span><span class="n">control_time</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">s.&#39;</span><span class="p">)</span>
+                    <span class="n">conv_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="n">collapse_time</span> <span class="o">=</span> <span class="n">control_time</span>
+                    <span class="k">break</span>
+
             <span class="c1"># ---- Hysteretic energy (signed F·v trapezoidal) ----</span>
             <span class="c1"># Same sign convention as do_nrha_analysis: use</span>
             <span class="c1"># eleForce[0] directly (node-I force) so that both</span>
@@ -3466,6 +3627,9 @@
                         <span class="n">collapse_time</span> <span class="o">=</span> <span class="n">control_time</span>
                         <span class="k">break</span>
                     <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">bidir</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">deform_result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">spring_deform</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                            <span class="n">spring_deform</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">deform_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
                     <span class="k">if</span> <span class="n">spring_deform</span> <span class="o">&gt;=</span> <span class="n">minmax_limits</span><span class="p">[</span><span class="n">s_idx</span><span class="p">]:</span>
                         <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span>
