@@ -301,6 +301,13 @@ class TestModellerMethods(unittest.TestCase):
         # Normalise by the maximum absolute component — OpenSees does not
         # guarantee a consistent eigenvector scale across platforms/versions.
         normalised = raw / np.abs(raw).max()
+        # Eigenvectors are only defined up to a sign; different OpenSeesPy
+        # builds (e.g. Windows openseespy vs. macOS openseespymac) can
+        # return either +phi or -phi for the same mode. Canonicalise the
+        # sign so the top-storey component (last entry, matching PHI's
+        # convention of ending in +1.0) is always positive.
+        if normalised[-1] < 0:
+            normalised = -normalised
         np.testing.assert_array_almost_equal(normalised, self.PHI, decimal=4)
 
     def test_spo_analysis(self):
