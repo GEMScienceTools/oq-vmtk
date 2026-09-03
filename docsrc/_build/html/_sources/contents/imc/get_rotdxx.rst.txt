@@ -44,18 +44,18 @@ Orientation-Independent Spectral Acceleration (RotDxx)
 
    .. math::
 
-      SA(T,\theta) = \omega^2\,\max_t\bigl|u(t,\theta)\bigr|\Big/g
+      PSA(T,\theta) = \omega^2\,\max_t\bigl|u(t,\theta)\bigr|\Big/g
 
    where :math:`\omega = 2\pi/T`.
 
    **RotDxx definition**
 
-   RotDxx is the *xx*-th percentile of :math:`SA(T, \theta)` over all 180
+   RotDxx is the *xx*-th percentile of :math:`PSA(T, \theta)` over all 180
    rotation angles:
 
    .. math::
 
-      \text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{SA(T,\theta) :
+      \text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{PSA(T,\theta) :
       \theta \in \{0°, 1°, \ldots, 179°\}\bigr\}
 
    Common choices are **RotD50** (median, used as reference IM in ASCE 7-22)

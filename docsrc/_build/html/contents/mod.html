@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="6.1. Initialisation" href="mod/init.html" />
-    <link rel="prev" title="5.2. SDOF-to-MDOF Calibration" href="cal/calibrate_model.html" /> 
+    <link rel="prev" title="5.1. SDOF-to-MDOF Calibration" href="cal/calibrate_model.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -97,7 +97,9 @@
 <h1><span class="section-number">6. </span>Model Building and Analysis<a class="headerlink" href="#model-building-and-analysis" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">modeller</span></code> class builds and analyses stick-and-mass MDOF structural models
 using the OpenSees framework. Each storey is represented by a Pinching4 hysteretic
-spring. Supported analysis types include gravity analysis, modal analysis, static
+spring; its pinching and damage parameters are configurable via the
+<code class="docutils literal notranslate"><span class="pre">pinching4_params</span></code> argument to <code class="docutils literal notranslate"><span class="pre">modeller.__init__</span></code>, defaulting to the toolkit’s
+standard values. Supported analysis types include gravity analysis, modal analysis, static
 pushover (SPO), and nonlinear time-history analysis (NRHA).</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -145,7 +147,7 @@ framework”, <em>SoftwareX</em>, Volume 7, 2018, Pages 6-11, ISSN 2352-7110,
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cal/calibrate_model.html" class="btn btn-neutral float-left" title="5.2. SDOF-to-MDOF Calibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cal/calibrate_model.html" class="btn btn-neutral float-left" title="5.1. SDOF-to-MDOF Calibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="mod/init.html" class="btn btn-neutral float-right" title="6.1. Initialisation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

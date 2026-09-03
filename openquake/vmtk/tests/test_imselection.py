@@ -138,8 +138,6 @@ def _make_synthetic_ida_dict(n_records=30, n_steps=20, seed=1,
             'sigma_build2build': [0.3] * len(damage_thresholds),
             'sigma_ds': [0.2] * len(damage_thresholds),
             'betas_total': [0.5] * len(damage_thresholds),
-            'rotation_active': False,
-            'rotation_percentile': None,
         },
         'stats': {
             'fitted_edps': edp_range,

@@ -14,8 +14,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -136,7 +136,7 @@
 <span class="sd">        Computes the geometric mean of spectral accelerations for a</span>
 <span class="sd">        user-defined list of periods.</span>
 
-<span class="sd">    get_velocity_displacement_history()</span>
+<span class="sd">    get_vel_disp_history()</span>
 <span class="sd">        Computes velocity and displacement history with zero-phase</span>
 <span class="sd">        high-pass filtering and baseline drift correction.</span>
 
@@ -233,7 +233,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_spectrum</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">periods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
-        <span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">damping_ratio</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the response spectrum using the Newmark-beta method.</span>
@@ -241,8 +241,8 @@
 <span class="sd">        The method performs Newmark constant-average-acceleration</span>
 <span class="sd">        time integration (gamma = 0.5, beta = 0.25) for a unit-mass</span>
 <span class="sd">        single-degree-of-freedom oscillator at each requested period,</span>
-<span class="sd">        returning the spectral displacement, pseudo-velocity, and</span>
-<span class="sd">        pseudo-acceleration.</span>
+<span class="sd">        returning the spectral displacement, pseudo-spectral velocity</span>
+<span class="sd">        (psv), and pseudo-spectral acceleration (psa).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -252,8 +252,9 @@
 <span class="sd">            4.0 s.</span>
 
 <span class="sd">        damping_ratio : float, optional</span>
-<span class="sd">            Damping ratio for the SDOF oscillator. Default is 0.05</span>
-<span class="sd">            (5%).</span>
+<span class="sd">            Damping ratio for the SDOF oscillator. Defaults to</span>
+<span class="sd">            ``self.damping`` (the damping ratio supplied at</span>
+<span class="sd">            construction, itself 0.05 / 5% by default).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -263,10 +264,10 @@
 <span class="sd">        sd : numpy.ndarray</span>
 <span class="sd">            Spectral displacement (m).</span>
 
-<span class="sd">        sv : numpy.ndarray</span>
+<span class="sd">        psv : numpy.ndarray</span>
 <span class="sd">            Pseudo spectral velocity (m/s).</span>
 
-<span class="sd">        sa : numpy.ndarray</span>
+<span class="sd">        psa : numpy.ndarray</span>
 <span class="sd">            Pseudo spectral acceleration (g).</span>
 
 <span class="sd">        Notes</span>
@@ -276,6 +277,9 @@
 <span class="sd">        acceleration method (unconditionally stable).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">damping_ratio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">damping_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping</span>
+
         <span class="c1"># Newmark-beta integration constants</span>
         <span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.5</span>
         <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.25</span>
@@ -334,10 +338,10 @@
 
         <span class="c1"># Compute spectral values (vectorised across all periods)</span>
         <span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Spectral displacement (m)</span>
-        <span class="n">sv</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">*</span> <span class="n">omega</span>  <span class="c1"># Pseudo spectral velocity (m/s)</span>
-        <span class="n">sa</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">_G</span>  <span class="c1"># Pseudo spectral acceleration (g)</span>
+        <span class="n">psv</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">*</span> <span class="n">omega</span>  <span class="c1"># Pseudo spectral velocity (m/s)</span>
+        <span class="n">psa</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">_G</span>  <span class="c1"># Pseudo spectral acceleration (g)</span>
 
-        <span class="k">return</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">sv</span><span class="p">,</span> <span class="n">sa</span></div>
+        <span class="k">return</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">psv</span><span class="p">,</span> <span class="n">psa</span></div>
 
 
 <div class="viewcode-block" id="imcalculator.get_sa">
@@ -354,14 +358,14 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        sa_interp : float</span>
-<span class="sd">            Spectral acceleration (g) at the requested period.</span>
+<span class="sd">        psa_interp : float</span>
+<span class="sd">            Pseudo-spectral acceleration (g) at the requested period.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">psa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
 
-        <span class="c1"># Interpolate to find SA at the requested period</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span></div>
+        <span class="c1"># Interpolate to find PSA at the requested period</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">psa</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="imcalculator.get_saavg">
@@ -381,24 +385,37 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        sa_avg : float</span>
-<span class="sd">            Geometric mean of spectral accelerations (g) over the</span>
-<span class="sd">            defined period range.</span>
+<span class="sd">        psa_avg : float</span>
+<span class="sd">            Geometric mean of pseudo-spectral accelerations (g) over</span>
+<span class="sd">            the defined period range.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        -------</span>
+<span class="sd">        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.</span>
+<span class="sd">            Development of a two-parameter seismic intensity measure and</span>
+<span class="sd">            probabilistic assessment procedure. 2nd US–Japan Workshop on</span>
+<span class="sd">            Performance-Based Earthquake Engineering Methodology for RC</span>
+<span class="sd">            Building Structures.</span>
+
+<span class="sd">        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral</span>
+<span class="sd">            acceleration as an intensity measure for collapse risk</span>
+<span class="sd">            assessment. Earthquake Engineering &amp; Structural Dynamics,</span>
+<span class="sd">            44(12), 2057–2073. DOI: 10.1002/eqe.2575</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">psa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
 
         <span class="c1"># Define 10 equally spaced periods in [0.2T, 1.5T]</span>
         <span class="n">period_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.2</span> <span class="o">*</span> <span class="n">period</span><span class="p">,</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">period</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 
-        <span class="c1"># Interpolate SA values at the defined period range</span>
-        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">period_range</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span>
+        <span class="c1"># Interpolate PSA values at the defined period range</span>
+        <span class="n">psa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">period_range</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">psa</span><span class="p">)</span>
 
         <span class="c1"># Clip to prevent underflow in the log-space geometric mean</span>
-        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sa_values</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">psa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">psa_values</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># Geometric mean via log-space averaging</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sa_values</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">psa_values</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="imcalculator.get_saavg_user_defined">
@@ -416,26 +433,39 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        sa_avg : float</span>
-<span class="sd">            Geometric mean of spectral accelerations (g) over the</span>
-<span class="sd">            user-defined periods.</span>
+<span class="sd">        psa_avg : float</span>
+<span class="sd">            Geometric mean of pseudo-spectral accelerations (g) over</span>
+<span class="sd">            the user-defined periods.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        -------</span>
+<span class="sd">        Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.</span>
+<span class="sd">            Development of a two-parameter seismic intensity measure and</span>
+<span class="sd">            probabilistic assessment procedure. 2nd US–Japan Workshop on</span>
+<span class="sd">            Performance-Based Earthquake Engineering Methodology for RC</span>
+<span class="sd">            Building Structures.</span>
+
+<span class="sd">        Eads, L., Miranda, E., and Lignos, D. G., 2015. Average spectral</span>
+<span class="sd">            acceleration as an intensity measure for collapse risk</span>
+<span class="sd">            assessment. Earthquake Engineering &amp; Structural Dynamics,</span>
+<span class="sd">            44(12), 2057–2073. DOI: 10.1002/eqe.2575</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
+        <span class="n">periods</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">psa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_spectrum</span><span class="p">()</span>
 
-        <span class="c1"># Interpolate SA values at user-defined periods</span>
-        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">periods_list</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span>
+        <span class="c1"># Interpolate PSA values at user-defined periods</span>
+        <span class="n">psa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">periods_list</span><span class="p">,</span> <span class="n">periods</span><span class="p">,</span> <span class="n">psa</span><span class="p">)</span>
 
         <span class="c1"># Clip to prevent underflow in the log-space geometric mean</span>
-        <span class="n">sa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sa_values</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">psa_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">psa_values</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># Geometric mean via log-space averaging</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sa_values</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">psa_values</span><span class="p">)))</span></div>
 
 
-<div class="viewcode-block" id="imcalculator.get_velocity_displacement_history">
-<a class="viewcode-back" href="../../../contents/imc/get_velocity_displacement_history.html#openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_velocity_displacement_history</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="imcalculator.get_vel_disp_history">
+<a class="viewcode-back" href="../../../contents/imc/get_velocity_displacement_history.html#openquake.vmtk.imcalculator.imcalculator.get_vel_disp_history">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vel_disp_history</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes velocity and displacement time histories with</span>
 <span class="sd">        baseline drift correction.</span>
@@ -556,6 +586,12 @@
 <span class="sd">        ai : float</span>
 <span class="sd">            Arias Intensity (m/s).</span>
 
+<span class="sd">        References</span>
+<span class="sd">        -------</span>
+<span class="sd">        Arias, A., 1970. A measure of earthquake intensity. </span>
+<span class="sd">            Hansen, R. J. (ed.), Seismic Design for Nuclear Power </span>
+<span class="sd">            Plants (pp. 438–483). Cambridge, MA: MIT Press.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Acceleration in m/s²</span>
         <span class="n">acc_m_s2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc_m_s2</span>
@@ -585,6 +621,13 @@
 <span class="sd">        -------</span>
 <span class="sd">        cav : float</span>
 <span class="sd">            Cumulative Absolute Velocity (m/s).</span>
+
+<span class="sd">        References</span>
+<span class="sd">        -------</span>
+<span class="sd">        O’Hara, T. F., and Jacobson, J. P., 1991. Standardization</span>
+<span class="sd">            of the cumulative absolute velocity (EPRI-TR--100082; </span>
+<span class="sd">            ON: UN92004453). Palo Alto, CA.</span>
+
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Integrate the absolute acceleration (m/s²) over the full</span>
@@ -618,6 +661,12 @@
 <span class="sd">        -------</span>
 <span class="sd">        sig_duration : float</span>
 <span class="sd">            Significant duration (s).</span>
+
+<span class="sd">        References</span>
+<span class="sd">        -------</span>
+<span class="sd">        Trifunac, M. D., and Brady, A. G., 1975. A study on the duration</span>
+<span class="sd">            of strong earthquake ground motion. Bulletin of the </span>
+<span class="sd">            Seismological Society of America, 65(3), 581–626.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -693,11 +742,11 @@
 
 <span class="sd">        References</span>
 <span class="sd">        ----------</span>
-<span class="sd">        Dávalos H, Miranda E. &quot;Filtered incremental velocity: A novel</span>
-<span class="sd">        approach in intensity measures for seismic collapse</span>
-<span class="sd">        estimation.&quot; *Earthquake Engineering &amp; Structural Dynamics*,</span>
-<span class="sd">        2019, 48(12), 1384-1405.</span>
-<span class="sd">        DOI: 10.1002/eqe.3205.</span>
+<span class="sd">        Davalos, H., and Miranda, E., 2019. Filtered incremental </span>
+<span class="sd">            velocity: A novel approach in intensity measures for </span>
+<span class="sd">            seismic collapse estimation. Earthquake Engineering &amp; </span>
+<span class="sd">            Structural Dynamics, 48(12), 1384–1405. </span>
+<span class="sd">            DOI: 10.1002/eqe.3205.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc</span><span class="p">)</span>
@@ -767,7 +816,7 @@
         <span class="n">acc2</span><span class="p">,</span>
         <span class="n">percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
         <span class="n">periods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
-        <span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">damping_ratio</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the RotDxx orientation-independent spectral</span>
@@ -810,8 +859,9 @@
 <span class="sd">            4.0 s.</span>
 
 <span class="sd">        damping_ratio : float, optional</span>
-<span class="sd">            Damping ratio for the SDOF oscillator. Default is</span>
-<span class="sd">            0.05 (5%).</span>
+<span class="sd">            Damping ratio for the SDOF oscillator. Defaults to</span>
+<span class="sd">            ``self.damping`` (the damping ratio supplied at</span>
+<span class="sd">            construction, itself 0.05 / 5% by default).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -819,7 +869,7 @@
 <span class="sd">            Periods of the RotDxx spectrum (s).</span>
 
 <span class="sd">        rotdxx : numpy.ndarray</span>
-<span class="sd">            RotDxx spectral acceleration (g) at each period.</span>
+<span class="sd">            RotDxx pseudo-spectral acceleration (g) at each period.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -829,7 +879,7 @@
 <span class="sd">        orientation-independent maximum.</span>
 
 <span class="sd">        When the second component is zero, RotD100 equals the</span>
-<span class="sd">        single-component SA and RotD50 equals SA · √2/2 (the</span>
+<span class="sd">        single-component PSA and RotD50 equals PSA · √2/2 (the</span>
 <span class="sd">        median of abs(cos θ) over 180 uniformly spaced angles).</span>
 
 <span class="sd">        References</span>
@@ -841,6 +891,9 @@
 <span class="sd">        DOI: 10.1785/0120090400.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">damping_ratio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">damping_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping</span>
+
         <span class="c1"># Newmark-beta integration constants (constant average</span>
         <span class="c1"># acceleration — unconditionally stable)</span>
         <span class="n">gamma_nb</span> <span class="o">=</span> <span class="mf">0.5</span>
@@ -909,7 +962,7 @@
         <span class="c1"># 180 rotation angles: 0°, 1°, …, 179°</span>
         <span class="n">theta_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">180</span><span class="p">))</span>   <span class="c1"># (180,)</span>
 
-        <span class="c1"># SA at each (angle, period) combination</span>
+        <span class="c1"># PSA at each (angle, period) combination</span>
         <span class="c1"># u_rot(θ) = cos(θ)*u1 + sin(θ)*u2  →  shape (n_periods, n_time)</span>
         <span class="c1"># Vectorise over angles by broadcasting</span>
         <span class="c1"># cos_th: (180, 1, 1), u1: (1, n_periods, n_time)</span>
@@ -919,10 +972,10 @@
         <span class="c1"># u_rot shape: (180, n_periods, n_time)</span>
 
         <span class="n">sd_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">u_rot</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># (180, n_periods)</span>
-        <span class="n">sa_rot</span> <span class="o">=</span> <span class="n">sd_rot</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">_G</span>   <span class="c1"># (180, n_periods)</span>
+        <span class="n">psa_rot</span> <span class="o">=</span> <span class="n">sd_rot</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">_G</span>   <span class="c1"># (180, n_periods)</span>
 
         <span class="c1"># RotDxx: percentile across the 180 rotation angles</span>
-        <span class="n">rotdxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">sa_rot</span><span class="p">,</span> <span class="n">percentile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># (n_periods,)</span>
+        <span class="n">rotdxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">psa_rot</span><span class="p">,</span> <span class="n">percentile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># (n_periods,)</span>
 
         <span class="k">return</span> <span class="n">periods</span><span class="p">,</span> <span class="n">rotdxx</span></div>
 

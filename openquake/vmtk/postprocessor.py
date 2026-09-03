@@ -31,14 +31,6 @@ class postprocessor:
         Computes the probability of exceeding a damage state using a
         lognormal cumulative distribution function (CDF).
 
-    calculate_rotated_fragility(
-        percentile, theta, sigma_record2record,
-        sigma_build2build=0.30, sigma_ds=0.30,
-        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
-        Calculates a rotated fragility function based on a lognormal
-        CDF, adjusting the median intensity to align with a specified
-        target percentile.
-
     calculate_glm_fragility(
         imls, edps, damage_thresholds,
         intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
@@ -59,38 +51,31 @@ class postprocessor:
         imls, edps, damage_thresholds, lower_limit, censored_limit,
         sigma_build2build=0.3, sigma_ds=0.3,
         intensities=np.geomspace(0.05, 10, 50), n_bootstrap=200,
-        random_seed=None, fragility_rotation=False,
-        rotation_percentile=0.10, fragility_method='lognormal')
+        random_seed=None, fragility_method='lognormal')
         Postprocess Modified Cloud Analysis (MCA) results: fits the
         probabilistic seismic demand model and derives fragility functions
         from pre-computed NLTHA outputs.
 
     process_msa_results(
         imls, edps, damage_thresholds, sigma_build2build=0.3,
-        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3),
-        fragility_rotation=False, rotation_percentile=0.10)
+        intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
         Postprocess Multiple Stripe Analysis (MSA) results: maximum
         likelihood estimation for fragility curve fitting from
         pre-computed NLTHA stripe outputs.
 
     calculate_vulnerability_function(
         poes, consequence_model, cov_consequence=None,
-        uncertainty=True, method=None,
+        uncertainty=True,
         intensities=np.round(np.geomspace(0.05, 10.0, 50), 3))
         Compute a vulnerability function by convolving fragility
         functions with a consequence (damage-to-loss) model.
 
-    calculate_average_annual_damage_probability(
-        fragility_array, hazard_array, return_period=1,
+    calculate_risk(
+        input_array, hazard_array, return_period=1,
         max_return_period=5000)
-        Calculate the Average Annual Damage State Probability (AADP)
-        based on fragility and hazard curves.
-
-    calculate_average_annual_loss(
-        vulnerability_array, hazard_array, return_period=1,
-        max_return_period=5000)
-        Calculate the Average Annual Loss (AAL) based on vulnerability
-        and hazard curves.
+        Calculate an average annual risk metric (Average Annual Damage
+        Probability or Average Annual Loss Ratio) by integrating a
+        fragility or vulnerability curve against a hazard curve.
 
     """
 
@@ -169,99 +154,6 @@ class postprocessor:
 
         # Compute exceedance probabilities for each intensity level
         return lognorm.cdf(intensities, s=beta_total, loc=0, scale=theta)
-
-    def calculate_rotated_fragility(self,
-                                    percentile,
-                                    theta,
-                                    sigma_record2record,
-                                    sigma_build2build=0.30,
-                                    sigma_ds=0.30,
-                                    intensities=np.round(
-                                        np.geomspace(0.05, 10.0, 50),
-                                        3)):
-        """
-        Calculates a rotated fragility function based on a lognormal
-        cumulative distribution function (CDF), adjusting the median
-        intensity to align with a specified target percentile.
-
-        This function modifies the median intensity based on the desired
-        target percentile and total uncertainty (considering both
-        record-to-record variability and modeling variability). The
-        resulting rotated fragility curve represents the damage
-        exceedance probabilities for a range of intensity measure
-        levels, as defined by the lognormal distribution.
-
-        Parameters
-        ----------
-        percentile : float
-            The target percentile for fragility function rotation. This
-            value corresponds to the desired percentile (e.g., 0.2
-            corresponds to the 20th percentile of the fragility curve).
-            The curve is adjusted such that this percentile aligns with
-            the calculated fragility function.
-
-        theta : float
-            The median seismic intensity corresponding to the edp-based
-            damage threshold.
-
-        sigma_record2record : float
-            The uncertainty associated with record-to-record variability
-            in the seismic records used to derive the fragility.
-
-        sigma_build2build : float, optional, default=0.30
-            The uncertainty associated with modeling variability between
-            different buildings or building types.
-
-        sigma_ds : float, optional
-            The logarithmic standard deviation representing uncertainty
-            in damage-state thresholds. Default value is 0.30.
-
-        intensities : array-like, optional,
-            default=np.round(np.geomspace(0.05, 10.0, 50), 3)
-            A list or array of intensity measure levels at which to
-            evaluate the fragility function, typically representing
-            seismic intensity levels (e.g., spectral acceleration). The
-            default is a geometric space ranging from 0.05 to 10.0.
-
-        Returns
-        -------
-        theta_prime : float
-            The new median intensity after the rotation based on the
-            specified percentile.
-
-        beta_total : float
-            The total standard deviation of the lognormal distribution,
-            calculated from both record-to-record and building-to-
-            building (modelling) uncertainties.
-
-        poes : array-like
-            The probabilities of exceedance (fragility values)
-            corresponding to the input intensity measure levels. This is
-            the lognormal CDF evaluated at the given intensities with
-            the rotated median and combined uncertainty.
-
-        References
-        ----------
-        1) Porter, K. (2017), "When Addressing Epistemic Uncertainty in
-        a Lognormal Fragility Function, How Should One Adjust the
-        Median?", Proceedings of the 16th World Conference on Earthquake
-        Engineering (16WCEE), Santiago, Chile.
-
-        """
-
-        # Calculate combined log standard deviation (total uncertainty)
-        beta_total = np.sqrt(sigma_record2record**2 +
-                             sigma_build2build**2 + sigma_ds**2)
-
-        # Adjust the median intensity based on the target percentile
-        theta_prime = theta * \
-            np.exp(-stats.norm.ppf(percentile) *
-                   (beta_total - sigma_record2record))
-
-        # Return rotated lognormal CDF for the given intensities
-        return (theta_prime, beta_total,
-                stats.lognorm(
-                    s=beta_total, scale=theta_prime).cdf(intensities))
 
     def calculate_glm_fragility(self,
                                 imls,
@@ -628,8 +520,6 @@ class postprocessor:
                             intensities=np.geomspace(0.05, 10, 50),
                             n_bootstrap=200,
                             random_seed=None,
-                            fragility_rotation=False,
-                            rotation_percentile=0.10,
                             fragility_method='lognormal',
                             dispersion_type='constant',
                             cloud_method='bootstrap',
@@ -697,15 +587,6 @@ class postprocessor:
         random_seed : int, optional
             Seed for reproducibility of the bootstrap sampling or MCMC.
             Default is None.
-
-        fragility_rotation : bool, optional
-            Whether to rotate the fragility curve around a specific
-            percentile to adjust for target reliability. Default is
-            False.
-
-        rotation_percentile : float, optional
-            The target percentile for fragility function rotation.
-            Default is 0.10.
 
         fragility_method : {'lognormal', 'ordinal', 'probit', 'logit'}, optional
             The methodology used to fit the fragility functions.
@@ -1140,26 +1021,12 @@ class postprocessor:
 
                 # Recalculate lognormal fragility functions
                 for ds in range(n_ds + 1):
-                    if fragility_rotation:
-                        fragility_method = (
-                            f'lognormal - rotated around the '
-                            f'{rotation_percentile}th percentile')
-                        (medians[ds],
-                         betas_total[ds],
-                         poes_fitted[:, ds]) = (
-                            self.calculate_rotated_fragility(
-                                rotation_percentile,
-                                medians[ds],
-                                betas_total[ds],
-                                sigma_build2build=0.0,
-                                sigma_ds=0.0))
-                    else:
-                        poes_fitted[:, ds] = (
-                            self.calculate_lognormal_fragility(
-                                medians[ds],
-                                betas_total[ds],
-                                sigma_build2build=0.0,
-                                sigma_ds=0.0))
+                    poes_fitted[:, ds] = (
+                        self.calculate_lognormal_fragility(
+                            medians[ds],
+                            betas_total[ds],
+                            sigma_build2build=0.0,
+                            sigma_ds=0.0))
 
                 # Final cleanup: prevent fragility crossing
                 for i in range(n_ds - 1, -1, -1):
@@ -1450,24 +1317,9 @@ class postprocessor:
                                 break
 
                 # ---------------------------------------------------------
-                # Step 8: Optional rotation and crossing cleanup
+                # Step 8: Crossing cleanup
                 # ---------------------------------------------------------
                 poes_fitted = poes_robust.copy()
-
-                for ds in range(n_ds + 1):
-                    if fragility_rotation:
-                        fragility_method = (
-                            f'lognormal - rotated around the '
-                            f'{rotation_percentile}th percentile')
-                        (medians[ds],
-                         betas_total[ds],
-                         poes_fitted[:, ds]) = (
-                            self.calculate_rotated_fragility(
-                                rotation_percentile,
-                                medians[ds],
-                                betas_total[ds],
-                                sigma_build2build=0.0,
-                                sigma_ds=0.0))
 
                 # Final cleanup: prevent fragility crossing
                 for i in range(n_ds - 1, -1, -1):
@@ -1556,16 +1408,13 @@ class postprocessor:
                             sigma_build2build=0.3,
                             sigma_ds=0.3,
                             intensities=np.round(
-                                np.geomspace(0.05, 10.0, 50), 3),
-                            fragility_rotation=False,
-                            rotation_percentile=0.10):
+                                np.geomspace(0.05, 10.0, 50), 3)):
         """
         Perform maximum likelihood estimation (MLE) for fragility curve
         fitting following a multiple stripe analysis. This method
         calculates the fragility function by fitting to the provided
         intensity measure levels (IMLs) and engineering demand parameters
-        (EDPs) "stripes", with the option to rotate the fragility curve
-        around a target percentile.
+        (EDPs) "stripes".
 
         The method is useful for deriving fragility functions by
         determining the probability of exceedance for various damage
@@ -1605,17 +1454,6 @@ class postprocessor:
             function will be sampled. By default, this is a logarithmic
             space ranging from 0.05 to 10.0, with 50 sample points.
 
-        fragility_rotation : bool, optional, default=False
-            A boolean flag that determines whether or not to rotate the
-            fragility curve about a given percentile. If `True`, the
-            fragility curve will be adjusted based on the specified
-            `rotation_percentile`.
-
-        rotation_percentile : float, optional, default=0.10
-            The target percentile (between 0 and 1) around which the
-            fragility function will be rotated. A value of 0.10
-            corresponds to rotating the curve to the 10th percentile.
-
         Returns
         -------
         msa_dict : dict
@@ -1634,8 +1472,6 @@ class postprocessor:
                   building modelling uncertainty.
                 - ``'sigma_ds'`` : float — uncertainty in the
                   damage-state threshold definition.
-                - ``'is_rotated'`` : bool — whether fragility
-                  rotation was applied.
 
             **'fragility'** : dict
                 MLE-fitted fragility function results.
@@ -1668,10 +1504,7 @@ class postprocessor:
         -----
         This method fits the fragility curve using MLE, which minimizes
         the difference between observed and predicted exceedance
-        probabilities. The option for fragility curve rotation allows for
-        adjusting the curve to better match the expected percentile of
-        damage occurrence, offering greater flexibility in representing
-        the fragility of the structure.
+        probabilities.
         """
 
         # Convert to numpy arrays
@@ -1745,19 +1578,9 @@ class postprocessor:
         # Calculate Fragility Curves (POEs) over the full intensity range
         poes = np.zeros((len(intensities), len(damage_thresholds)))
         for i in range(len(damage_thresholds)):
-            if fragility_rotation:
-                _, _, poes[:, i] = self.calculate_rotated_fragility(
-                    rotation_percentile,
-                    thetas[i],
-                    sigmas_record2record[i],
-                    sigma_build2build=sigma_build2build,
-                    sigma_ds=sigma_ds,
-                    intensities=intensities
-                )
-            else:
-                # Standard lognormal PoE
-                poes[:, i] = stats.norm.cdf(
-                    np.log(intensities / thetas[i]) / betas_total[i])
+            # Standard lognormal PoE
+            poes[:, i] = stats.norm.cdf(
+                np.log(intensities / thetas[i]) / betas_total[i])
 
         # Formatting Output
         # observed_fractions: list of arrays (one array per DS)
@@ -1767,8 +1590,7 @@ class postprocessor:
                 'edps': edps,
                 'damage_thresholds': damage_thresholds,
                 'sigma_build2build': sigma_build2build,
-                'sigma_ds': sigma_ds,
-                'is_rotated': fragility_rotation
+                'sigma_ds': sigma_ds
             },
             'fragility': {
                 'fragility_method': 'mle',
@@ -1802,9 +1624,7 @@ class postprocessor:
                             sigma_ds=0.3,
                             intensities=np.round(
                                 np.geomspace(0.05, 10.0, 50), 3),
-                            edp_range=np.linspace(0.00, 0.05, 101),
-                            fragility_rotation=False,
-                            rotation_percentile=0.10):
+                            edp_range=np.linspace(0.00, 0.05, 101)):
         """
         Perform fragility function fitting and statistical processing on
         Incremental Dynamic Analysis (IDA) results.
@@ -1814,9 +1634,7 @@ class postprocessor:
         Parameter (EDP) range. It accounts for "flatlining" (global
         dynamic instability) using Maximum Likelihood Estimation (MLE)
         for censored data to estimate the fragility parameters (median
-        and dispersion) for multiple damage states. It also supports
-        fragility curve rotation around a target percentile to account
-        for modeling uncertainties.
+        and dispersion) for multiple damage states.
 
         Parameters
         ----------
@@ -1862,15 +1680,6 @@ class postprocessor:
             The array of engineering demand parameters over which the
             IDA curves will be evaluated.
 
-        fragility_rotation : bool, optional, default=False
-            Flag to determine if the fragility curves should be rotated
-            around a specific percentile to adjust for modeling bias or
-            target reliability levels.
-
-        rotation_percentile : float, optional, default=0.10
-            The target percentile (0.0 to 1.0) around which the fragility
-            curve rotation is anchored if `fragility_rotation` is True.
-
         Returns
         -------
         ida_dict : dict
@@ -1913,10 +1722,6 @@ class postprocessor:
                   in the damage-state threshold definition.
                 - ``'betas_total'`` : list, length n_DS — total
                   logarithmic standard deviation per damage state.
-                - ``'rotation_active'`` : bool — whether fragility
-                  rotation around a percentile was applied.
-                - ``'rotation_percentile'`` : float or None — the
-                  percentile used for rotation, or None if inactive.
 
             **'stats'** : dict
                 Statistical IDA curves across all records.
@@ -2038,7 +1843,7 @@ class postprocessor:
             sigmas_build2build.append(sigma_build2build)
             sigmas_ds.append(sigma_ds)
 
-        # Generate Probabilities of Exceedance with Rotation Option
+        # Generate Probabilities of Exceedance
         poes = np.zeros((len(intensities), len(damage_thresholds)))
         betas_total = []
 
@@ -2046,25 +1851,11 @@ class postprocessor:
             theta = thetas[i]
             beta_rec = sigmas_rec2rec[i]
 
-            if fragility_rotation:
-                # Combined uncertainty isn't a simple SRSS in rotation,
-                # but we report total for consistency in dict
-                betas_total.append(
-                    np.sqrt(beta_rec**2 + sigma_build2build**2 + sigma_ds**2))
-                (_, _, poes[:, i]) = (
-                    self.calculate_rotated_fragility(
-                        theta,
-                        rotation_percentile,
-                        beta_rec,
-                        sigma_build2build,
-                        sigma_ds,
-                        intensities))
-            else:
-                beta_total = np.sqrt(
-                    beta_rec**2 + sigma_build2build**2 + sigma_ds**2)
-                betas_total.append(beta_total)
-                poes[:, i] = self.calculate_lognormal_fragility(
-                    theta, beta_total)
+            beta_total = np.sqrt(
+                beta_rec**2 + sigma_build2build**2 + sigma_ds**2)
+            betas_total.append(beta_total)
+            poes[:, i] = self.calculate_lognormal_fragility(
+                theta, beta_total)
 
         # 5. Construct the final nested dictionary (Cloud-style)
         ida_dict = {
@@ -2085,11 +1876,7 @@ class postprocessor:
                 'sigma_record2record': sigmas_rec2rec,
                 'sigma_build2build': sigmas_build2build,
                 'sigma_ds': sigmas_ds,
-                'betas_total': betas_total,
-                'rotation_active': fragility_rotation,
-                'rotation_percentile': (
-                    rotation_percentile if fragility_rotation
-                    else None)
+                'betas_total': betas_total
             },
 
             'stats': {
@@ -2107,7 +1894,6 @@ class postprocessor:
                                          consequence_model,
                                          cov_consequence=None,
                                          uncertainty=True,
-                                         method=None,
                                          intensities=np.round(
                                              np.geomspace(
                                                  0.05, 10.0, 50),
@@ -2120,8 +1906,8 @@ class postprocessor:
         The expected loss ratio is computed as the convolution of mutually
         exclusive damage-state probabilities with damage-to-loss ratios.
         Uncertainty in the loss ratio conditional on intensity measure
-        level (Loss | IM) can be computed either explicitly using the law
-        of total variance or via an empirical Silva-type envelope.
+        level (Loss | IM) is computed explicitly using the law of total
+        variance.
 
         Parameters
         ----------
@@ -2136,30 +1922,15 @@ class postprocessor:
 
         cov_consequence : array-like, length n_DS, optional
             Coefficient of variation of the damage-to-loss ratio for each
-            damage state. Required when ``method="explicit"``. Each entry
+            damage state. Required when ``uncertainty=True``. Each entry
             represents the conditional uncertainty of loss given the
             damage state.
 
         uncertainty : bool, optional
             Flag indicating whether to compute uncertainty (coefficient of
-            variation) of the loss ratio conditional on IM. If False, the
-            COV column is still returned and filled with zeros.
-            Default is True.
-
-        method : {"explicit", "silva"}, optional
-            Method used to compute uncertainty when ``uncertainty=True``.
-
-            - "explicit" (default):
-              Computes uncertainty using the law of total variance,
-              accounting for both damage-state mixing and uncertainty
-              within each damage state. Requires ``cov_consequence``.
-
-            - "silva":
-              Computes uncertainty using a Silva-type empirical envelope
-              based only on the mean loss ratio.
-
-            If ``uncertainty=True`` and ``method=None``, the method
-            defaults to "explicit".
+            variation) of the loss ratio conditional on IM using the law
+            of total variance. If False, the COV column is still returned
+            and filled with zeros. Default is True.
 
         intensities : ndarray, optional
             Intensity measure levels corresponding to the rows of
@@ -2184,13 +1955,13 @@ class postprocessor:
         Exception
             If the dimensions of ``poes``, ``consequence_model``, or
             ``cov_consequence`` are inconsistent, or if
-            ``method="explicit"`` is selected without providing
+            ``uncertainty=True`` is selected without providing
             ``cov_consequence``.
 
         Notes
         -----
-        For the explicit uncertainty method, the variance of the loss
-        ratio is computed using the law of total variance:
+        The variance of the loss ratio is computed using the law of
+        total variance:
 
         Var(LR | IM) = sum_k p_k [ sigma_k^2 + (mu_k - mu)^2 ]
 
@@ -2207,70 +1978,6 @@ class postprocessor:
         IM-dependent uncertainty.
         """
 
-        def calculate_sigma_silva(loss):
-            """
-            Helper function to calculate uncertainty in the loss
-            estimates based on the method proposed in Silva (2019),
-            which incorporates the sigma (standard deviation) for loss
-            ratios within seismic vulnerability functions.
-
-            This method computes the sigma loss ratio for expected loss
-            ratios and also estimates the parameters of a beta
-            distribution (coefficients a and b), which describe the
-            uncertainty and variability in the loss estimates. The
-            formula used is derived from seismic vulnerability research.
-
-            Parameters:
-            -----------
-            loss : list or array
-                A list or array of expected loss ratios. The expected
-                loss ratio represents the proportion of the building's
-                value that is expected to be lost due to an earthquake
-                event, ranging from 0 to 1.
-
-            Returns:
-            --------
-            sigma_loss_ratio : list or array
-                The calculated uncertainty (sigma) associated with the
-                mean loss ratio for each input loss value. The sigma
-                loss ratio represents the variability of the loss
-                estimates and is computed based on the loss ratios
-                provided.
-
-            a_beta_dist : list or array
-                The coefficient 'a' of the beta distribution for each
-                loss ratio. This parameter represents the shape of the
-                beta distribution and is used to model the uncertainty
-                in the loss estimates.
-
-            b_beta_dist : list or array
-                The coefficient 'b' of the beta distribution for each
-                loss ratio. This parameter also represents the shape of
-                the beta distribution, complementing the coefficient 'a'
-                to fully describe the distribution's behavior.
-
-            References:
-            ----------
-            1) Silva, V. (2019) "Uncertainty and correlation in seismic
-            vulnerability functions of building classes." Earthquake
-            Spectra. DOI: 10.1193/013018eqs031m.
-
-            """
-            sigma_loss_ratio = np.where(
-                loss == 1e-8, 1e-8, np.where(
-                    loss == 1, 1,
-                    0.5 * np.sqrt(
-                        loss * (-0.7 - 2 * loss
-                                + np.sqrt(6.8 * loss + 0.5)))))
-            a_beta_dist = np.zeros(loss.shape)
-            b_beta_dist = np.zeros(loss.shape)
-
-            return sigma_loss_ratio, a_beta_dist, b_beta_dist
-
-        # Default behavior
-        if uncertainty and method is None:
-            method = "explicit"
-
         # Consistency checks
         n_im, n_ds = poes.shape
         if len(consequence_model) != n_ds:
@@ -2281,10 +1988,10 @@ class postprocessor:
             raise Exception(
                 'ERROR! Mismatch between number of IMLs and fragility models!')
 
-        if uncertainty and method == "explicit":
+        if uncertainty:
             if cov_consequence is None:
                 raise Exception(
-                    'ERROR! Explicit uncertainty method requires '
+                    'ERROR! Uncertainty calculation requires '
                     'cov_consequence.')
             if len(cov_consequence) != n_ds:
                 raise Exception(
@@ -2314,20 +2021,10 @@ class postprocessor:
         # Initialize COV
         cov = np.zeros_like(loss)
         if uncertainty:
-            if method.lower() == "explicit":
-                # Law of total variance
-                diff = mu_k - loss[:, None]
-                var_loss = np.sum(p_ds * (var_k + diff ** 2), axis=1)
-                cov = np.sqrt(var_loss) / (loss + 1e-12)
-            elif method.lower() == "silva":
-                # Semi-empirical derivatoin
-                for i, mu in enumerate(loss):
-                    sigma_loss_ratio, _, _ = calculate_sigma_silva(mu)
-                    cov[i] = np.min(
-                        [sigma_loss_ratio / mu,
-                         0.90 * np.sqrt(mu * (1 - mu)) / mu])
-            else:
-                raise Exception(f"ERROR! Unknown uncertainty method: {method}")
+            # Law of total variance
+            diff = mu_k - loss[:, None]
+            var_loss = np.sum(p_ds * (var_k + diff ** 2), axis=1)
+            cov = np.sqrt(var_loss) / (loss + 1e-12)
 
         # Output
         df = pd.DataFrame({'IML': intensities,
@@ -2336,32 +2033,43 @@ class postprocessor:
 
         return df
 
-    def calculate_average_annual_damage_probability(self,
-                                                    fragility_array,
-                                                    hazard_array,
-                                                    return_period=1,
-                                                    max_return_period=5000):
+    def calculate_risk(self,
+                       input_array,
+                       hazard_array,
+                       return_period=1,
+                       max_return_period=5000):
         """
-        Calculate the Average Annual Damage State Probability (AADP)
-        based on fragility and hazard curves.
+        Calculate an average annual risk metric by integrating a
+        fragility or vulnerability curve against a seismic hazard curve.
 
-        This function estimates the average annual probability of damage
-        states occurring over a given return period, using the fragility
-        curve (which relates intensity measure levels to damage state
-        probabilities) and the hazard curve (which relates intensity
-        measure levels to annual rates of exceedance).
+        This function estimates the average annual value of ``input_array``
+        occurring over a given return period (typically annual where
+        return_period = 1), using the hazard curve (which relates
+        intensity measure levels to annual rates of exceedance). The
+        interpretation of the result depends on what ``input_array``
+        represents:
 
-        The calculation integrates the product of the fragility function
-        and the hazard curve over the specified range of intensity measure
+        - If ``input_array`` is a fragility curve (intensity measure
+          level vs. probability of exceeding a damage state), the result
+          is the Average Annual Damage [State] Probability (AADP).
+        - If ``input_array`` is a vulnerability curve (intensity measure
+          level vs. expected loss ratio), the result is the Average
+          Annual Loss Ratio (AALR).
+
+        The calculation integrates the product of ``input_array`` and the
+        hazard curve over the specified range of intensity measure
         levels, accounting for the return period and a maximum return
         period threshold.
 
         Parameters
         ----------
-        fragility_array : 2D array
+        input_array : 2D array
             A 2D array where the first column contains intensity measure
-            levels, and the second column contains the corresponding
-            probabilities of exceedance for each intensity level.
+            levels, and the second column contains either the
+            probability of exceedance of a damage state (a fragility
+            curve, yielding the AADP) or the expected loss ratio (a
+            vulnerability curve, yielding the AALR) for each intensity
+            level.
 
         hazard_array : 2D array
             A 2D array where the first column contains intensity measure
@@ -2371,9 +2079,9 @@ class postprocessor:
 
         return_period : float, optional, default=1
             The return period used to scale the hazard rate. This is the
-            time span (in years) over which the average annual damage
-            probability is calculated. A typical value is 1 year, but
-            longer periods can be used for multi-year assessments.
+            time span (in years) over which the average annual value is
+            calculated. A typical value is 1 year, but longer periods
+            can be used for multi-year assessments.
 
         max_return_period : float, optional, default=5000
             The maximum return period threshold used to filter out very
@@ -2383,106 +2091,24 @@ class postprocessor:
 
         Returns
         -------
-        average_annual_damage_probability : float
-            The average annual damage state probability, calculated by
-            integrating the product of the fragility function and the
-            hazard curve over the given intensity measure levels.
+        average_annual_value : float
+            The average annual value of ``input_array``, calculated by
+            integrating the product of ``input_array`` and the hazard
+            curve over the given intensity measure levels. This is the
+            AADP when ``input_array`` is a fragility curve, or the AALR
+            when it is a vulnerability curve.
 
         """
-
-        # Ensure arrays are sorted by Intensity (Column 0)
+        # Ensure arrays are sorted by Intensity Measure (IM)
         hazard_array = hazard_array[hazard_array[:, 0].argsort()]
-        fragility_array = fragility_array[fragility_array[:, 0].argsort()]
-
-        # Filter hazard based on return period threshold
-        max_integration = return_period / max_return_period
-        hazard_array = hazard_array[hazard_array[:, 1] >= max_integration]
-
-        # Need at least 2 points to calculate a rate difference
-        if len(hazard_array) < 2:
-            return 0.0
-
-        # Compute midpoints and rate of occurrences (|d_lambda|)
-        mean_imls = (hazard_array[:-1, 0] + hazard_array[1:, 0]) / 2
-        # abs ensures positive probability mass regardless of sort order
-        rate_occ = np.abs(np.diff(hazard_array[:, 1])) / return_period
-
-        # Define fragility curve with dynamic upper boundary
-        # We assume Probability=0 at IM=0 and Probability=1 at high IM
-        upper_im_bound = max(20.0, fragility_array[:, 0].max() * 1.5)
-        curve_imls = np.hstack(
-            ([0.0], fragility_array[:, 0], [upper_im_bound]))
-        curve_ordinates = np.hstack(([0.0], fragility_array[:, 1], [1.0]))
-
-        # Interpolate and Integrate
-        interpolated_values = np.interp(mean_imls, curve_imls, curve_ordinates)
-
-        # Result: Sum of (Probability of Damage * Frequency of Occurrence)
-        return np.dot(interpolated_values, rate_occ)
-
-    def calculate_average_annual_loss(self,
-                                      vulnerability_array,
-                                      hazard_array,
-                                      return_period=1,
-                                      max_return_period=5000):
-        """
-        Calculate the Average Annual Loss Ratio (AALR) based on
-        vulnerability and hazard curves.
-
-        This function estimates the average loss ratio occurring over a
-        given return period (typically annual where return_period = 1),
-        using the vulnerability curve (which relates intensity measure
-        levels to an expected loss ratio) and the hazard curve (which
-        relates intensity measure levels to annual rates of exceedance).
-
-        The calculation integrates the product of the vulnerability
-        function and the hazard curve over the specified range of
-        intensity measure levels, accounting for the return period and
-        a maximum return period threshold.
-
-        Parameters
-        ----------
-        vulnerability_array : 2D array
-            A 2D array where the first column contains intensity measure
-            levels, and the second column contains the corresponding
-            expected loss ratios for each intensity level.
-
-        hazard_array : 2D array
-            A 2D array where the first column contains intensity measure
-            levels, and the second column contains the annual rates of
-            exceedance (i.e., the probability of exceedance per year)
-            for each intensity level.
-
-        return_period : float, optional, default=1
-            The return period used to scale the hazard rate. This is the
-            time span (in years) over which the average annual damage
-            probability is calculated. A typical value is 1 year, but
-            longer periods can be used for multi-year assessments.
-
-        max_return_period : float, optional, default=5000
-            The maximum return period threshold used to filter out very
-            low hazard rates. The hazard curve is truncated to include
-            only intensity levels with exceedance rates above this
-            threshold.
-
-        Returns
-        -------
-        average_annual_loss_ratio : float
-            The average annual loss ratio, calculated by integrating
-            the product of the vulnerability function and the hazard
-            curve over the given intensity measure levels.
-
-        """
-        # Ensure hazard data is sorted by Intensity Measure (IM)
-        hazard_array = hazard_array[hazard_array[:, 0].argsort()]
-        vulnerability_array = vulnerability_array[
-            vulnerability_array[:, 0].argsort()]
+        input_array = input_array[input_array[:, 0].argsort()]
 
         # Filter hazard based on max return period (min frequency threshold)
         min_rate_threshold = return_period / max_return_period
         hazard_filtered = hazard_array[hazard_array[:, 1]
                                        >= min_rate_threshold]
 
+        # Need at least 2 points to calculate a rate difference
         if len(hazard_filtered) < 2:
             return 0.0
 
@@ -2491,19 +2117,19 @@ class postprocessor:
         mean_imls = (hazard_filtered[:-1, 0] + hazard_filtered[1:, 0]) / 2
         rate_occ = np.abs(np.diff(hazard_filtered[:, 1])) / return_period
 
-        # Prepare vulnerability curve for interpolation
-        # Anchoring the curve at IM=0 (Loss=0) and a high IM cap (Loss=1.0)
-        v_im = vulnerability_array[:, 0]
-        v_loss = vulnerability_array[:, 1]
+        # Prepare the input curve for interpolation
+        # Anchoring the curve at IM=0 (value=0) and a high IM cap (value=1.0)
+        input_im = input_array[:, 0]
+        input_value = input_array[:, 1]
 
         curve_imls = np.concatenate(
-            ([0.0], v_im, [max(20.0, v_im.max() * 1.5)]))
-        curve_ordinates = np.concatenate(([0.0], v_loss, [1.0]))
+            ([0.0], input_im, [max(20.0, input_im.max() * 1.5)]))
+        curve_ordinates = np.concatenate(([0.0], input_value, [1.0]))
 
-        # Interpolate vulnerability at the hazard midpoints
-        interpolated_losses = np.interp(mean_imls, curve_imls, curve_ordinates)
+        # Interpolate the input curve at the hazard midpoints
+        interpolated_values = np.interp(mean_imls, curve_imls, curve_ordinates)
 
-        # Final Integration (Dot product of Losses and Probabilities)
-        average_annual_loss = np.dot(interpolated_losses, rate_occ)
+        # Final Integration (Dot product of values and rates of occurrence)
+        average_annual_value = np.dot(interpolated_values, rate_occ)
 
-        return average_annual_loss
+        return average_annual_value

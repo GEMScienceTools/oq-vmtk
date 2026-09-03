@@ -55,7 +55,7 @@
 <li class="toctree-l2"><a class="reference internal" href="get_saavg.html">3.4. Average Spectral Acceleration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="get_saavg_user_defined.html">3.5. User-Defined Average Spectral Acceleration</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">3.6. Velocity and Displacement History</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history"><code class="docutils literal notranslate"><span class="pre">imcalculator.get_velocity_displacement_history()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.imcalculator.imcalculator.get_vel_disp_history"><code class="docutils literal notranslate"><span class="pre">imcalculator.get_vel_disp_history()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="get_amplitude_ims.html">3.7. Amplitude Intensity Measures</a></li>
@@ -105,8 +105,8 @@
   <section id="velocity-and-displacement-history">
 <h1><span class="section-number">3.6. </span>Velocity and Displacement History<a class="headerlink" href="#velocity-and-displacement-history" title="Link to this heading"></a></h1>
 <dl class="py method">
-<dt class="sig sig-object py" id="openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history">
-<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_velocity_displacement_history</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_velocity_displacement_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_velocity_displacement_history" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="openquake.vmtk.imcalculator.imcalculator.get_vel_disp_history">
+<span class="sig-prename descclassname"><span class="pre">imcalculator.</span></span><span class="sig-name descname"><span class="pre">get_vel_disp_history</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/imcalculator.html#imcalculator.get_vel_disp_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.imcalculator.imcalculator.get_vel_disp_history" title="Link to this definition"></a></dt>
 <dd><p>Computes velocity and displacement time histories with
 baseline drift correction.</p>
 <p>A zero-phase fourth-order Butterworth high-pass filter
@@ -143,7 +143,7 @@ directions, eliminating phase distortion.</p>
 <span class="n">acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;openquake/vmtk/tests/test_data/acceleration.txt&quot;</span><span class="p">)</span>
 <span class="n">im</span> <span class="o">=</span> <span class="n">imcalculator</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.005</span><span class="p">)</span>
 
-<span class="n">vel</span><span class="p">,</span> <span class="n">disp</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_velocity_displacement_history</span><span class="p">()</span>
+<span class="n">vel</span><span class="p">,</span> <span class="n">disp</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_vel_disp_history</span><span class="p">()</span>
 <span class="n">pgv</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">vel</span><span class="p">))</span>
 <span class="n">pgd</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">disp</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PGV = </span><span class="si">{</span><span class="n">pgv</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> m/s,  PGD = </span><span class="si">{</span><span class="n">pgd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>

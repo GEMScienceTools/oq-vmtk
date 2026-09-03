@@ -96,62 +96,6 @@ class TestLognormalFragility(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# calculate_rotated_fragility
-# ---------------------------------------------------------------------------
-class TestRotatedFragility(unittest.TestCase):
-
-    def setUp(self):
-        self.pp = postprocessor()
-        self.theta = 0.50
-        self.sigma_rr = 0.40
-        self.percentile = 0.10
-        self.ims = np.linspace(0.01, 2.0, 500)
-
-    def test_returns_three_values(self):
-        result = self.pp.calculate_rotated_fragility(
-            self.percentile, self.theta, self.sigma_rr,
-            sigma_build2build=0.0, sigma_ds=0.0,
-            intensities=self.ims)
-        self.assertEqual(len(result), 3)
-
-    def test_no_rotation_when_no_epistemic(self):
-        """With sigma_b2b=0 and sigma_ds=0, theta_prime = theta."""
-        theta_prime, _, _ = self.pp.calculate_rotated_fragility(
-            self.percentile, self.theta, self.sigma_rr,
-            sigma_build2build=0.0, sigma_ds=0.0,
-            intensities=self.ims)
-        self.assertAlmostEqual(theta_prime, self.theta, places=6)
-
-    def test_anchor_percentile_preserved(self):
-        """IM at target percentile is same for original and rotated."""
-        non_rotated = self.pp.calculate_lognormal_fragility(
-            self.theta, self.sigma_rr,
-            sigma_build2build=0.0, sigma_ds=0.0,
-            intensities=self.ims)
-        _, _, rotated = self.pp.calculate_rotated_fragility(
-            self.percentile, self.theta, self.sigma_rr,
-            sigma_build2build=0.30, sigma_ds=0.0,
-            intensities=self.ims)
-        im_nr = np.interp(self.percentile, non_rotated, self.ims)
-        im_r = np.interp(self.percentile, rotated, self.ims)
-        self.assertAlmostEqual(im_nr, im_r, places=3)
-
-    def test_poes_bounded_and_monotonic(self):
-        _, _, poes = self.pp.calculate_rotated_fragility(
-            self.percentile, self.theta, self.sigma_rr,
-            intensities=self.ims)
-        self.assertTrue(np.all(poes >= 0.0))
-        self.assertTrue(np.all(poes <= 1.0))
-        self.assertTrue(np.all(np.diff(poes) >= 0))
-
-    def test_output_length_matches_intensities(self):
-        _, _, poes = self.pp.calculate_rotated_fragility(
-            self.percentile, self.theta, self.sigma_rr,
-            intensities=self.ims)
-        self.assertEqual(len(poes), len(self.ims))
-
-
-# ---------------------------------------------------------------------------
 # calculate_glm_fragility
 # ---------------------------------------------------------------------------
 class TestGLMFragility(unittest.TestCase):
@@ -357,11 +301,6 @@ class TestModifiedCloudAnalysis(unittest.TestCase):
         self.assertEqual(
             result['fragility']['fragility_method'], 'ordinal')
 
-    def test_fragility_rotation_accepted(self):
-        result = self._run(
-            fragility_rotation=True, rotation_percentile=0.10)
-        self.assertIn('fragility', result)
-
     def test_cloud_method_key_bootstrap(self):
         result = self._run(cloud_method='bootstrap')
         self.assertEqual(
@@ -469,7 +408,7 @@ class TestMultipleStripeAnalysis(unittest.TestCase):
     def test_msa_inputs_keys(self):
         result = self._run()
         for key in ['imls', 'edps', 'damage_thresholds',
-                    'sigma_build2build', 'sigma_ds', 'is_rotated']:
+                    'sigma_build2build', 'sigma_ds']:
             self.assertIn(key, result['msa_inputs'])
 
     def test_fragility_keys(self):
@@ -504,11 +443,6 @@ class TestMultipleStripeAnalysis(unittest.TestCase):
         # one list per damage state, one entry per stripe
         self.assertEqual(len(fracs), len(self.thresholds))
         self.assertEqual(len(fracs[0]), self.imls.shape[1])
-
-    def test_fragility_rotation_flag_stored(self):
-        result = self._run(
-            fragility_rotation=True, rotation_percentile=0.10)
-        self.assertTrue(result['msa_inputs']['is_rotated'])
 
 
 # ---------------------------------------------------------------------------
@@ -565,18 +499,9 @@ class TestVulnerabilityFunction(unittest.TestCase):
         df = self._vuln()
         self.assertTrue(np.all(df['COV'].values == 0.0))
 
-    def test_silva_uncertainty_accepted(self):
-        df = self.pp.calculate_vulnerability_function(
-            self.poes, self.consequence_model,
-            uncertainty=True, method='silva',
-            intensities=self.ims)
-        self.assertIn('COV', df.columns)
-        self.assertTrue(np.all(df['COV'].values >= 0.0))
-
 
 # ---------------------------------------------------------------------------
-# calculate_average_annual_damage_probability /
-# calculate_average_annual_loss
+# calculate_risk
 # ---------------------------------------------------------------------------
 class TestAverageAnnualMetrics(unittest.TestCase):
 
@@ -593,23 +518,23 @@ class TestAverageAnnualMetrics(unittest.TestCase):
         self.vulnerability = np.column_stack([im_vals, poes])
 
     def test_aadp_returns_scalar(self):
-        result = self.pp.calculate_average_annual_damage_probability(
+        result = self.pp.calculate_risk(
             self.fragility, self.hazard)
         self.assertIsInstance(float(result), float)
 
     def test_aadp_bounded(self):
-        result = self.pp.calculate_average_annual_damage_probability(
+        result = self.pp.calculate_risk(
             self.fragility, self.hazard)
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
 
     def test_aal_returns_scalar(self):
-        result = self.pp.calculate_average_annual_loss(
+        result = self.pp.calculate_risk(
             self.vulnerability, self.hazard)
         self.assertIsInstance(float(result), float)
 
     def test_aal_bounded(self):
-        result = self.pp.calculate_average_annual_loss(
+        result = self.pp.calculate_risk(
             self.vulnerability, self.hazard)
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
@@ -619,7 +544,7 @@ class TestAverageAnnualMetrics(unittest.TestCase):
         low_hazard = np.array([
             [0.05, 0.0001],
             [0.10, 0.00005]])
-        result = self.pp.calculate_average_annual_damage_probability(
+        result = self.pp.calculate_risk(
             self.fragility, low_hazard,
             max_return_period=100)
         self.assertEqual(result, 0.0)
@@ -629,7 +554,7 @@ class TestAverageAnnualMetrics(unittest.TestCase):
         low_hazard = np.array([
             [0.05, 0.0001],
             [0.10, 0.00005]])
-        result = self.pp.calculate_average_annual_loss(
+        result = self.pp.calculate_risk(
             self.vulnerability, low_hazard,
             max_return_period=100)
         self.assertEqual(result, 0.0)

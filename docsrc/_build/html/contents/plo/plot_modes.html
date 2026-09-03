@@ -106,21 +106,35 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="openquake.vmtk.plotter.plotter.plot_modes">
 <span class="sig-prename descclassname"><span class="pre">plotter.</span></span><span class="sig-name descname"><span class="pre">plot_modes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_shape_vectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/plotter.html#plotter.plot_modes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.plotter.plotter.plot_modes" title="Link to this definition"></a></dt>
-<dd><p>Plots 2-D mode shape profiles in a square grid layout (2x2, 3x3 etc).</p>
+<dd><p>Plots 2-D mode shape profiles in a square grid layout (2×2, 3×3, …).</p>
 <p>Each mode occupies one cell with two side-by-side profile plots:
 left = X-displacement vs Z (blue), right = Y-displacement vs Z (green).
 Normalised displacement values are annotated next to every node dot.
 A grey undeformed reference line (x=0) is drawn in every panel.</p>
 <section id="sign-convention">
 <h2><span class="section-number">9.1. </span>Sign convention<a class="headerlink" href="#sign-convention" title="Link to this heading"></a></h2>
-<p>Eigenvectors have arbitrary sign.  The method flips each mode so that
+<p>Eigenvectors have arbitrary sign. The method flips each mode so that
 the top-node displacement in the dominant horizontal direction is always
 positive.</p>
 </section>
-<section id="grid">
-<h2><span class="section-number">9.1. </span>Grid<a class="headerlink" href="#grid" title="Link to this heading"></a></h2>
-<p>ncols = ceil(sqrt(N)),  nrows = ceil(N / ncols).
+<section id="grid-layout">
+<h2><span class="section-number">9.1. </span>Grid layout<a class="headerlink" href="#grid-layout" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ncols</span> <span class="pre">=</span> <span class="pre">ceil(sqrt(N))</span></code>, <code class="docutils literal notranslate"><span class="pre">nrows</span> <span class="pre">=</span> <span class="pre">ceil(N</span> <span class="pre">/</span> <span class="pre">ncols)</span></code>.
 Unused cells in the last row are hidden.</p>
+</section>
+<section id="title-placement">
+<h2><span class="section-number">9.1. </span>Title placement<a class="headerlink" href="#title-placement" title="Link to this heading"></a></h2>
+<p>Each mode title (e.g. <code class="docutils literal notranslate"><span class="pre">'Mode</span> <span class="pre">1</span> <span class="pre">[X-dir]</span> <span class="pre">—</span> <span class="pre">T₁</span> <span class="pre">=</span> <span class="pre">0.312</span> <span class="pre">s'</span></code>) is placed
+via <code class="docutils literal notranslate"><span class="pre">fig.text()</span></code> at the horizontal midpoint of both panels so that
+it is centred over the X- and Y-displacement plots together.</p>
+</section>
+<section id="adaptive-scaling">
+<h2><span class="section-number">9.1. </span>Adaptive scaling<a class="headerlink" href="#adaptive-scaling" title="Link to this heading"></a></h2>
+<p>Font sizes for node annotations, axis labels, tick marks, and panel
+titles, as well as the vertical panel spacing (<code class="docutils literal notranslate"><span class="pre">hspace</span></code>) and the
+figure top margin (<code class="docutils literal notranslate"><span class="pre">top</span></code>), all scale automatically with the number
+of grid rows and the number of nodes per panel. This prevents text
+and title overlap when plotting a large number of modes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param node_list<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Ordered OpenSees node tags (base node first).</p>
@@ -130,7 +144,7 @@ Unused cells in the last row are hidden.</p>
 </dd>
 <dt class="field-odd">param mode_shape_vectors<span class="colon">:</span></dt>
 <dd class="field-odd"><p>One array per mode; columns are [ux, uy, uz], pre-normalised by
-max abs value as returned by do_modal_analysis.</p>
+max abs value as returned by <code class="docutils literal notranslate"><span class="pre">do_modal_analysis</span></code>.</p>
 </dd>
 <dt class="field-even">type mode_shape_vectors<span class="colon">:</span></dt>
 <dd class="field-even"><p>list of numpy.ndarray, shape (n_nodes, 3)</p>
@@ -142,7 +156,8 @@ max abs value as returned by do_modal_analysis.</p>
 <dd class="field-even"><p>list of float</p>
 </dd>
 <dt class="field-odd">param export_path<span class="colon">:</span></dt>
-<dd class="field-odd"><p>File path to save the figure.  If None the figure is displayed.</p>
+<dd class="field-odd"><p>File path to save the figure. If <code class="docutils literal notranslate"><span class="pre">None</span></code> the figure is displayed
+interactively.</p>
 </dd>
 <dt class="field-even">type export_path<span class="colon">:</span></dt>
 <dd class="field-even"><p>str, optional</p>
@@ -159,10 +174,12 @@ max abs value as returned by do_modal_analysis.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotter</span>
 
 <span class="n">pl</span> <span class="o">=</span> <span class="n">plotter</span><span class="p">()</span>
-<span class="c1"># modal_dict from modelbuilder.do_modal_analysis()</span>
+<span class="c1"># T, mode_shapes from modeller.do_modal_analysis()</span>
 <span class="n">pl</span><span class="o">.</span><span class="n">plot_modes</span><span class="p">(</span>
-    <span class="n">modal_dict</span><span class="o">=</span><span class="n">modal_dict</span><span class="p">,</span>
-    <span class="n">num_modes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">node_list</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">node_list</span><span class="p">,</span>
+    <span class="n">mode_shape_vectors</span><span class="o">=</span><span class="n">mode_shapes</span><span class="p">,</span>
+    <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
+    <span class="n">export_path</span><span class="o">=</span><span class="s2">&quot;mode_shapes.png&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>

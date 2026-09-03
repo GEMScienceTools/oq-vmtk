@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="8.1. Initialisation" href="slf/init.html" />
-    <link rel="prev" title="7.11. Average Annual Loss" href="pos/calculate_average_annual_loss.html" /> 
+    <link rel="prev" title="7.9. Average Annual Risk Metrics" href="pos/calculate_risk.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -94,7 +94,10 @@
 consequence, and quantity data. SLFs link expected repair loss at a storey to the
 Engineering Demand Parameter (EDP). A Monte Carlo approach is used to sample damage
 states and associated repair costs across a user-defined inventory of damageable
-components.</p>
+components; the SLF itself is the empirical 16th/50th/84th-percentile storey loss
+ratio across those realisations — no parametric curve is fitted. An optional
+<code class="docutils literal notranslate"><span class="pre">correlation_tree</span></code> lets one component’s damage state force a minimum damage state
+on another (e.g. a partition wall and the door framed into it).</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="slf/init.html">8.1. Initialisation</a><ul>
@@ -127,7 +130,7 @@ and Earthquake Engineering, 2021. DOI: 10.7712/120121.8659.18567.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pos/calculate_average_annual_loss.html" class="btn btn-neutral float-left" title="7.11. Average Annual Loss" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pos/calculate_risk.html" class="btn btn-neutral float-left" title="7.9. Average Annual Risk Metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="slf/init.html" class="btn btn-neutral float-right" title="8.1. Initialisation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

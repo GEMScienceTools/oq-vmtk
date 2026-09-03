@@ -144,8 +144,7 @@ image has identical, deterministic pixel dimensions.</p>
 <li><p><strong>imt_label</strong> (<em>str</em>) – X-axis label (e.g., <code class="docutils literal notranslate"><span class="pre">'PGA</span> <span class="pre">[g]'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Sa(T1)</span> <span class="pre">[g]'</span></code>).</p></li>
 <li><p><strong>xlims</strong> (<em>tuple</em><em> of </em><em>float</em>) – <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> limits for the X-axis.</p></li>
 <li><p><strong>ylims</strong> (<em>tuple</em><em> of </em><em>float</em>) – <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> limits for the Y-axis.</p></li>
-<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Custom plot title. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a method-specific default
-is used.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Custom plot title. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no title is displayed.</p></li>
 <li><p><strong>cloud_method</strong> (<em>{'bootstrap'</em><em>, </em><em>'classical'}</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Selects the plotting style. When <code class="docutils literal notranslate"><span class="pre">None</span></code> (default), the
 value is read from
 <code class="docutils literal notranslate"><span class="pre">cloud_dict['fragility'].get('cloud_method',</span> <span class="pre">'bootstrap')</span></code>.</p></li>
@@ -173,7 +172,9 @@ The parent directory is created automatically if needed.</p></li>
 <span class="n">pl</span><span class="o">.</span><span class="n">plot_fragility_from_mca</span><span class="p">(</span>
     <span class="n">cloud_dict</span><span class="o">=</span><span class="n">cloud_dict</span><span class="p">,</span>
     <span class="n">imt_label</span><span class="o">=</span><span class="s2">&quot;Sa(T1) [g]&quot;</span><span class="p">,</span>
-    <span class="n">ds_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Slight&quot;</span><span class="p">,</span> <span class="s2">&quot;Moderate&quot;</span><span class="p">,</span> <span class="s2">&quot;Extensive&quot;</span><span class="p">,</span> <span class="s2">&quot;Complete&quot;</span><span class="p">],</span>
+    <span class="n">xlims</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span>
+    <span class="n">ylims</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Fragility Functions — MCA&quot;</span><span class="p">,</span>
     <span class="n">export_path</span><span class="o">=</span><span class="s2">&quot;fragility_mca.png&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>

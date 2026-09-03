@@ -1,15 +1,16 @@
 Model Calibration
 #################
 
-The ``calibration`` class transforms Single-Degree-of-Freedom (SDOF) spectral
-capacity parameters into Multi-Degree-of-Freedom (MDOF) storey force-deformation
-relationships. It handles building classification, mass and stiffness matrix
-assembly, eigenvalue-based modal analysis, period scaling, storey force-drift
-distribution, and optional OpenSees static pushover verification.
+The ``calibrate_model`` function transforms Single-Degree-of-Freedom (SDOF)
+spectral capacity parameters into Multi-Degree-of-Freedom (MDOF) storey
+force-deformation relationships. The first-mode shape is either an assumed
+power law (frame buildings up to 12 storeys) or the first eigenvector of a
+uniform tri-diagonal stiffness matrix (everything else), softened at the
+ground floor for soft-storey buildings. Only the first mode is used; no
+period-matching or OpenSees verification is performed.
 
 .. toctree::
 
-   cal/init
    cal/calibrate_model
 
 References

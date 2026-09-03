@@ -163,6 +163,7 @@ is ‘KrylovNewton’.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'spo_forces_spring'</span></code>: array, shape (TimeSteps × Springs) — spring shear forces.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'spo_idr'</span></code>: array, shape (TimeSteps × Storeys) — interstorey drift ratio history.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'spo_midr'</span></code>: array, shape (TimeSteps,) — maximum IDR across all storeys.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'conv_index'</span></code>: int — collapse/convergence status: 0 = success, -1 = failure (MinMax spring limit reached or non-convergence).</p></li>
 </ul>
 </p>
 </dd>
@@ -178,11 +179,13 @@ is ‘KrylovNewton’.</p></li>
 <span class="n">m</span><span class="o">.</span><span class="n">do_gravity_analysis</span><span class="p">()</span>
 <span class="n">periods</span><span class="p">,</span> <span class="n">mode_shapes</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">do_modal_analysis</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">spo_results</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">do_spo_analysis</span><span class="p">(</span>
+    <span class="n">ref_disp</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+    <span class="n">disp_scale_factor</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
     <span class="n">push_dir</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">target_disp</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
     <span class="n">phi</span><span class="o">=</span><span class="n">mode_shapes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
     <span class="n">num_steps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;conv_index = </span><span class="si">{</span><span class="n">spo_results</span><span class="p">[</span><span class="s1">&#39;conv_index&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># 0 = success, -1 = collapse</span>
 </pre></div>
 </div>
 </div>

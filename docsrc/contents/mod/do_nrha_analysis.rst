@@ -8,14 +8,15 @@ Nonlinear Time-History Analysis
 
    .. code-block:: python
 
-      import numpy as np
-
-      acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
       m.compile_model()
       m.do_gravity_analysis()
+      m.do_modal_analysis(num_modes=2)
       nrha_results = m.do_nrha_analysis(
-          acc=acc,
-          dt=0.005,
+          fnames=["openquake/vmtk/tests/test_data/acceleration.txt"],
+          dt_gm=0.005,
+          sf=9.81,
+          t_max=30.0,
+          dt_ansys=0.001,
           xi=0.05,
-          dc=0.10,
       )
+      conv_index = nrha_results[1]  # 0 = success, -1 = collapse
