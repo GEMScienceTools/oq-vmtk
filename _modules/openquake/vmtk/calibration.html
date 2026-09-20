@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openquake.vmtk.calibration &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">openquake.vmtk.calibration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openquake.vmtk.calibration</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">SDOF-to-MDOF calibration module.</span>
+
+<span class="sd">Transforms an SDOF spectral capacity curve ``(Sd, Sa)`` into per-storey</span>
+<span class="sd">force-drift backbones for a stick-and-mass MDOF model.</span>
+
+<span class="sd">The first-mode shape is either an assumed power law (frame buildings up</span>
+<span class="sd">to 12 storeys) or the first eigenvector of a uniform tri-diagonal</span>
+<span class="sd">stiffness matrix (everything else), softened at the ground floor for</span>
+<span class="sd">soft-storey buildings. Soft-storey buildings always use the eigenvector</span>
+<span class="sd">shape, regardless of ``is_frame``, so the ground-floor softening is never</span>
+<span class="sd">bypassed.</span>
+
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">eigh</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_inputs</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">is_sos</span><span class="p">,</span> <span class="n">is_frame</span><span class="p">,</span> <span class="n">storey_heights</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate calibrate_model's inputs, raising on the first problem found."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span> <span class="ow">or</span> <span class="n">nst</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'nst' must be a positive integer, got </span><span class="si">{</span><span class="n">nst</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+
+    <span class="n">sdof_capacity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">sdof_capacity</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">sdof_capacity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"'sdof_capacity' must have shape (n, 2) with columns [Sd, Sa]."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sdof_capacity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'sdof_capacity' must have at least 2 points."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">sdof_capacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'sdof_capacity' values must be non-negative."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_sos</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'is_sos' must be a bool, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">is_sos</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_frame</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'is_frame' must be a bool, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">is_frame</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">storey_heights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storey_heights</span><span class="p">,</span> <span class="s2">"__len__"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"'storey_heights' must be a list or array."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">storey_heights</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nst</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"'storey_heights' length (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">storey_heights</span><span class="p">)</span><span class="si">}</span><span class="s2">) "</span>
+                <span class="sa">f</span><span class="s2">"must match 'nst' (</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2">)."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">h</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">storey_heights</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All values in 'storey_heights' must be positive."</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dynamic_properties</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">is_sos</span><span class="p">,</span> <span class="n">is_frame</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    First-mode shape, floor masses and modal participation factor</span>
+<span class="sd">    for the MDOF stick model.</span>
+<span class="sd">    """</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nst</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">I</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.75</span>
+
+    <span class="k">if</span> <span class="n">is_frame</span> <span class="ow">and</span> <span class="n">nst</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_sos</span><span class="p">:</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([((</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">nst</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.6</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">K</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">is_sos</span><span class="p">:</span>
+            <span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.20</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">I</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">phi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Floor mass such that the assumed mode shape carries unit</span>
+    <span class="c1"># effective modal mass, consistent with the unit-mass SDOF</span>
+    <span class="c1"># capacity curve.</span>
+    <span class="n">mass</span> <span class="o">=</span> <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">I</span> <span class="o">@</span> <span class="n">phi</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">I</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">floor_masses</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">I</span><span class="p">)</span> <span class="o">*</span> <span class="n">mass</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">gamma_real</span> <span class="o">=</span> <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">I</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nst</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">phi</span> <span class="o">@</span> <span class="n">I</span> <span class="o">@</span> <span class="n">phi</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">phi</span><span class="p">,</span> <span class="n">floor_masses</span><span class="p">,</span> <span class="n">gamma_real</span>
+
+
+<div class="viewcode-block" id="calibrate_model">
+<a class="viewcode-back" href="../../../contents/cal/calibrate_model.html#openquake.vmtk.calibration.calibrate_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calibrate_model</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">is_sos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_frame</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">storey_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Calibrate MDOF storey force-drift backbones from an SDOF</span>
+<span class="sd">    spectral capacity curve.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nst : int</span>
+<span class="sd">        Number of storeys.</span>
+<span class="sd">    sdof_capacity : array-like</span>
+<span class="sd">        SDOF capacity array [Sd (m), Sa (g)], shape (n_points, 2).</span>
+<span class="sd">    is_sos : bool, optional</span>
+<span class="sd">        True for soft-storey buildings. Softens the ground-floor</span>
+<span class="sd">        stiffness used to derive the mode shape. Default False.</span>
+<span class="sd">    is_frame : bool, optional</span>
+<span class="sd">        True for moment/braced-frame buildings (nst &lt;= 12), which use</span>
+<span class="sd">        a power-law mode shape instead of the eigenvalue-derived one.</span>
+<span class="sd">        Ignored when is_sos is True: soft-storey buildings always use</span>
+<span class="sd">        the eigenvalue-derived shape, so the ground-floor softening is</span>
+<span class="sd">        never bypassed. Default False.</span>
+<span class="sd">    storey_heights : list of float, optional</span>
+<span class="sd">        Not used by the calibration; carried through to metadata for</span>
+<span class="sd">        callers that need it. Default None.</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Print a one-line summary if True. Default False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    floor_masses : list of float</span>
+<span class="sd">        MDOF floor masses.</span>
+<span class="sd">    storey_drifts : numpy.ndarray</span>
+<span class="sd">        Inter-storey drift capacities (m), shape (nst, n_points).</span>
+<span class="sd">    storey_forces : numpy.ndarray</span>
+<span class="sd">        Storey shear-force capacities (g x mass units), shape</span>
+<span class="sd">        (nst, n_points).</span>
+<span class="sd">    phi : numpy.ndarray</span>
+<span class="sd">        First mode shape (roof-normalised).</span>
+<span class="sd">    metadata : dict</span>
+<span class="sd">        gamma_real, is_sos, is_frame, storey_heights.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If nst, sdof_capacity, or storey_heights is malformed (see</span>
+<span class="sd">        above).</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If is_sos, is_frame, or storey_heights has the wrong type.</span>
+<span class="sd">    """</span>
+    <span class="n">_validate_inputs</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">is_sos</span><span class="p">,</span> <span class="n">is_frame</span><span class="p">,</span> <span class="n">storey_heights</span><span class="p">)</span>
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nst</span><span class="p">)</span>
+    <span class="n">sdof_capacity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sdof_capacity</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">Sd</span><span class="p">,</span> <span class="n">Sa</span> <span class="o">=</span> <span class="n">sdof_capacity</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sdof_capacity</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">n_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Sd</span><span class="p">)</span>
+
+    <span class="n">phi</span><span class="p">,</span> <span class="n">floor_masses</span><span class="p">,</span> <span class="n">gamma_real</span> <span class="o">=</span> <span class="n">_dynamic_properties</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">is_sos</span><span class="p">,</span> <span class="n">is_frame</span><span class="p">)</span>
+    <span class="n">flm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">floor_masses</span><span class="p">)</span>
+
+    <span class="n">storey_drifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">n_points</span><span class="p">))</span>
+    <span class="n">storey_forces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nst</span><span class="p">,</span> <span class="n">n_points</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nst</span><span class="p">):</span>
+        <span class="c1"># Storey shear = Sa x effective modal mass tributary to</span>
+        <span class="c1"># storeys i..roof (first-mode shear distribution).</span>
+        <span class="n">storey_forces</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">Sa</span> <span class="o">*</span> <span class="n">gamma_real</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span> <span class="o">*</span> <span class="n">flm</span><span class="p">[</span><span class="n">i</span><span class="p">:])</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">storey_drifts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">Sd</span> <span class="o">*</span> <span class="n">gamma_real</span> <span class="o">*</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Interstorey drift ratio relative to the first storey,</span>
+            <span class="c1"># from the mode-shape increment.</span>
+            <span class="n">drift_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">phi</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">storey_drifts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">storey_drifts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">drift_ratio</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"calibrate_model: nst=</span><span class="si">{</span><span class="n">nst</span><span class="si">}</span><span class="s2"> is_sos=</span><span class="si">{</span><span class="n">is_sos</span><span class="si">}</span><span class="s2"> "</span>
+              <span class="sa">f</span><span class="s2">"is_frame=</span><span class="si">{</span><span class="n">is_frame</span><span class="si">}</span><span class="s2"> gamma=</span><span class="si">{</span><span class="n">gamma_real</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'gamma_real'</span><span class="p">:</span> <span class="n">gamma_real</span><span class="p">,</span>
+        <span class="s1">'is_sos'</span><span class="p">:</span> <span class="n">is_sos</span><span class="p">,</span>
+        <span class="s1">'is_frame'</span><span class="p">:</span> <span class="n">is_frame</span><span class="p">,</span>
+        <span class="s1">'storey_heights'</span><span class="p">:</span> <span class="n">storey_heights</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">floor_masses</span><span class="p">,</span> <span class="n">storey_drifts</span><span class="p">,</span> <span class="n">storey_forces</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">metadata</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

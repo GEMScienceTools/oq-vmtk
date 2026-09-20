@@ -1,0 +1,195 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4. Intensity Measure Selection &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="4.1. Initialisation" href="ims/init.html" />
+    <link rel="prev" title="3.12. Orientation-Independent Spectral Acceleration (RotDxx)" href="imc/get_rotdxx.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Intensity Measure Selection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/init.html">4.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_efficiency_mca.html">4.2. Efficiency — Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_efficiency_ida.html">4.3. Efficiency — Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_proficiency_mca.html">4.4. Proficiency — Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_proficiency_ida.html">4.5. Proficiency — Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_rsm_mca.html">4.6. Relative Score Method — Modified Cloud Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_rsm_ida.html">4.7. Relative Score Method — Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_rsm_general.html">4.8. Relative Score Method — General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ims/compare_ims.html">4.9. IM Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">4.10. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Intensity Measure Selection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/ims.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="intensity-measure-selection">
+<h1><span class="section-number">4. </span>Intensity Measure Selection<a class="headerlink" href="#intensity-measure-selection" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">imselection</span></code> class evaluates and ranks intensity measures (IMs) using the
+information-theoretic framework of Ebrahimian &amp; Jalayer (2021). The central metric
+is the <strong>Relative Sufficiency Measure (RSM)</strong>, expressed in bits: a positive
+RSM(IM₂ vs IM₁) means IM₂ is the more sufficient IM. Two complementary metrics
+are also provided — efficiency (βD|IM) and proficiency (βIM|DCR=1). Both Modified
+Cloud Analysis (MCA) and Incremental Dynamic Analysis (IDA) workflows are supported.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ims/init.html">4.1. Initialisation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/init.html#openquake.vmtk.imselection.imselection.__init__"><code class="docutils literal notranslate"><span class="pre">imselection.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_efficiency_mca.html">4.2. Efficiency — Modified Cloud Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_efficiency_mca.html#openquake.vmtk.imselection.imselection.compute_efficiency_mca"><code class="docutils literal notranslate"><span class="pre">imselection.compute_efficiency_mca()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_efficiency_ida.html">4.3. Efficiency — Incremental Dynamic Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_efficiency_ida.html#openquake.vmtk.imselection.imselection.compute_efficiency_ida"><code class="docutils literal notranslate"><span class="pre">imselection.compute_efficiency_ida()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_proficiency_mca.html">4.4. Proficiency — Modified Cloud Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_proficiency_mca.html#openquake.vmtk.imselection.imselection.compute_proficiency_mca"><code class="docutils literal notranslate"><span class="pre">imselection.compute_proficiency_mca()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_proficiency_ida.html">4.5. Proficiency — Incremental Dynamic Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_proficiency_ida.html#openquake.vmtk.imselection.imselection.compute_proficiency_ida"><code class="docutils literal notranslate"><span class="pre">imselection.compute_proficiency_ida()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_rsm_mca.html">4.6. Relative Score Method — Modified Cloud Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_rsm_mca.html#openquake.vmtk.imselection.imselection.compute_rsm_mca"><code class="docutils literal notranslate"><span class="pre">imselection.compute_rsm_mca()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_rsm_ida.html">4.7. Relative Score Method — Incremental Dynamic Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_rsm_ida.html#openquake.vmtk.imselection.imselection.compute_rsm_ida"><code class="docutils literal notranslate"><span class="pre">imselection.compute_rsm_ida()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compute_rsm_general.html">4.8. Relative Score Method — General</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compute_rsm_general.html#openquake.vmtk.imselection.imselection.compute_rsm_general"><code class="docutils literal notranslate"><span class="pre">imselection.compute_rsm_general()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ims/compare_ims.html">4.9. IM Comparison</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ims/compare_ims.html#openquake.vmtk.imselection.imselection.compare_ims"><code class="docutils literal notranslate"><span class="pre">imselection.compare_ims()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="references">
+<h2><span class="section-number">4.10. </span>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Ebrahimian, H. and Jalayer, F. (2021). “Selection of seismic intensity measures for
+prescribed limit states using alternative nonlinear dynamic analysis methods”,
+<em>Earthquake Engineering and Structural Dynamics</em>, 50(5), 1235-1250.
+<a class="reference external" href="https://doi.org/10.1002/eqe.3393">https://doi.org/10.1002/eqe.3393</a></p></li>
+<li><p>Luco, N. and Cornell, C.A. (2007). “Structure-specific scalar intensity measures for
+near-source and ordinary earthquake ground motions.” <em>Earthquake Spectra</em>, 23(2), 357–392.</p></li>
+<li><p>Shome, N. and Cornell, C.A. (1999). “Probabilistic seismic demand analysis of nonlinear
+structures.” Report No. RMS-35, Stanford University, Stanford, CA.</p></li>
+<li><p>Padgett, J.E., Nielson, B.G., and DesRoches, R. (2008). “Selection of optimal intensity
+measures in probabilistic seismic demand models of highway bridge portfolios.”
+<em>Earthquake Engineering &amp; Structural Dynamics</em>, 37(5), 711–725.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="imc/get_rotdxx.html" class="btn btn-neutral float-left" title="3.12. Orientation-Independent Spectral Acceleration (RotDxx)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ims/init.html" class="btn btn-neutral float-right" title="4.1. Initialisation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

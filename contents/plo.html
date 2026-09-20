@@ -1,0 +1,192 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9. Visualisation &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="9.1. Modal Shapes" href="plo/plot_modes.html" />
+    <link rel="prev" title="8.2. SLF Generation" href="slf/generate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">9. Visualisation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_modes.html">9.1. Modal Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/animate_spo.html">9.2. Static Pushover Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/animate_cpo.html">9.3. Cyclic Pushover Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/animate_nrha.html">9.4. Nonlinear Time-History Animation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_mca_analysis.html">9.5. MCA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_ida_analysis.html">9.6. IDA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_msa_analysis.html">9.7. MSA Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_fragility_from_mca.html">9.8. Fragility Functions from MCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_fragility_from_ida.html">9.9. Fragility Functions from IDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_fragility_from_msa.html">9.10. Fragility Functions from MSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_slf_model.html">9.11. Storey Loss Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_vulnerability_function.html">9.12. Vulnerability Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">9. </span>Visualisation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contents/plo.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="visualisation">
+<h1><span class="section-number">9. </span>Visualisation<a class="headerlink" href="#visualisation" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">plotter</span></code> class creates publication-quality plots for all <code class="docutils literal notranslate"><span class="pre">oq-vmtk</span></code>
+analysis outputs. It covers modal shape plots, cloud/MCA scatter plots, IDA fan
+plots, MSA stripe plots, fragility curves, vulnerability functions, Storey Loss
+Function outputs, and animated NRHA responses. All plots share a consistent style
+(fonts, line widths, colour schemes) and can optionally be saved to disk.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_modes.html">9.1. Modal Shapes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_modes.html#openquake.vmtk.plotter.plotter.plot_modes"><code class="docutils literal notranslate"><span class="pre">plotter.plot_modes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/animate_spo.html">9.2. Static Pushover Animation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/animate_spo.html#openquake.vmtk.plotter.plotter.animate_spo"><code class="docutils literal notranslate"><span class="pre">plotter.animate_spo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/animate_cpo.html">9.3. Cyclic Pushover Animation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/animate_cpo.html#openquake.vmtk.plotter.plotter.animate_cpo"><code class="docutils literal notranslate"><span class="pre">plotter.animate_cpo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/animate_nrha.html">9.4. Nonlinear Time-History Animation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/animate_nrha.html#openquake.vmtk.plotter.plotter.animate_nrha"><code class="docutils literal notranslate"><span class="pre">plotter.animate_nrha()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_mca_analysis.html">9.5. MCA Results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_mca_analysis.html#openquake.vmtk.plotter.plotter.plot_mca_analysis"><code class="docutils literal notranslate"><span class="pre">plotter.plot_mca_analysis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_ida_analysis.html">9.6. IDA Results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_ida_analysis.html#openquake.vmtk.plotter.plotter.plot_ida_analysis"><code class="docutils literal notranslate"><span class="pre">plotter.plot_ida_analysis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_msa_analysis.html">9.7. MSA Results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_msa_analysis.html#openquake.vmtk.plotter.plotter.plot_msa_analysis"><code class="docutils literal notranslate"><span class="pre">plotter.plot_msa_analysis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_fragility_from_mca.html">9.8. Fragility Functions from MCA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_fragility_from_mca.html#openquake.vmtk.plotter.plotter.plot_fragility_from_mca"><code class="docutils literal notranslate"><span class="pre">plotter.plot_fragility_from_mca()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_fragility_from_ida.html">9.9. Fragility Functions from IDA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_fragility_from_ida.html#openquake.vmtk.plotter.plotter.plot_fragility_from_ida"><code class="docutils literal notranslate"><span class="pre">plotter.plot_fragility_from_ida()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_fragility_from_msa.html">9.10. Fragility Functions from MSA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_fragility_from_msa.html#openquake.vmtk.plotter.plotter.plot_fragility_from_msa"><code class="docutils literal notranslate"><span class="pre">plotter.plot_fragility_from_msa()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_slf_model.html">9.11. Storey Loss Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_slf_model.html#openquake.vmtk.plotter.plotter.plot_slf_model"><code class="docutils literal notranslate"><span class="pre">plotter.plot_slf_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plo/plot_vulnerability_function.html">9.12. Vulnerability Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plo/plot_vulnerability_function.html#openquake.vmtk.plotter.plotter.plot_vulnerability_function"><code class="docutils literal notranslate"><span class="pre">plotter.plot_vulnerability_function()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="slf/generate.html" class="btn btn-neutral float-left" title="8.2. SLF Generation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plo/plot_modes.html" class="btn btn-neutral float-right" title="9.1. Modal Shapes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
