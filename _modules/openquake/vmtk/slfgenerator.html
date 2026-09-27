@@ -1,0 +1,1097 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openquake.vmtk.slfgenerator &mdash; OpenQuake Vulnerability Modellers Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modellers Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/mod.html">6. Model Building and Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents/examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenQuake Vulnerability Modellers Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">openquake.vmtk.slfgenerator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openquake.vmtk.slfgenerator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Internal Pydantic validation models</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">component_data_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Represents a single row of component inventory data.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Component_ID : Optional[int]</span>
+<span class="sd">        Unique identifier for the component. Must be a positive integer.</span>
+<span class="sd">    Description : Optional[str]</span>
+<span class="sd">        Textual description of the component.</span>
+<span class="sd">    EDP : str</span>
+<span class="sd">        Engineering Demand Parameter (e.g., ``'psd'``, ``'pfa'``).</span>
+<span class="sd">    Typology : str</span>
+<span class="sd">        Component type (e.g., ``'s'`` structural, ``'ns'`` non-structural).</span>
+<span class="sd">    Performance_Group : Optional[int]</span>
+<span class="sd">        Classification group number.</span>
+<span class="sd">    Quantity : float</span>
+<span class="sd">        Number of units of this component present on the storey.</span>
+<span class="sd">    Damage_States : int</span>
+<span class="sd">        Number of defined damage states.</span>
+<span class="sd">    """</span>
+
+    <span class="n">Component_ID</span><span class="p">:</span>      <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"Component ID"</span><span class="p">)</span>
+    <span class="n">Description</span><span class="p">:</span>       <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">EDP</span><span class="p">:</span>                        <span class="nb">str</span>
+    <span class="n">Typology</span><span class="p">:</span>                   <span class="nb">str</span>
+    <span class="n">Performance_Group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"Performance Group"</span><span class="p">)</span>
+    <span class="n">Quantity</span><span class="p">:</span>                  <span class="nb">float</span>
+    <span class="n">Damage_States</span><span class="p">:</span>               <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"Damage States"</span><span class="p">)</span>
+
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">"Component_ID"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Component ID must be a positive integer"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span>
+
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">"Performance_Group"</span><span class="p">,</span> <span class="s2">"Component_ID"</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">allow_none</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">v</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">correlation_tree_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Tracks the dependency structure between components.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ID : int</span>
+<span class="sd">        Unique identifier for the correlation entry (must be positive).</span>
+<span class="sd">    dependent_on_item : str</span>
+<span class="sd">        Name of the item this component depends on.</span>
+<span class="sd">    """</span>
+
+    <span class="n">ID</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">dependent_on_item</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"DEPENDENT ON ITEM"</span><span class="p">)</span>
+
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">vid</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">vid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Component ID must be a positive integer"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vid</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">item_base</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Stores a dictionary of arrays for a single item.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    RootModel : Dict[str, np.ndarray]</span>
+<span class="sd">        Mapping of label → array.</span>
+<span class="sd">    """</span>
+
+    <span class="n">RootModel</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">items_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Collection of items keyed by integer ID.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    RootModel : Dict[int, item_base]</span>
+<span class="sd">        Mapping of item ID → :class:`item_base`.</span>
+<span class="sd">    """</span>
+
+    <span class="n">RootModel</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">item_base</span><span class="p">]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">fragility_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Holds EDP values and the associated item fragility data.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    EDP : np.ndarray</span>
+<span class="sd">        Engineering Demand Parameter values.</span>
+<span class="sd">    ITEMs : items_model</span>
+<span class="sd">        Fragility data for all items.</span>
+<span class="sd">    """</span>
+
+    <span class="n">EDP</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">ITEMs</span><span class="p">:</span> <span class="n">items_model</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ds_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Damage-state arrays nested by item ID and simulation index.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    RootModel : Dict[int, Dict[int, np.ndarray]]</span>
+<span class="sd">        ``{item_id: {simulation_index: damage_state_array}}``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">RootModel</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cost_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Cost arrays keyed by component ID.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    RootModel : Dict[int, np.ndarray]</span>
+<span class="sd">        Mapping of component ID → cost array.</span>
+<span class="sd">    """</span>
+
+    <span class="n">RootModel</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">simulation_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Per-simulation repair costs keyed by component ID.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    RootModel : Dict[int, cost_model]</span>
+<span class="sd">        Mapping of component ID → :class:`cost_model`.</span>
+<span class="sd">    """</span>
+
+    <span class="n">RootModel</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">cost_model</span><span class="p">]</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">loss_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Absolute and normalised loss results per component.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loss : Dict[int, Dict[Union[int, str], float]]</span>
+<span class="sd">        Absolute loss values keyed by component ID and damage state.</span>
+<span class="sd">    loss_ratio : Dict[int, Dict[Union[int, str], float]]</span>
+<span class="sd">        Normalised loss ratios keyed by component ID and damage state.</span>
+<span class="sd">    """</span>
+
+    <span class="n">loss</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span>
+    <span class="n">loss_ratio</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">slf_model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Storey Loss Function output record.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    directionality : Optional[int]</span>
+<span class="sd">        Analysis directionality flag.</span>
+<span class="sd">    component_type : str</span>
+<span class="sd">        Component type label (e.g., ``'PSD, NS'``).</span>
+<span class="sd">    storey : Optional[Union[int, List[int]]]</span>
+<span class="sd">        Storey level(s) covered by this SLF.</span>
+<span class="sd">    edp : str</span>
+<span class="sd">        Engineering Demand Parameter label.</span>
+<span class="sd">    edp_range : List[float]</span>
+<span class="sd">        EDP values over which the SLF is defined.</span>
+<span class="sd">    slf_16th : List[float]</span>
+<span class="sd">        Empirical 16th-percentile Storey Loss Function values (loss ratio).</span>
+<span class="sd">    slf : List[float]</span>
+<span class="sd">        Empirical median (50th-percentile) Storey Loss Function values</span>
+<span class="sd">        (loss ratio) -- the primary SLF curve.</span>
+<span class="sd">    slf_84th : List[float]</span>
+<span class="sd">        Empirical 84th-percentile Storey Loss Function values (loss ratio).</span>
+<span class="sd">    """</span>
+
+    <span class="n">directionality</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>  <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"Directionality"</span><span class="p">)</span>
+    <span class="n">component_type</span><span class="p">:</span> <span class="nb">str</span>             <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"Component-type"</span><span class="p">)</span>
+    <span class="n">storey</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">"Storey"</span><span class="p">)</span>
+    <span class="n">edp</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">edp_range</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">slf_16th</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">slf</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">slf_84th</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Main class</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">slfgenerator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Storey Loss Function (SLF) generator for storey-based loss assessment.</span>
+
+<span class="sd">    Automates the generation of Storey Loss Functions using fragility,</span>
+<span class="sd">    consequence, and quantity data via a probabilistic Monte-Carlo approach.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    1. Ramirez and Miranda (2009). *Building-Specific Loss Estimation Methods</span>
+<span class="sd">       &amp; Tools for Simplified PBEE*. John A. Blume EEC, Stanford University.</span>
+<span class="sd">    2. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Story loss functions</span>
+<span class="sd">       for seismic design and assessment. *Earthquake Spectra*, 37(4):</span>
+<span class="sd">       2813–2839. https://doi.org/10.1177/87552930211023523</span>
+<span class="sd">    3. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Development of a</span>
+<span class="sd">       Python-Based Storey Loss Function Generator. *COMPDYN 2021*.</span>
+<span class="sd">       https://doi.org/10.7712/120121.8659.18567</span>
+
+<span class="sd">    Acknowledgements</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Based on the original work by Dr. Davit Shahnazaryan:</span>
+<span class="sd">    https://github.com/davitshahnazaryan3/SLFGenerator</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="slfgenerator.__init__">
+<a class="viewcode-back" href="../../../contents/slf/init.html#openquake.vmtk.slfgenerator.slfgenerator.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">component_data</span><span class="p">:</span> <span class="n">component_data_model</span><span class="p">,</span>
+                 <span class="n">edp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">correlation_tree</span><span class="p">:</span> <span class="n">correlation_tree_model</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">typology</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">edp_range</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">edp_bin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">grouping_flag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">conversion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">realizations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+                 <span class="n">replacement_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">storey</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">directionality</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialise the SLF generator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        component_data : pandas.DataFrame</span>
+<span class="sd">            Inventory of component data (loaded from CSV).</span>
+<span class="sd">        edp : str</span>
+<span class="sd">            Engineering Demand Parameter; ``'PSD'`` (Peak Storey Drift) or</span>
+<span class="sd">            ``'PFA'`` (Peak Floor Acceleration).</span>
+<span class="sd">        correlation_tree : pandas.DataFrame, optional</span>
+<span class="sd">            Correlation tree defining component dependencies. Default ``None``.</span>
+<span class="sd">        typology : List[str], optional</span>
+<span class="sd">            Component typologies to include (``'ns'`` or ``'s'``).</span>
+<span class="sd">            Default ``None``.</span>
+<span class="sd">        edp_range : array-like, optional</span>
+<span class="sd">            Custom EDP value range. If ``None``, defaults are used.</span>
+<span class="sd">        edp_bin : float, optional</span>
+<span class="sd">            EDP bin size. If ``None``, a type-specific default is used.</span>
+<span class="sd">        grouping_flag : bool, optional</span>
+<span class="sd">            Whether to group components by performance group. Default ``True``.</span>
+<span class="sd">        conversion : float, optional</span>
+<span class="sd">            Cost conversion factor. Default ``1.0``.</span>
+<span class="sd">        realizations : int, optional</span>
+<span class="sd">            Number of Monte Carlo realizations. Default ``20``.</span>
+<span class="sd">        replacement_cost : float, optional</span>
+<span class="sd">            Normalising replacement cost. Default ``1.0``.</span>
+<span class="sd">        storey : int or List[int], optional</span>
+<span class="sd">            Storey level(s) to include. Default ``None``.</span>
+<span class="sd">        directionality : int, optional</span>
+<span class="sd">            Analysis directionality flag. Default ``None``.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edp</span> <span class="o">=</span> <span class="n">edp</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">typology</span> <span class="o">=</span> <span class="n">typology</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edp_bin</span> <span class="o">=</span> <span class="n">edp_bin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span> <span class="o">=</span> <span class="n">edp_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grouping_flag</span> <span class="o">=</span> <span class="n">grouping_flag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conversion</span> <span class="o">=</span> <span class="n">conversion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span> <span class="o">=</span> <span class="n">realizations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replacement_cost</span> <span class="o">=</span> <span class="n">replacement_cost</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storey</span> <span class="o">=</span> <span class="n">storey</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directionality</span> <span class="o">=</span> <span class="n">directionality</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span> <span class="o">=</span> <span class="n">correlation_tree</span>
+
+        <span class="c1"># Normalise all string entries to lowercase</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span> <span class="o">=</span> <span class="n">component_data</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">s</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Set up EDP range and parse component inventory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_define_edp_range</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_component_data</span><span class="p">()</span>
+
+        <span class="c1"># Process optional correlation tree</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">s</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_correlation_tree</span><span class="p">()</span>
+
+        <span class="c1"># Group components by performance group if requested</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grouping_flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_group_components</span><span class="p">()</span></div>
+
+
+    <span class="c1"># -----------------------------------------------------------------------</span>
+    <span class="c1"># Private helpers</span>
+    <span class="c1"># -----------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_define_edp_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Set up the EDP discretisation range.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``edp`` is not ``'psd'``, ``'idr'``, or ``'pfa'``.</span>
+<span class="sd">        """</span>
+        <span class="n">edp_defaults</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"idr"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="s2">"psd"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="s2">"pfa"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span>      <span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">edp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">edp_defaults</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Incorrect EDP provided — must be 'psd', 'idr', or 'pfa'."</span>
+            <span class="p">)</span>
+
+        <span class="n">default_bin</span><span class="p">,</span> <span class="n">range_start</span><span class="p">,</span> <span class="n">range_end</span> <span class="o">=</span> <span class="n">edp_defaults</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">edp</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">edp_bin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edp_bin</span> <span class="o">=</span> <span class="n">default_bin</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="n">range_start</span><span class="p">,</span> <span class="n">range_end</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">edp_bin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">edp_bin</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-20</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_component_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Parse and validate the component inventory DataFrame.</span>
+
+<span class="sd">        Missing ``Component ID`` values are filled with sequential integers;</span>
+<span class="sd">        missing ``Description`` values default to ``'B'``; missing values in</span>
+<span class="sd">        all other columns (except ``Performance Group`` and ``Typology``) are</span>
+<span class="sd">        set to ``0``.</span>
+
+<span class="sd">        Builds ``self.id_to_pos``, the sole mapping from a component's real</span>
+<span class="sd">        ``Component ID`` to its row position in ``self.component_data``.</span>
+<span class="sd">        Every other method identifies components by their actual ID (not</span>
+<span class="sd">        row position) and consults this map only where it needs to index</span>
+<span class="sd">        into a positional array or ``.iloc``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If, after auto-assigning missing IDs, ``Component ID`` contains</span>
+<span class="sd">            duplicate values.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_component_data_schema</span><span class="p">()</span>
+
+        <span class="c1"># Fill missing 'Best Fit' columns with 'normal'</span>
+        <span class="n">best_fit_cols</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"Best Fit"</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="n">best_fit_cols</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="n">best_fit_cols</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">"normal"</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Auto-assign missing component IDs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int"</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Description"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Description"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">"B"</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Fill remaining columns (excluding categorical ones) with 0</span>
+        <span class="n">exclude_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Performance Group"</span><span class="p">,</span> <span class="s2">"Typology"</span><span class="p">]</span>
+        <span class="n">cols_to_fill</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">exclude_cols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="n">cols_to_fill</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="n">cols_to_fill</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+            <span class="n">dupes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">cid</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">ids</span> <span class="k">if</span> <span class="n">ids</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">})</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Duplicate 'Component ID' value(s) after auto-assigning "</span>
+                <span class="sa">f</span><span class="s2">"missing IDs: </span><span class="si">{</span><span class="n">dupes</span><span class="si">}</span><span class="s2">. Provide explicit, unique Component "</span>
+                <span class="s2">"ID values for every row, or leave them all blank to have "</span>
+                <span class="s2">"1..n auto-assigned."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id_to_pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">cid</span><span class="p">:</span> <span class="n">pos</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">cid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids</span><span class="p">)}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_group_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Partition components into performance groups.</span>
+
+<span class="sd">        Groups are formed by ``(EDP, Typology)`` pairs, giving three standard</span>
+<span class="sd">        buckets: ``'PSD, S'``, ``'PSD, NS'``, and ``'PFA, NS'``.  If explicit</span>
+<span class="sd">        ``Performance Group`` values are present they override this default</span>
+<span class="sd">        grouping.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Performance Group"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Performance Group"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Typology"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Typology"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">"-1"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">grouping_flag</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"EDP"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">component_groups</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">}</span>
+            <span class="k">return</span>
+
+        <span class="n">edp_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"EDP"</span><span class="p">,</span> <span class="s2">"Typology"</span><span class="p">])</span>
+
+        <span class="n">psd_s</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">edp_groups</span><span class="o">.</span><span class="n">get_group</span><span class="p">((</span><span class="s2">"psd"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">))</span>
+            <span class="k">if</span> <span class="p">(</span><span class="s2">"psd"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edp_groups</span><span class="o">.</span><span class="n">groups</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">psd_ns</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">edp_groups</span><span class="o">.</span><span class="n">get_group</span><span class="p">((</span><span class="s2">"psd"</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">))</span>
+            <span class="k">if</span> <span class="p">(</span><span class="s2">"psd"</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edp_groups</span><span class="o">.</span><span class="n">groups</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">pfa_ns</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">edp_groups</span><span class="o">.</span><span class="n">get_group</span><span class="p">((</span><span class="s2">"pfa"</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">))</span>
+            <span class="k">if</span> <span class="p">(</span><span class="s2">"pfa"</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edp_groups</span><span class="o">.</span><span class="n">groups</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_groups</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">{</span>
+                <span class="s2">"PSD, S"</span><span class="p">:</span>  <span class="n">psd_s</span><span class="p">,</span>
+                <span class="s2">"PSD, NS"</span><span class="p">:</span> <span class="n">psd_ns</span><span class="p">,</span>
+                <span class="s2">"PFA, NS"</span><span class="p">:</span> <span class="n">pfa_ns</span><span class="p">,</span>
+            <span class="p">}</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Override with explicit performance groups if more than one exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Performance Group"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">component_groups</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">group</span><span class="p">:</span> <span class="n">df</span>
+                <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"Performance Group"</span><span class="p">)</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_correlation_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build the internal correlation matrix from the correlation tree.</span>
+
+<span class="sd">        The tree is joined to ``component_data`` by ``Component ID`` (not</span>
+<span class="sd">        row order), via ``correlation_tree.set_index('ID').loc[component_ids]``</span>
+<span class="sd">        -- so the two DataFrames may list components in different orders.</span>
+
+<span class="sd">        The matrix has shape</span>
+<span class="sd">        ``(n_components, n_damage_states + 1)`` where the first column stores</span>
+<span class="sd">        the causation component ID and the remaining columns store the minimum</span>
+<span class="sd">        damage state required on the causation component before the dependent</span>
+<span class="sd">        component sustains damage. Row ``i`` of the matrix corresponds to</span>
+<span class="sd">        the component whose ID is ``self.correlation_item_ids[i]``, which is</span>
+<span class="sd">        also persisted for use by :meth:`validate_ds_dependence`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Both the component inventory and the correlation tree are matched by</span>
+<span class="sd">        ``Component ID``/``ID`` -- every ``Component ID`` in the inventory</span>
+<span class="sd">        must have a matching row in the tree (enforced by</span>
+<span class="sd">        :meth:`_validate_correlation_tree_schema`, which also checks that no</span>
+<span class="sd">        minimum DS assigned in the tree exceeds the DS range actually</span>
+<span class="sd">        defined for that component).</span>
+<span class="sd">        """</span>
+        <span class="n">damage_states</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Damage States"</span><span class="p">])</span>
+        <span class="n">component_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_correlation_tree_schema</span><span class="p">(</span><span class="n">damage_states</span><span class="p">,</span> <span class="n">component_ids</span><span class="p">)</span>
+
+        <span class="n">tree_by_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">)</span>
+        <span class="n">correlation_data</span> <span class="o">=</span> <span class="n">tree_by_id</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">component_ids</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+        <span class="c1"># Row i now corresponds to component_data row i by Component ID,</span>
+        <span class="c1"># regardless of the correlation tree's own row order.</span>
+
+        <span class="n">item_ids</span> <span class="o">=</span> <span class="n">correlation_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correlation_item_ids</span> <span class="o">=</span> <span class="n">item_ids</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">correlation_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">correlation_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">correlation_values</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">correlation_values</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"independent"</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="n">item_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">item_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span>
+                        <span class="s2">"independent"</span><span class="p">,</span> <span class="s2">"undamaged"</span>
+                    <span class="p">}:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_component_data_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate required columns and their counts in the component data.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If duplicate ``Component ID`` values are found, or if the counts of</span>
+<span class="sd">            ``Median``, ``Total Dispersion``, ``Cost``, ``Cost Dispersion``,</span>
+<span class="sd">            and ``Best Fit`` columns are not equal.</span>
+<span class="sd">        """</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">component_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">"records"</span><span class="p">)</span>
+
+        <span class="n">id_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">component_data</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">component_data_model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">Component_ID</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">Component_ID</span> <span class="ow">in</span> <span class="n">id_set</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Duplicate Component ID: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">Component_ID</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">id_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Component_ID</span><span class="p">)</span>
+
+        <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"Median"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"Total Dispersion"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"Cost"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"Cost Dispersion"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"Best Fit"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                    <span class="n">counts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">expected</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s2">"Median"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"Column counts must be equal for 'Median', "</span>
+                    <span class="s2">"'Total Dispersion', 'Cost', 'Cost Dispersion', "</span>
+                    <span class="s2">"and 'Best Fit'."</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_correlation_tree_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">damage_states</span><span class="p">,</span> <span class="n">component_ids</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate the correlation tree against the component inventory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        damage_states : list of int</span>
+<span class="sd">            Number of damage states for each component, in the same row</span>
+<span class="sd">            order as ``component_ids``.</span>
+<span class="sd">        component_ids : list of int</span>
+<span class="sd">            ``component_data['Component ID']`` values, in row order.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            On duplicate IDs, insufficient columns, DS range violations, or</span>
+<span class="sd">            a component inventory ID missing from the correlation tree.</span>
+<span class="sd">        """</span>
+        <span class="n">corr_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">"records"</span><span class="p">)</span>
+
+        <span class="n">id_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">corr_dict</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">correlation_tree_model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ID</span> <span class="ow">in</span> <span class="n">id_set</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Duplicate ITEM: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">ID</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">id_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">cid</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">component_ids</span> <span class="k">if</span> <span class="n">cid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">id_set</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The correlation tree is missing a row for Component "</span>
+                <span class="sa">f</span><span class="s2">"ID(s) </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> present in the component inventory. "</span>
+                <span class="s2">"Every component needs a correlation-tree row (mark it "</span>
+                <span class="s2">"'Independent' if it has no forced dependency)."</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">damage_states</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Unexpected (fewer) number of features in the correlations "</span>
+                <span class="s2">"DataFrame."</span>
+            <span class="p">)</span>
+
+        <span class="n">tree_by_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">n_ds</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">component_ids</span><span class="p">,</span> <span class="n">damage_states</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">tree_by_id</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">tree_by_id</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">feature</span><span class="p">])</span> <span class="o">==</span> <span class="sa">f</span><span class="s2">"DS</span><span class="si">{</span><span class="n">n_ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">"MIN DS in the correlation tree must not exceed the "</span>
+                        <span class="s2">"possible DS defined for the element."</span>
+                    <span class="p">)</span>
+
+    <span class="c1"># -----------------------------------------------------------------------</span>
+    <span class="c1"># Public methods</span>
+    <span class="c1"># -----------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fragility_function</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Derive lognormal fragility functions for all components.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fragilities : dict</span>
+<span class="sd">            Keys ``'EDP'`` (np.ndarray) and ``'IDs'`` (nested dict mapping</span>
+<span class="sd">            Component ID → DS label → exceedance probability array).</span>
+<span class="sd">        means_cost : np.ndarray</span>
+<span class="sd">            Shape ``(n_components, n_ds)`` — mean repair costs per DS.</span>
+<span class="sd">        covs_cost : np.ndarray</span>
+<span class="sd">            Shape ``(n_components, n_ds)`` — cost CoV per DS.</span>
+<span class="sd">        """</span>
+        <span class="n">n_ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"Median"</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">"object"</span><span class="p">])</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+            <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">,</span> <span class="s2">"Performance Group"</span><span class="p">,</span> <span class="s2">"Quantity"</span><span class="p">,</span>
+                    <span class="s2">"Damage States"</span><span class="p">],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">component_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+        <span class="n">num_components</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">means_fr</span>  <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_ds</span><span class="p">]</span>
+        <span class="n">covs_fr</span>   <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="n">n_ds</span><span class="p">:</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_ds</span><span class="p">]</span>
+        <span class="n">means_cost</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_ds</span><span class="p">:</span><span class="mi">3</span> <span class="o">*</span> <span class="n">n_ds</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversion</span>
+        <span class="n">covs_cost</span>  <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">n_ds</span><span class="p">:</span><span class="mi">4</span> <span class="o">*</span> <span class="n">n_ds</span><span class="p">]</span>
+
+        <span class="n">fragilities</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"EDP"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">,</span> <span class="s2">"IDs"</span><span class="p">:</span> <span class="p">{}}</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_components</span><span class="p">):</span>
+            <span class="n">cid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">component_ids</span><span class="p">[</span><span class="n">pos</span><span class="p">])</span>
+            <span class="n">fragilities</span><span class="p">[</span><span class="s2">"IDs"</span><span class="p">][</span><span class="n">cid</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">):</span>
+                <span class="n">mean_val</span> <span class="o">=</span> <span class="n">means_fr</span><span class="p">[</span><span class="n">pos</span><span class="p">,</span> <span class="n">ds</span><span class="p">]</span>
+                <span class="n">cov_val</span>  <span class="o">=</span> <span class="n">covs_fr</span><span class="p">[</span><span class="n">pos</span><span class="p">,</span> <span class="n">ds</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">mean_val</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">fragilities</span><span class="p">[</span><span class="s2">"IDs"</span><span class="p">][</span><span class="n">cid</span><span class="p">][</span><span class="sa">f</span><span class="s2">"DS</span><span class="si">{</span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log_std</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">cov_val</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">log_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mean_val</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">log_std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="n">curve</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span> <span class="o">/</span> <span class="n">log_mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">log_std</span>
+                    <span class="p">)</span>
+                    <span class="n">fragilities</span><span class="p">[</span><span class="s2">"IDs"</span><span class="p">][</span><span class="n">cid</span><span class="p">][</span><span class="sa">f</span><span class="s2">"DS</span><span class="si">{</span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fragilities</span><span class="p">,</span> <span class="n">means_cost</span><span class="p">,</span> <span class="n">covs_cost</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_monte_carlo_simulations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragilities</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Sample damage states via Monte Carlo for each EDP level.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragilities : dict</span>
+<span class="sd">            Fragility functions as returned by :meth:`fragility_function`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            ``{item_id: {realization_index: damage_state_array}}``.</span>
+<span class="sd">        """</span>
+        <span class="n">n_ds</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">fragilities</span><span class="p">[</span><span class="s2">"IDs"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+        <span class="n">ds_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Pre-generate all random numbers at once</span>
+        <span class="n">random_arrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">))</span>
+
+        <span class="n">damage_state</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">frag</span> <span class="ow">in</span> <span class="n">fragilities</span><span class="p">[</span><span class="s2">"IDs"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">damage_state</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
+                <span class="n">rnd</span> <span class="o">=</span> <span class="n">random_arrays</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                <span class="n">damage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ds</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">y1</span> <span class="o">=</span> <span class="n">frag</span><span class="p">[</span><span class="sa">f</span><span class="s2">"DS</span><span class="si">{</span><span class="n">ds</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">ds</span> <span class="o">==</span> <span class="n">n_ds</span><span class="p">:</span>
+                        <span class="n">damage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rnd</span> <span class="o">&lt;=</span> <span class="n">y1</span><span class="p">,</span> <span class="n">ds_range</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">damage</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">y2</span> <span class="o">=</span> <span class="n">frag</span><span class="p">[</span><span class="sa">f</span><span class="s2">"DS</span><span class="si">{</span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+                        <span class="n">damage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                            <span class="p">(</span><span class="n">rnd</span> <span class="o">&gt;=</span> <span class="n">y2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">rnd</span> <span class="o">&lt;</span> <span class="n">y1</span><span class="p">),</span> <span class="n">ds_range</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">damage</span>
+                        <span class="p">)</span>
+
+                <span class="n">damage_state</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">damage</span>
+
+        <span class="k">return</span> <span class="n">damage_state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_ds_dependence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">damage_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Enforce correlated damage states for dependent components.</span>
+
+<span class="sd">        If no ``correlation_tree`` was provided the damage states are returned</span>
+<span class="sd">        unchanged.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        damage_state : dict</span>
+<span class="sd">            Sampled damage states as returned by</span>
+<span class="sd">            :meth:`do_monte_carlo_simulations`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Updated damage states with dependency constraints applied.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_tree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">damage_state</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">own_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_item_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">own_id</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">continue</span>  <span class="c1"># Independent component — skip</span>
+
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>   <span class="c1"># causation component ID</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">own_id</span>                    <span class="c1"># dependent component ID (from the tree)</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
+                <span class="n">causation_ds</span>  <span class="o">=</span> <span class="n">damage_state</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+                <span class="n">correlated_ds</span> <span class="o">=</span> <span class="n">damage_state</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">causation_ds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">temp</span><span class="p">[</span><span class="n">causation_ds</span> <span class="o">==</span> <span class="n">ds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ds</span><span class="p">]</span>
+
+                <span class="n">damage_state</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">correlated_ds</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">damage_state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_costs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">damage_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                        <span class="n">means_cost</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                        <span class="n">covs_cost</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Evaluate repair costs for each component at every EDP level.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        damage_state : dict</span>
+<span class="sd">            Sampled damage states from :meth:`do_monte_carlo_simulations`.</span>
+<span class="sd">        means_cost : np.ndarray</span>
+<span class="sd">            Shape ``(n_components, n_ds)`` — mean cost per DS.</span>
+<span class="sd">        covs_cost : np.ndarray</span>
+<span class="sd">            Shape ``(n_components, n_ds)`` — cost CoV per DS.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        total_loss_storey : dict</span>
+<span class="sd">            ``{realization: loss_array}`` — absolute storey loss.</span>
+<span class="sd">        total_loss_storey_ratio : dict</span>
+<span class="sd">            ``{realization: loss_ratio_array}`` — storey loss normalised by</span>
+<span class="sd">            replacement cost.</span>
+<span class="sd">        repair_cost : dict</span>
+<span class="sd">            ``{item_id: {realization: cost_array}}`` — per-component costs.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``replacement_cost`` is zero or ``None``.</span>
+<span class="sd">        """</span>
+        <span class="n">num_ds</span> <span class="o">=</span> <span class="n">means_cost</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">quantities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="p">[</span><span class="s2">"Quantity"</span><span class="p">]</span>
+
+        <span class="n">repair_cost</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">damage_state</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_pos</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+            <span class="n">repair_cost</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_ds</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">ds</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">repair_cost</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                            <span class="n">damage_state</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">best_fit</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">component_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span>
+                                <span class="sa">f</span><span class="s2">"DS</span><span class="si">{</span><span class="n">ds</span><span class="si">}</span><span class="s2">, Best Fit"</span>
+                            <span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                        <span class="p">)</span>
+                        <span class="n">mu</span>  <span class="o">=</span> <span class="n">means_cost</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="n">ds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                        <span class="n">cov</span> <span class="o">=</span> <span class="n">covs_cost</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="n">ds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                        <span class="n">idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">damage_state</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="n">ds</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">n_repair</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">n_repair</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">best_fit</span> <span class="o">==</span> <span class="s2">"lognormal"</span><span class="p">:</span>
+                                <span class="c1"># Lognormal is always positive — sample directly,</span>
+                                <span class="c1"># no rejection loop needed.</span>
+                                <span class="n">std_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">cov</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                                <span class="n">m_log</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">std_log</span> <span class="o">**</span> <span class="mi">2</span>
+                                <span class="n">a_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">lognormal</span><span class="p">(</span>
+                                    <span class="n">m_log</span><span class="p">,</span> <span class="n">std_log</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_repair</span>
+                                <span class="p">)</span>
+                            <span class="k">elif</span> <span class="n">cov</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="c1"># Normal truncated at 0 -- same distribution as</span>
+                                <span class="c1"># "resample until positive", but no unbounded</span>
+                                <span class="c1"># rejection loop (which could hang if cov == 0</span>
+                                <span class="c1"># and mu &lt;= 0, since every draw would then be</span>
+                                <span class="c1"># the same non-positive value). Drawn in one</span>
+                                <span class="c1"># batched call per (component, realization, DS)</span>
+                                <span class="c1"># rather than one at a time -- scipy's rv_continuous</span>
+                                <span class="c1"># machinery has substantial per-call overhead.</span>
+                                <span class="n">a_std</span> <span class="o">=</span> <span class="n">cov</span> <span class="o">*</span> <span class="n">mu</span>
+                                <span class="n">a_vals</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">truncnorm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
+                                    <span class="p">(</span><span class="mi">0</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">a_std</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                    <span class="n">loc</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">a_std</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_repair</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">a_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_repair</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span>
+
+                            <span class="n">repair_cost</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">][</span><span class="n">idx_list</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_vals</span>
+
+        <span class="c1"># Aggregate to storey-level totals</span>
+        <span class="n">total_repair_cost</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">item</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">n</span><span class="p">:</span> <span class="n">repair_cost</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">quantities</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id_to_pos</span><span class="p">[</span><span class="n">item</span><span class="p">]]</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">damage_state</span>
+        <span class="p">}</span>
+
+        <span class="n">total_loss_storey</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
+            <span class="n">total_loss_storey</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">total_repair_cost</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">damage_state</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">replacement_cost</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"replacement_cost must be a non-zero positive value."</span>
+            <span class="p">)</span>
+
+        <span class="n">total_loss_storey_ratio</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">n</span><span class="p">:</span> <span class="n">total_loss_storey</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">replacement_cost</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">total_loss_storey</span><span class="p">,</span> <span class="n">total_loss_storey_ratio</span><span class="p">,</span> <span class="n">repair_cost</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">slf_16th</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                         <span class="n">slf_median</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                         <span class="n">slf_84th</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                         <span class="n">typology</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build the SLF output record for a performance group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        slf_16th, slf_median, slf_84th : np.ndarray</span>
+<span class="sd">            Empirical 16th/50th/84th percentile of the storey loss RATIO,</span>
+<span class="sd">            evaluated at every point in ``self.edp_range``.</span>
+<span class="sd">        typology : str, optional</span>
+<span class="sd">            Component type label (e.g. ``'PSD, NS'``). Default ``None``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            SLF record with keys ``'Directionality'``, ``'Component-type'``,</span>
+<span class="sd">            ``'Storey'``, ``'edp'``, ``'edp_range'``, ``'slf_16th'``,</span>
+<span class="sd">            ``'slf'`` (the empirical median -- the primary SLF curve), and</span>
+<span class="sd">            ``'slf_84th'``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"Directionality"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">directionality</span><span class="p">,</span>
+            <span class="s2">"Component-type"</span><span class="p">:</span> <span class="n">typology</span><span class="p">,</span>
+            <span class="s2">"Storey"</span><span class="p">:</span>         <span class="bp">self</span><span class="o">.</span><span class="n">storey</span><span class="p">,</span>
+            <span class="s2">"edp"</span><span class="p">:</span>            <span class="bp">self</span><span class="o">.</span><span class="n">edp</span><span class="p">,</span>
+            <span class="s2">"edp_range"</span><span class="p">:</span>      <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edp_range</span><span class="p">),</span>
+            <span class="s2">"slf_16th"</span><span class="p">:</span>       <span class="nb">list</span><span class="p">(</span><span class="n">slf_16th</span><span class="p">),</span>
+            <span class="s2">"slf"</span><span class="p">:</span>            <span class="nb">list</span><span class="p">(</span><span class="n">slf_median</span><span class="p">),</span>
+            <span class="s2">"slf_84th"</span><span class="p">:</span>       <span class="nb">list</span><span class="p">(</span><span class="n">slf_84th</span><span class="p">),</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="slfgenerator.generate">
+<a class="viewcode-back" href="../../../contents/slf/generate.html#openquake.vmtk.slfgenerator.slfgenerator.generate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Generate Storey Loss Functions for all performance groups.</span>
+
+<span class="sd">        Orchestrates the full SLF pipeline:</span>
+
+<span class="sd">        1. Compute component fragility and consequence functions.</span>
+<span class="sd">        2. Sample damage states via Monte Carlo simulation.</span>
+<span class="sd">        3. Enforce correlated damage state constraints.</span>
+<span class="sd">        4. Calculate repair costs per group.</span>
+<span class="sd">        5. Compute the empirical 16th/50th/84th percentile of the storey</span>
+<span class="sd">           loss ratio across all Monte Carlo realizations -- this IS the</span>
+<span class="sd">           Storey Loss Function. No parametric curve is fitted to it.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            ``{group_label: slf_dict}`` -- one SLF record per performance</span>
+<span class="sd">            group, with ``'slf_16th'``, ``'slf'`` (median), and</span>
+<span class="sd">            ``'slf_84th'`` giving the empirical percentiles of the storey</span>
+<span class="sd">            loss ratio vs. ``'edp_range'``.</span>
+<span class="sd">        cache : dict</span>
+<span class="sd">            Intermediate data for each group: fragilities, raw</span>
+<span class="sd">            per-realization losses (both absolute ``'total_loss_storey'``</span>
+<span class="sd">            and ratio ``'total_loss_storey_ratio'`` units), repair costs,</span>
+<span class="sd">            the group-sliced damage states, and the same empirical</span>
+<span class="sd">            percentiles as ``out`` (mirrored here as</span>
+<span class="sd">            ``'empirical_16th'``/``'empirical_median'``/``'empirical_84th'``).</span>
+<span class="sd">        """</span>
+        <span class="n">out</span><span class="p">,</span> <span class="n">cache</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+
+        <span class="n">fragilities</span><span class="p">,</span> <span class="n">means_cost</span><span class="p">,</span> <span class="n">covs_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragility_function</span><span class="p">()</span>
+        <span class="n">damage_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_monte_carlo_simulations</span><span class="p">(</span><span class="n">fragilities</span><span class="p">)</span>
+        <span class="n">damage_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_ds_dependence</span><span class="p">(</span><span class="n">damage_state</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">component_data_group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">component_data_group</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Resolve typology label</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typology</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">typology</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">typology</span><span class="p">[</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typology</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">typology</span><span class="p">:</span>
+                <span class="n">typology</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">typology</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">typology</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="c1"># Extract group-level subsets</span>
+            <span class="n">item_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">component_data_group</span><span class="p">[</span><span class="s2">"Component ID"</span><span class="p">])</span>
+            <span class="n">ds_group</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">damage_state</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">item_ids</span><span class="p">}</span>
+            <span class="n">fragilities_group</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"IDs"</span><span class="p">:</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">fragilities</span><span class="p">[</span><span class="s2">"IDs"</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">item_ids</span><span class="p">},</span>
+                <span class="s2">"EDP"</span><span class="p">:</span> <span class="n">fragilities</span><span class="p">[</span><span class="s2">"EDP"</span><span class="p">],</span>
+            <span class="p">}</span>
+
+            <span class="c1"># Run the SLF pipeline for this group</span>
+            <span class="n">total</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">repair_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_costs</span><span class="p">(</span>
+                <span class="n">ds_group</span><span class="p">,</span> <span class="n">means_cost</span><span class="p">,</span> <span class="n">covs_cost</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Empirical percentiles of the storey loss RATIO -- the</span>
+            <span class="c1"># canonical (dimensionless) Storey Loss Function. Computed</span>
+            <span class="c1"># once and reused for both 'out' and 'cache' so they never</span>
+            <span class="c1"># diverge.</span>
+            <span class="n">ratio_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ratio</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ratio</span><span class="p">))])</span>
+            <span class="n">slf_16th</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">ratio_matrix</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">slf_median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">ratio_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">slf_84th</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">ratio_matrix</span><span class="p">,</span> <span class="mi">84</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">group_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">group_str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_output</span><span class="p">(</span>
+                <span class="n">slf_16th</span><span class="p">,</span> <span class="n">slf_median</span><span class="p">,</span> <span class="n">slf_84th</span><span class="p">,</span> <span class="n">typology</span>
+            <span class="p">)</span>
+
+            <span class="n">cache</span><span class="p">[</span><span class="n">group_str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"component"</span><span class="p">:</span>               <span class="n">component_data_group</span><span class="p">,</span>
+                <span class="s2">"fragilities"</span><span class="p">:</span>             <span class="n">fragilities_group</span><span class="p">,</span>
+                <span class="s2">"total_loss_storey"</span><span class="p">:</span>       <span class="n">total</span><span class="p">,</span>
+                <span class="s2">"total_loss_storey_ratio"</span><span class="p">:</span> <span class="n">ratio</span><span class="p">,</span>
+                <span class="s2">"repair_cost"</span><span class="p">:</span>             <span class="n">repair_cost</span><span class="p">,</span>
+                <span class="s2">"damage_states"</span><span class="p">:</span>           <span class="n">ds_group</span><span class="p">,</span>
+                <span class="s2">"edp"</span><span class="p">:</span>                     <span class="bp">self</span><span class="o">.</span><span class="n">edp</span><span class="p">,</span>
+                <span class="s2">"empirical_16th"</span><span class="p">:</span>          <span class="n">slf_16th</span><span class="p">,</span>
+                <span class="s2">"empirical_median"</span><span class="p">:</span>        <span class="n">slf_median</span><span class="p">,</span>
+                <span class="s2">"empirical_84th"</span><span class="p">:</span>          <span class="n">slf_84th</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span>
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">cache</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
