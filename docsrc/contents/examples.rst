@@ -19,3 +19,4 @@ on GitHub.
    examples/fragility_analysis
    examples/storey_loss_function_generation
    examples/storey_loss_function_application
+   examples/eq_spectra_example

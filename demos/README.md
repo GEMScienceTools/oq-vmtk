@@ -40,6 +40,9 @@ This example demonstrates an application for reading inventory files that list d
 ## StoreyLossFunctionApplication: Example of Storey Loss Function Application
 This example demonstrates an application of storey loss functions where vulnerability functions associated with nonstructural components are derived. The loss model is derived after interpolating the storey loss associated with engineering demand parameters (i.e., peak storey drift or peak floor acceleration) quantified following nonlinear time-history analyses.
 
+## EQSpectraExample: Illustrative Case Study Application for OQ-VMTK
+This notebook is the electronic supplement to the example provided in the *Illustrative Case Study Application for OQ-VMTK* section of the EQ Spectra paper. It follows the full workflow on a single building class: calibration of an MDOF stick-and-mass model from an SDOF capacity curve, modal and static pushover verification, Modified Cloud Analysis, and derivation of fragility and vulnerability functions. It incorporates the `calibration`, `modeller`, `postprocessor`, `plotter` and `utilities` modules.
+
 ---
 
 Each example includes relevant scripts, input data, and instructions to guide users through the analysis. Feel free to explore and modify them to suit your specific needs!

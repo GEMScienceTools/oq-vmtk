@@ -99,6 +99,7 @@ The `demos/` directory contains thirteen self-contained Jupyter notebooks coveri
 | `FragilityAnalysis` | Comparison of all supported fragility fitting methods |
 | `StoreyLossFunctionGeneration` | Generating storey loss functions from component inventory data |
 | `StoreyLossFunctionApplication` | Deriving system-level vulnerability models using storey loss functions |
+| `EQSpectraExample` | Illustrative case study accompanying the EQ Spectra paper (end-to-end workflow) |
 
 ---
 

@@ -29,6 +29,15 @@ Added
 Changed
 ~~~~~~~
 
+- **Demo notebook**: ``demos/EQSpectraExample/EQSpectraExample.ipynb``
+  ("Illustrative Case Study Application for OQ-VMTK") is the electronic
+  supplement to the corresponding section of the EQ Spectra paper. It covers
+  the full workflow from SDOF-based MDOF calibration to vulnerability functions.
+
+- **``plotter`` — uniform plotting grid**: all single-panel static plots now
+  share an identical grid (fixed axes margins replace ``constrained_layout``).
+  ``plot_demand_profiles``, ``plot_modes`` and the animations keep their layouts.
+
 - **``postprocessor`` method renames** (no logic changes, backwards-incompatible):
 
   ============================================  ============================

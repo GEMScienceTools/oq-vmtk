@@ -7,6 +7,12 @@ plots, MSA stripe plots, fragility curves, vulnerability functions, Storey Loss
 Function outputs, and animated NRHA responses. All plots share a consistent style
 (fonts, line widths, colour schemes) and can optionally be saved to disk.
 
+All single-panel static plots (MCA, IDA, MSA, fragility, SLF and vulnerability
+plots) use the same figure size and fixed axes margins, so the plotting grid has
+identical dimensions across plots regardless of labels, legends or secondary
+axes. The multi-panel demand-profile and modal-shape plots, and the animations,
+keep their own layouts.
+
 .. toctree::
 
    plo/plot_modes
