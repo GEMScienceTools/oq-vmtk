@@ -63,19 +63,21 @@ jobs:
 
   pages:
     needs: vulnerability_test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: "3.11"
+        python-version: "3.12"
     - name: Install sphinx and themes
       run: |
-        python -m pip install --upgrade pip
-        pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
         # Install package so autodoc can import modules (openseespy mocked in conf.py)
-        pip install numpy scipy pandas matplotlib
+        # Use python3.12
+        export PIP_DEFAULT_TIMEOUT=100
+        pip install --upgrade pip
+        pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
+        pip install -r requirements-py312-linux.txt
         pip install -e .
     - name: Make html pages
       run: |
@@ -84,7 +86,7 @@ jobs:
 
     - name: Deploy to GitHub Pages
       if: success()
-      uses: crazy-max/ghaction-github-pages@v4
+      uses: crazy-max/ghaction-github-pages@v5
       with:
         target_branch: gh-pages
         build_dir: docsrc/_build/html/
