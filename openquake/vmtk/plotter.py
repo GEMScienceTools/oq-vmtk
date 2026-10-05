@@ -33,7 +33,7 @@ class plotter:
     It also includes utility methods for setting consistent plot styles and saving plots.
 
     All static plots are created at a uniform ``figsize`` (default ``(10, 7)``)
-    with ``constrained_layout=True`` and are saved **without**
+    with fixed axes margins (identical plotting grid in every plot) and are saved **without**
     ``bbox_inches='tight'``.  This guarantees that every exported image has
     exactly the same pixel dimensions (``figsize × resolution``), regardless
     of its content.  Animation panels use ``figsize_anim`` (default
@@ -122,7 +122,7 @@ class plotter:
         schemes used consistently across all plot methods. Also configures the
         default output resolution (DPI), font family, and figure size.
 
-        All figures are created with ``constrained_layout=True`` and saved
+        Static figures use fixed axes margins (identical plotting grid) and are saved
         without ``bbox_inches='tight'`` so that every output image has exactly
         the same pixel dimensions (``figsize × resolution``).  Modify
         ``self.figsize`` to change the uniform size of all static plots, or
@@ -216,6 +216,31 @@ class plotter:
         if grid:
             ax.grid(visible=True, which='major')
             ax.grid(visible=True, which='minor')
+
+    def _subplots(self, ncols=1):
+        """
+        Create a figure whose plotting area (grid) has the same size in
+        every static plot.
+
+        ``constrained_layout`` resizes the axes to fit labels, tick labels
+        and secondary axes, so the grid differs from plot to plot.  Here the
+        axes are placed with fixed figure-fraction margins instead, so all
+        plots share an identical grid regardless of their content.  The
+        margins leave room on the right for a secondary y-axis label.
+
+        Parameters
+        ----------
+        ncols : int, default 1
+            Number of side-by-side axes sharing the common plotting area.
+
+        Returns
+        -------
+        fig, ax : matplotlib Figure and Axes (or tuple of Axes if ncols > 1)
+        """
+        fig, ax = plt.subplots(1, ncols, figsize=self.figsize)
+        fig.subplots_adjust(left=0.12, right=0.88, bottom=0.13, top=0.93,
+                            wspace=0.35)
+        return fig, ax
 
     def _show(self):
         """
@@ -1378,7 +1403,7 @@ class plotter:
         The data is presented as lines representing each control node's response at different
         floors.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -1413,8 +1438,7 @@ class plotter:
         """
 
         # Initialise Plot with two subplots
-        fig, (ax1, ax2) = plt.subplots(
-            1, 2, figsize=self.figsize, constrained_layout=True)
+        fig, (ax1, ax2) = self._subplots(ncols=2)
 
         # Apply standard styles to subplots
         self._set_plot_style(
@@ -1487,7 +1511,7 @@ class plotter:
         This plot accounts for collapse cases using logistic regression, showing the
         'softening' effect on the median and percentile structural response.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -1545,7 +1569,7 @@ class plotter:
             np.exp(sig * norm.ppf(percentile / (1 - p_c)))
 
         # Initialise Plot
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
 
         # Apply consistent Class Styling
         self._set_plot_style(ax,
@@ -1695,7 +1719,7 @@ class plotter:
         percentiles. It is designed to provide an immediate visual assessment of
         structural performance across a range of intensities.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -1738,7 +1762,7 @@ class plotter:
             Displays the matplotlib figure.
         """
 
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
 
         inputs = ida_dict['ida_inputs']
         stats = ida_dict['stats']
@@ -1907,7 +1931,7 @@ class plotter:
             stripe_gap = unique_imls[0] * 0.20
 
         # ── Figure / axes ────────────────────────────────────────────────────
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
 
         # ── Per-stripe rendering ─────────────────────────────────────────────
         for j in range(num_stripes):
@@ -2020,7 +2044,7 @@ class plotter:
         ``None`` (default), falling back to ``'bootstrap'`` for dicts
         produced by older code that does not carry the key.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and
+        The figure uses ``self.figsize`` with fixed axes margins and
         is saved without ``bbox_inches='tight'`` so that every output
         image has identical, deterministic pixel dimensions.
 
@@ -2092,7 +2116,7 @@ class plotter:
         # -----------------------------------------------------------------
         # Initialise figure
         # -----------------------------------------------------------------
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
         self._set_plot_style(
             ax,
             xlabel=imt_label,
@@ -2234,7 +2258,7 @@ class plotter:
         specific engineering demand parameter (EDP) threshold (e.g., drift limit)
         is exceeded given a specific intensity measure (IM) level.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -2280,7 +2304,7 @@ class plotter:
         betas = frag_data['betas_total']
 
         # Initialize Plot
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
 
         self._set_plot_style(
             ax,
@@ -2346,7 +2370,7 @@ class plotter:
         specific engineering demand parameter (EDP) threshold (e.g., drift limit)
         is exceeded given a specific intensity measure (IM) level.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -2391,7 +2415,7 @@ class plotter:
             [])  # List of arrays per DS
 
         # 2. Initialise Plot
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
         self._set_plot_style(
             ax,
             title=title,
@@ -2478,7 +2502,7 @@ class plotter:
         Function, so the scatter, band, and median line share consistent
         units on a single set of axes.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -2534,7 +2558,7 @@ class plotter:
         palette_order = [0, 2, 4, 1, 3, 5, 6]
         palette = [gem[i] for i in palette_order if i < len(gem)]
 
-        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax = self._subplots()
 
         for k, current_key in enumerate(keys_list):
             color = palette[k % len(palette)]
@@ -2608,7 +2632,7 @@ class plotter:
         truncated violin plots (strictly bounded 0-1) to represent the physical limits
         of structural damage.
 
-        The figure uses ``self.figsize`` with ``constrained_layout`` and is
+        The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
@@ -2688,7 +2712,7 @@ class plotter:
                                'Loss_Val': np.concatenate(simulated_data)})
 
         # Initialise Plot
-        fig, ax1 = plt.subplots(figsize=self.figsize, constrained_layout=True)
+        fig, ax1 = self._subplots()
 
         # Set plot style
         self._set_plot_style(ax1,
