@@ -15,7 +15,6 @@ https://wheelhouse.openquake.org/unified/statsmodels-0.14.4-cp311-cp311-manylinu
 #
 https://wheelhouse.openquake.org/unified/click-8.5.0-py3-none-any.whl
 https://wheelhouse.openquake.org/unified/pydantic-2.13.5-py3-none-any.whl
-https://wheelhouse.openquake.org/unified/pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 https://wheelhouse.openquake.org/unified/patsy-1.0.3-py2.py3-none-any.whl
 https://wheelhouse.openquake.org/unified/packaging-26.3-py3-none-any.whl
 https://wheelhouse.openquake.org/unified/python_dateutil-2.9.0.post0-py2.py3-none-any.whl
