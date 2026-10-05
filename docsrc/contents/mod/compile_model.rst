@@ -18,5 +18,6 @@ Model Compilation
                                   [0., 0.005, 0.02, 0.06]]),
           storey_forces=np.array([[0., 250., 320., 200.],
                                   [0., 220., 280., 180.]]),
+          degradation=True,
       )
       m.compile_model()

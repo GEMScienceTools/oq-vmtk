@@ -1,6 +1,20 @@
 *.pyc
 __pycache__/
+
+# macOS
 *.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
 \#*\#
 \.\#*
 .coverage
@@ -25,3 +39,4 @@ venv/
 .virtual_documents/
 .pytest_cache/
 .claude/
+.env

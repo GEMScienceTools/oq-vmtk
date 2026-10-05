@@ -224,10 +224,10 @@
 
         <span class="c1"># Define default styles</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
-            <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
-            <span class="s1">&#39;ticks&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
-            <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="mi">12</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+            <span class="s1">&#39;ticks&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+            <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="mi">16</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">line_widths</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;thick&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
@@ -244,7 +244,7 @@
                 <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">],</span> <span class="s1">&#39;damage_states&#39;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">],</span> <span class="s1">&#39;gem&#39;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="s2">&quot;#0A4F4E&quot;</span><span class="p">,</span> <span class="s2">&quot;#0A4F5E&quot;</span><span class="p">,</span> <span class="s2">&quot;#54D7EB&quot;</span><span class="p">,</span> <span class="s2">&quot;#54D6EB&quot;</span><span class="p">,</span> <span class="s2">&quot;#399283&quot;</span><span class="p">,</span> <span class="s2">&quot;#399264&quot;</span><span class="p">,</span> <span class="s2">&quot;#399296&quot;</span><span class="p">]}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="mi">400</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="mi">500</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">font_name</span> <span class="o">=</span> <span class="s1">&#39;Arial&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">figsize_anim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
@@ -396,7 +396,7 @@
                    <span class="n">T</span><span class="p">,</span>
                    <span class="n">export_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plots 2-D mode shape profiles in a square grid layout (2x2, 3x3 etc).</span>
+<span class="sd">        Plots 2-D mode shape profiles in a square grid layout (2×2, 3×3, …).</span>
 
 <span class="sd">        Each mode occupies one cell with two side-by-side profile plots:</span>
 <span class="sd">        left = X-displacement vs Z (blue), right = Y-displacement vs Z (green).</span>
@@ -405,14 +405,28 @@
 
 <span class="sd">        Sign convention</span>
 <span class="sd">        ---------------</span>
-<span class="sd">        Eigenvectors have arbitrary sign.  The method flips each mode so that</span>
+<span class="sd">        Eigenvectors have arbitrary sign. The method flips each mode so that</span>
 <span class="sd">        the top-node displacement in the dominant horizontal direction is always</span>
 <span class="sd">        positive.</span>
 
-<span class="sd">        Grid</span>
-<span class="sd">        ----</span>
-<span class="sd">        ncols = ceil(sqrt(N)),  nrows = ceil(N / ncols).</span>
+<span class="sd">        Grid layout</span>
+<span class="sd">        -----------</span>
+<span class="sd">        ``ncols = ceil(sqrt(N))``, ``nrows = ceil(N / ncols)``.</span>
 <span class="sd">        Unused cells in the last row are hidden.</span>
+
+<span class="sd">        Title placement</span>
+<span class="sd">        ---------------</span>
+<span class="sd">        Each mode title (e.g. ``&#39;Mode 1 [X-dir] — T₁ = 0.312 s&#39;``) is placed</span>
+<span class="sd">        via ``fig.text()`` at the horizontal midpoint of both panels so that</span>
+<span class="sd">        it is centred over the X- and Y-displacement plots together.</span>
+
+<span class="sd">        Adaptive scaling</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        Font sizes for node annotations, axis labels, tick marks, and panel</span>
+<span class="sd">        titles, as well as the vertical panel spacing (``hspace``) and the</span>
+<span class="sd">        figure top margin (``top``), all scale automatically with the number</span>
+<span class="sd">        of grid rows and the number of nodes per panel. This prevents text</span>
+<span class="sd">        and title overlap when plotting a large number of modes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -420,11 +434,12 @@
 <span class="sd">            Ordered OpenSees node tags (base node first).</span>
 <span class="sd">        mode_shape_vectors : list of numpy.ndarray, shape (n_nodes, 3)</span>
 <span class="sd">            One array per mode; columns are [ux, uy, uz], pre-normalised by</span>
-<span class="sd">            max abs value as returned by do_modal_analysis.</span>
+<span class="sd">            max abs value as returned by ``do_modal_analysis``.</span>
 <span class="sd">        T : list of float</span>
 <span class="sd">            Natural periods [s] for each mode.</span>
 <span class="sd">        export_path : str, optional</span>
-<span class="sd">            File path to save the figure.  If None the figure is displayed.</span>
+<span class="sd">            File path to save the figure. If ``None`` the figure is displayed</span>
+<span class="sd">            interactively.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -455,12 +470,19 @@
         <span class="n">ncols</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num_modes</span><span class="p">))</span>
         <span class="n">nrows</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_modes</span> <span class="o">/</span> <span class="n">ncols</span><span class="p">)</span>
 
+        <span class="n">ann_fs</span>   <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">9</span>  <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_nodes</span> <span class="o">-</span> <span class="mi">6</span><span class="p">)</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">label_fs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">tick_fs</span>  <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">title_fs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">hspace</span>   <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.90</span><span class="p">,</span> <span class="mf">0.50</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.12</span><span class="p">)</span>
+        <span class="n">top</span>      <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.82</span><span class="p">,</span> <span class="mf">0.91</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.02</span><span class="p">)</span>
+
         <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">ncols</span> <span class="o">*</span> <span class="mf">5.0</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">*</span> <span class="mf">4.5</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">BG</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">BG</span><span class="p">)</span>
         <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span>
-                               <span class="n">hspace</span><span class="o">=</span><span class="mf">0.50</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span>
+                               <span class="n">hspace</span><span class="o">=</span><span class="n">hspace</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span>
                                <span class="n">left</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.97</span><span class="p">,</span>
-                               <span class="n">top</span><span class="o">=</span><span class="mf">0.88</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.08</span><span class="p">)</span>
+                               <span class="n">top</span><span class="o">=</span><span class="n">top</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.08</span><span class="p">)</span>
 
         <span class="n">interp_kind</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;cubic&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_z</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="k">else</span>
                        <span class="s1">&#39;quadratic&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_z</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="s1">&#39;linear&#39;</span><span class="p">)</span>
@@ -508,31 +530,40 @@
                                <span class="n">color</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
                                <span class="n">linewidths</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">d_i</span> <span class="o">+</span> <span class="n">ann_off</span><span class="p">,</span> <span class="n">z_i</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">d_i</span><span class="si">:</span><span class="s1">+.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                            <span class="n">fontsize</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span>
+                            <span class="n">fontsize</span><span class="o">=</span><span class="n">ann_fs</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span>
                             <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="n">xlim</span><span class="p">,</span> <span class="n">xlim</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">z_min</span> <span class="o">-</span> <span class="mf">0.4</span><span class="p">,</span> <span class="n">z_max</span> <span class="o">+</span> <span class="mf">0.4</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fs</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="n">tick_fs</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="s1">&#39;right&#39;</span><span class="p">):</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;left&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">COL_ANN</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;bottom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">COL_ANN</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span>
-                             <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1A237E&#39;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">title_fs</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span>
+                                 <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1A237E&#39;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
             <span class="n">ax_x</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">gc_x</span><span class="p">])</span>
-            <span class="n">ax_x</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Z [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">ax_x</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Z [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fs</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COL_ANN</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
             <span class="n">_draw</span><span class="p">(</span><span class="n">ax_x</span><span class="p">,</span> <span class="n">ux</span><span class="p">,</span> <span class="n">ux_sm</span><span class="p">,</span> <span class="n">COL_X</span><span class="p">,</span> <span class="n">COL_NODE</span><span class="p">,</span>
-                  <span class="sa">r</span><span class="s1">&#39;$u_x$ (norm.)&#39;</span><span class="p">,</span> <span class="n">xlim_x</span><span class="p">,</span> <span class="n">t_base</span><span class="p">)</span>
+                  <span class="sa">r</span><span class="s1">&#39;$u_x$ (norm.)&#39;</span><span class="p">,</span> <span class="n">xlim_x</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
 
             <span class="n">ax_y</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">gc_y</span><span class="p">],</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax_x</span><span class="p">)</span>
             <span class="n">ax_y</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">_draw</span><span class="p">(</span><span class="n">ax_y</span><span class="p">,</span> <span class="n">uy</span><span class="p">,</span> <span class="n">uy_sm</span><span class="p">,</span> <span class="n">COL_Y</span><span class="p">,</span> <span class="s1">&#39;#2E7D32&#39;</span><span class="p">,</span>
-                  <span class="sa">r</span><span class="s1">&#39;$u_y$ (norm.)&#39;</span><span class="p">,</span> <span class="n">xlim_y</span><span class="p">,</span> <span class="n">t_base</span><span class="p">)</span>
+                  <span class="sa">r</span><span class="s1">&#39;$u_y$ (norm.)&#39;</span><span class="p">,</span> <span class="n">xlim_y</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="n">pos_x</span> <span class="o">=</span> <span class="n">gs</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">gc_x</span><span class="p">]</span><span class="o">.</span><span class="n">get_position</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+            <span class="n">pos_y</span> <span class="o">=</span> <span class="n">gs</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">gc_y</span><span class="p">]</span><span class="o">.</span><span class="n">get_position</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+            <span class="n">cx</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_x</span><span class="o">.</span><span class="n">x0</span> <span class="o">+</span> <span class="n">pos_y</span><span class="o">.</span><span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="n">pos_x</span><span class="o">.</span><span class="n">y1</span> <span class="o">+</span> <span class="mf">0.005</span><span class="p">,</span> <span class="n">t_base</span><span class="p">,</span>
+                     <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span>
+                     <span class="n">fontsize</span><span class="o">=</span><span class="n">title_fs</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1A237E&#39;</span><span class="p">,</span>
+                     <span class="n">transform</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;OpenSees  —  Modal Analysis  |  Mode Shapes&#39;</span><span class="p">,</span>
-                     <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1A237E&#39;</span><span class="p">)</span>
+                     <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1A237E&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">export_path</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
@@ -626,7 +657,7 @@
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-        <span class="n">_FS</span> <span class="o">=</span> <span class="mi">11</span>  <span class="c1"># uniform fontsize for all SPO animation text</span>
+        <span class="n">_FS</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># uniform fontsize for all SPO animation text</span>
 
         <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figsize_anim</span><span class="p">)</span>
         <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span>
@@ -884,7 +915,7 @@
                 <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 
-        <span class="n">_FS</span> <span class="o">=</span> <span class="mi">11</span>  <span class="c1"># uniform fontsize for all CPO animation text</span>
+        <span class="n">_FS</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># uniform fontsize for all CPO animation text</span>
 
         <span class="n">ax_model</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">x_label_model</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">)</span>
         <span class="n">ax_model</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_label_model</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">)</span>
@@ -914,7 +945,7 @@
         <span class="n">ax_curve</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">)</span>
 
         <span class="c1"># Governing Drift Hysteresis (Base Shear vs MIDR)</span>
-        <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Maximum Interstorey Drift [-]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">)</span>
+        <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Maximum Interstorey Drift [%]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">)</span>
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Base Shear [kN]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">)</span>
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Hysteretic Curve&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">_FS</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">governing_drift_history</span><span class="p">,</span> <span class="n">cpo_rxn</span><span class="p">,</span> <span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -1062,9 +1093,13 @@
 <span class="sd">        Four-panel layout (self.figsize_anim)</span>
 <span class="sd">        -------------------------------------</span>
 <span class="sd">        Panel 1 - Floor displacement profile [m] vs. elevation.</span>
-<span class="sd">        Panel 2 - Storey drift profile [%] vs. elevation (staircase style, matching plot_demand_profiles).</span>
+<span class="sd">        Panel 2 - Storey drift profile [%] vs. elevation (staircase style,</span>
+<span class="sd">                  matching plot_demand_profiles).</span>
 <span class="sd">        Panel 3 - Floor acceleration profile [g] vs. elevation.</span>
-<span class="sd">        Panel 4 - Input ground motion time-history with elapsed portion highlighted. If collapse_time is provided, an &#39;X&#39; marker is drawn at that instant to indicate when the MinMax material limit was exceeded.</span>
+<span class="sd">        Panel 4 - Input ground motion time-history with elapsed portion</span>
+<span class="sd">                  highlighted. If collapse_time is provided, an &#39;X&#39; marker is</span>
+<span class="sd">                  drawn at that instant to indicate when the MinMax material</span>
+<span class="sd">                  limit was exceeded.</span>
 
 <span class="sd">        Line colours update cumulatively based on worst damage state reached so</span>
 <span class="sd">        far (blue -&gt; green -&gt; yellow -&gt; orange -&gt; red) when drift_thresholds given.</span>
@@ -1182,7 +1217,7 @@
                        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;MinMax exceeded (</span><span class="si">{</span><span class="n">collapse_time</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">s)&#39;</span><span class="p">)</span>
             <span class="n">ax_gm</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">collapse_time</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#E53935&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
                           <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-            <span class="n">ax_gm</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
+            <span class="n">ax_gm</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
 
         <span class="c1"># ── Damage state colours ─────────────────────────────────────────────</span>
         <span class="c1"># Index 0 = no damage (blue) … index 4 = collapse (red).</span>
@@ -1225,45 +1260,45 @@
         <span class="n">line_gm_trace</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax_gm</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="n">damage_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.6</span><span class="p">)</span>
 
         <span class="c1"># ── Axis formatting ──────────────────────────────────────────────────</span>
-        <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Floor Displacements&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-        <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Displacement [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-        <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Elevation [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Floor Displacements&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+        <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Displacement [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+        <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Elevation [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
         <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="nb">max</span><span class="p">(</span><span class="n">max_abs_disp</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">),</span>
                          <span class="nb">max</span><span class="p">(</span><span class="n">max_abs_disp</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">))</span>
         <span class="n">ax_disp</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylim_elev</span><span class="p">)</span>
         <span class="n">ax_disp</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-        <span class="n">ax_disp</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_disp</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
             <span class="s1">&#39;Storey Drift Profile&#39;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
             <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-        <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Storey Drift [%]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-        <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Elevation [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Storey Drift [%]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+        <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Elevation [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">xlim_drift</span><span class="p">)</span>
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylim_elev</span><span class="p">)</span>
         <span class="n">ax_drift</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-        <span class="n">ax_drift</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_drift</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 
         <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
             <span class="s1">&#39;Floor Accelerations&#39;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
             <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-        <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Acceleration [g]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-        <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Elevation [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Acceleration [g]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+        <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Elevation [m]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
         <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="nb">max</span><span class="p">(</span><span class="n">max_abs_accel</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
                           <span class="nb">max</span><span class="p">(</span><span class="n">max_abs_accel</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
         <span class="n">ax_accel</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylim_elev</span><span class="p">)</span>
         <span class="n">ax_accel</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-        <span class="n">ax_accel</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_accel</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 
-        <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Input Ground Motion&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-        <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-        <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Accel [g]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Input Ground Motion&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+        <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+        <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Accel [g]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
         <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">ax_gm</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">acc</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">acc</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
         <span class="n">ax_gm</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-        <span class="n">ax_gm</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax_gm</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 
         <span class="c1"># Annotations — anchored inside axes with clip_on so they never</span>
         <span class="c1"># overflow</span>
@@ -1272,7 +1307,7 @@
             <span class="mf">0.97</span><span class="p">,</span>
             <span class="s1">&#39;&#39;</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">ax_drift</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
             <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
             <span class="n">va</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
             <span class="n">clip_on</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1286,7 +1321,7 @@
             <span class="mf">0.97</span><span class="p">,</span>
             <span class="s1">&#39;&#39;</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">ax_accel</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
             <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
             <span class="n">va</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
             <span class="n">clip_on</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1515,10 +1550,10 @@
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">])</span>
 
         <span class="c1"># Add title</span>
-        <span class="n">default_title</span> <span class="o">=</span> <span class="s2">&quot;Seismic Demand Profiles&quot;</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">default_title</span><span class="p">,</span>
-                     <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
-                     <span class="n">fontname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span>
+                         <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+                         <span class="n">fontname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">)</span>
 
         <span class="c1"># Save or Show</span>
         <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
@@ -1715,7 +1750,7 @@
             <span class="mf">0.95</span><span class="p">,</span>
             <span class="n">stats_text</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
             <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
             <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
                 <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
@@ -1787,8 +1822,8 @@
 <span class="sd">            (min, max) limits for the Y-axis (IML axis).</span>
 
 <span class="sd">        title : str, optional, default=None</span>
-<span class="sd">            A custom title for the figure. If not provided, a default title</span>
-<span class="sd">            incorporating the Intensity Measure (IM) label is used.</span>
+<span class="sd">            A custom title for the figure. If not provided, no title is</span>
+<span class="sd">            displayed.</span>
 
 <span class="sd">        pFlag : bool, optional, default=True</span>
 <span class="sd">            If True, the plot is processed (saved/shown).</span>
@@ -1926,7 +1961,8 @@
 <span class="sd">        For each intensity stripe the method plots:</span>
 <span class="sd">        - Individual ground-motion response points coloured and sized by IM level.</span>
 <span class="sd">        - A filled lognormal PDF silhouette scaled to the inter-stripe spacing.</span>
-<span class="sd">        - A vertical line at the lognormal median and dashed lines at the 16th/84th percentiles, both labelled on the first stripe only.</span>
+<span class="sd">        - A vertical line at the lognormal median and dashed lines at the</span>
+<span class="sd">          16th/84th percentiles, both labelled on the first stripe only.</span>
 <span class="sd">        - A horizontal bracket connecting the 16th and 84th percentile ticks per stripe.</span>
 
 <span class="sd">        Parameters</span>
@@ -1946,7 +1982,7 @@
 <span class="sd">        ylims : tuple of float</span>
 <span class="sd">            (min, max) for the IM (y) axis.</span>
 <span class="sd">        title : str, optional</span>
-<span class="sd">            Figure title.  Defaults to a standard MSA title.</span>
+<span class="sd">            Figure title. If not provided, no title is displayed.</span>
 <span class="sd">        pFlag : bool, default True</span>
 <span class="sd">            Show/save the figure when True; close silently when False.</span>
 <span class="sd">        export_path : str, optional</span>
@@ -2034,7 +2070,7 @@
         <span class="c1"># ── Styling ──────────────────────────────────────────────────────────</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_plot_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span>
                              <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
-                             <span class="n">xlabel</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">edp_label</span><span class="si">}</span><span class="s2"> [%]&quot;</span><span class="p">,</span>
+                             <span class="n">xlabel</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">edp_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                              <span class="n">ylabel</span><span class="o">=</span><span class="n">imt_label</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlims</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylims</span><span class="p">)</span>
@@ -2119,8 +2155,7 @@
 <span class="sd">            ``(min, max)`` limits for the Y-axis.</span>
 
 <span class="sd">        title : str, optional</span>
-<span class="sd">            Custom plot title. If ``None``, a method-specific default</span>
-<span class="sd">            is used.</span>
+<span class="sd">            Custom plot title. If ``None``, no title is displayed.</span>
 
 <span class="sd">        cloud_method : {&#39;bootstrap&#39;, &#39;classical&#39;} or None, optional</span>
 <span class="sd">            Selects the plotting style. When ``None`` (default), the</span>
@@ -2208,10 +2243,6 @@
                         <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
                         <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 
-            <span class="n">default_title</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Fragility Functions from Modified Cloud Analysis&quot;</span>
-                <span class="s2">&quot; (Bootstrap)&quot;</span><span class="p">)</span>
-
         <span class="c1"># -----------------------------------------------------------------</span>
         <span class="c1"># Classical (Bayesian MCMC) rendering</span>
         <span class="c1"># -----------------------------------------------------------------</span>
@@ -2252,10 +2283,6 @@
                         <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
                         <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 
-            <span class="n">default_title</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Robust Fragility Functions from Modified Cloud Analysis&quot;</span>
-                <span class="s2">&quot; (Classical / Jalayer et al. 2017)&quot;</span><span class="p">)</span>
-
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unknown cloud_method &#39;</span><span class="si">{</span><span class="n">cloud_method</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
@@ -2264,14 +2291,16 @@
         <span class="c1"># -----------------------------------------------------------------</span>
         <span class="c1"># Final formatting</span>
         <span class="c1"># -----------------------------------------------------------------</span>
+        <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+                <span class="n">title</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+                <span class="n">fontname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">xlims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xlims</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">ylims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ylims</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">())</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">())</span>
 
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
-            <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">default_title</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
             <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">,</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;legend&#39;</span><span class="p">],</span>
@@ -2362,10 +2391,9 @@
         <span class="c1"># Initialize Plot</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">default_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Fragility Functions for </span><span class="si">{</span><span class="n">imt_label</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_plot_style</span><span class="p">(</span>
             <span class="n">ax</span><span class="p">,</span>
-            <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">default_title</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
             <span class="n">xlabel</span><span class="o">=</span><span class="n">imt_label</span><span class="p">,</span>
             <span class="n">ylabel</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Probability of Exceedance $P(DS \geq ds | IM)$&#39;</span><span class="p">)</span>
 
@@ -2478,6 +2506,7 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_plot_style</span><span class="p">(</span>
             <span class="n">ax</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
             <span class="n">xlabel</span><span class="o">=</span><span class="n">imt_label</span><span class="p">,</span>
             <span class="n">ylabel</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Probability of Exceedance $P(DS \geq ds | IM)$&#39;</span><span class="p">)</span>
 
@@ -2509,10 +2538,6 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">())</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">())</span>
 
-        <span class="n">default_title</span> <span class="o">=</span> <span class="s2">&quot;Fragility Functions from Multiple Stripe Analysis (MLE)&quot;</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
-            <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">default_title</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;legend&#39;</span><span class="p">],</span>
                   <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
 
@@ -2551,18 +2576,22 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a plot to visualize the Storey Loss Function (SLF) model output.</span>
 
-<span class="sd">        This function visualizes the storey loss for different realizations of a model</span>
-<span class="sd">        by plotting the following:</span>
-<span class="sd">        1. Scatter plot of total storey loss for each realization.</span>
-<span class="sd">        2. Shaded region representing the 16th to 84th percentiles of the empirical data.</span>
-<span class="sd">        3. Plot of the median of the empirical data for simulations.</span>
-<span class="sd">        4. Fitted Storey Loss Function (SLF) curve.</span>
+<span class="sd">        Visualises, for every performance-group key shared by ``out`` and</span>
+<span class="sd">        ``cache`` (overlaid on the same axes if more than one key is</span>
+<span class="sd">        present -- e.g. to compare two ``slfgenerator`` runs side by side):</span>
 
-<span class="sd">        The plot includes:</span>
-<span class="sd">        - A scatter plot of the total loss per storey for each realization.</span>
-<span class="sd">        - A shaded area representing the empirical 16th to 84th percentiles.</span>
-<span class="sd">        - The median storey loss curve based on simulations.</span>
-<span class="sd">        - The fitted SLF curve.</span>
+<span class="sd">        1. A scatter cloud of the per-realization storey loss RATIO</span>
+<span class="sd">           (``cache[key][&#39;total_loss_storey_ratio&#39;]``) vs. EDP.</span>
+<span class="sd">        2. A shaded band spanning the empirical 16th-84th percentile of the</span>
+<span class="sd">           loss ratio (``out[key][&#39;slf_16th&#39;]`` / ``out[key][&#39;slf_84th&#39;]``).</span>
+<span class="sd">        3. The empirical median loss-ratio curve (``out[key][&#39;slf&#39;]``) --</span>
+<span class="sd">           this IS the Storey Loss Function; no fitted/regression curve is</span>
+<span class="sd">           plotted, since :meth:`slfgenerator.generate` no longer fits one.</span>
+
+<span class="sd">        All three are expressed as loss RATIO (loss / replacement cost),</span>
+<span class="sd">        the conventional, dimensionless definition of a Storey Loss</span>
+<span class="sd">        Function, so the scatter, band, and median line share consistent</span>
+<span class="sd">        units on a single set of axes.</span>
 
 <span class="sd">        The figure uses ``self.figsize`` with ``constrained_layout`` and is</span>
 <span class="sd">        saved without ``bbox_inches=&#39;tight&#39;`` so that every output image has</span>
@@ -2571,24 +2600,31 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        out : dict</span>
-<span class="sd">            Results dictionary with keys ``&#39;edp_range&#39;`` and ``&#39;slf&#39;``</span>
-<span class="sd">            (the fitted Storey Loss Function curve).</span>
+<span class="sd">            ``{group_key: slf_dict}`` as returned by</span>
+<span class="sd">            :meth:`openquake.vmtk.slfgenerator.slfgenerator.generate`. Each</span>
+<span class="sd">            ``slf_dict`` must provide ``&#39;edp_range&#39;``, ``&#39;slf_16th&#39;``,</span>
+<span class="sd">            ``&#39;slf&#39;`` (median), and ``&#39;slf_84th&#39;`` (all loss-ratio values).</span>
+<span class="sd">            Pass a dict with more than one key (e.g.</span>
+<span class="sd">            ``{&#39;Example A&#39;: out_a[...], &#39;Example B&#39;: out_b[...]}``) to</span>
+<span class="sd">            overlay several SLF results on one figure.</span>
 
 <span class="sd">        cache : dict</span>
-<span class="sd">            Cached simulation data with keys ``&#39;total_loss_storey&#39;``,</span>
-<span class="sd">            ``&#39;empirical_16th&#39;``, ``&#39;empirical_84th&#39;``, and ``&#39;empirical_median&#39;``.</span>
+<span class="sd">            ``{group_key: cache_dict}`` as returned by</span>
+<span class="sd">            :meth:`openquake.vmtk.slfgenerator.slfgenerator.generate`. Each</span>
+<span class="sd">            ``cache_dict`` must provide ``&#39;total_loss_storey_ratio&#39;``</span>
+<span class="sd">            (``{realization: array}``).</span>
 
 <span class="sd">        edp_label : str</span>
 <span class="sd">            Label for the x-axis (Engineering Demand Parameter).</span>
 
 <span class="sd">        loss_label : str</span>
-<span class="sd">            Label for the y-axis (Storey Loss Ratio).</span>
+<span class="sd">            Label for the y-axis. Typically ``&#39;Storey Loss Ratio [-]&#39;``.</span>
 
 <span class="sd">        xlims : tuple of float</span>
 <span class="sd">            (min, max) limits for the X-axis (EDP axis).</span>
 
 <span class="sd">        ylims : tuple of float</span>
-<span class="sd">            (min, max) limits for the Y-axis (Loss axis).</span>
+<span class="sd">            (min, max) limits for the Y-axis (loss-ratio axis).</span>
 
 <span class="sd">        title : str, optional</span>
 <span class="sd">            Custom plot title.</span>
@@ -2605,47 +2641,48 @@
 <span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">keys_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cache</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">current_key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys_list</span><span class="p">):</span>
-            <span class="n">rlz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cache</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;total_loss_storey&#39;</span><span class="p">])</span>
-            <span class="n">total_loss_storey_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">cache</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;total_loss_storey&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rlz</span><span class="p">)])</span>
+        <span class="c1"># self.colors[&#39;gem&#39;] has near-duplicate shades at adjacent indices</span>
+        <span class="c1"># (e.g. indices 0/1 are both dark teal, 2/3 both bright cyan) --</span>
+        <span class="c1"># cycle through one representative of each visually distinct</span>
+        <span class="c1"># cluster first so a 2-3 way comparison stays legible.</span>
+        <span class="n">gem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="s1">&#39;gem&#39;</span><span class="p">]</span>
+        <span class="n">palette_order</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+        <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="n">gem</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">palette_order</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">gem</span><span class="p">)]</span>
 
-            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
-                <span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_set_plot_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="n">edp_label</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Storey Loss&#39;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">current_key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys_list</span><span class="p">):</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">palette</span><span class="p">[</span><span class="n">k</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span>
+            <span class="n">edp_range</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;edp_range&#39;</span><span class="p">]</span>
+
+            <span class="n">ratio_dict</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;total_loss_storey_ratio&#39;</span><span class="p">]</span>
+            <span class="n">rlz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratio_dict</span><span class="p">)</span>
+            <span class="n">ratio_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ratio_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rlz</span><span class="p">)])</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rlz</span><span class="p">):</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;edp_range&#39;</span><span class="p">],</span>
-                           <span class="n">total_loss_storey_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span>
-                                                   <span class="p">:],</span>
-                           <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="s1">&#39;gem&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">],</span>
-                           <span class="n">s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_sizes</span><span class="p">[</span><span class="s1">&#39;small&#39;</span><span class="p">],</span>
-                           <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">edp_range</span><span class="p">,</span>
+                          <span class="n">ratio_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
+                          <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                          <span class="n">s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_sizes</span><span class="p">[</span><span class="s1">&#39;small&#39;</span><span class="p">],</span>
+                          <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 
+            <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39; — </span><span class="si">{</span><span class="n">current_key</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
-                <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;edp_range&#39;</span><span class="p">],</span>
-                <span class="n">cache</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;empirical_16th&#39;</span><span class="p">],</span>
-                <span class="n">cache</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;empirical_84th&#39;</span><span class="p">],</span>
-                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-                <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;16$^{\text</span><span class="si">{th}</span><span class="s1">}$-84$^{\text</span><span class="si">{th}</span><span class="s1">}$ Percentile&#39;</span><span class="p">)</span>
+                <span class="n">edp_range</span><span class="p">,</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;slf_16th&#39;</span><span class="p">],</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;slf_84th&#39;</span><span class="p">],</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">fr</span><span class="s1">&#39;16$^</span><span class="se">{{</span><span class="s1">\text</span><span class="se">{{</span><span class="s1">th</span><span class="se">}}}}</span><span class="s1">$-84$^</span><span class="se">{{</span><span class="s1">\text</span><span class="se">{{</span><span class="s1">th</span><span class="se">}}}}</span><span class="s1">$ Percentile</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;edp_range&#39;</span><span class="p">],</span>
-                <span class="n">cache</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;empirical_median&#39;</span><span class="p">],</span>
-                <span class="n">lw</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_widths</span><span class="p">[</span><span class="s1">&#39;medium&#39;</span><span class="p">],</span>
-                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span>
-                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Simulations - Median&#39;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;edp_range&#39;</span><span class="p">],</span>
+                <span class="n">edp_range</span><span class="p">,</span>
                 <span class="n">out</span><span class="p">[</span><span class="n">current_key</span><span class="p">][</span><span class="s1">&#39;slf&#39;</span><span class="p">],</span>
-                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
                 <span class="n">lw</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_widths</span><span class="p">[</span><span class="s1">&#39;medium&#39;</span><span class="p">],</span>
-                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;SLF - Fitted&#39;</span><span class="p">)</span>
-
-            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;legend&#39;</span><span class="p">])</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;SLF - Median</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_plot_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span>
-                             <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;Storey Loss Function&quot;</span><span class="p">,</span>
+                             <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
                              <span class="n">xlabel</span><span class="o">=</span><span class="n">edp_label</span><span class="p">,</span>
                              <span class="n">ylabel</span><span class="o">=</span><span class="n">loss_label</span><span class="p">)</span>
 
@@ -2678,6 +2715,7 @@
                                     <span class="n">imt_label</span><span class="p">,</span>
                                     <span class="n">loss_label</span><span class="p">,</span>
                                     <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                    <span class="n">xlims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                     <span class="n">pFlag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                     <span class="n">export_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2712,6 +2750,10 @@
 <span class="sd">        title : str, optional</span>
 <span class="sd">            Custom plot title.</span>
 
+<span class="sd">        xlims : list or tuple of float, optional</span>
+<span class="sd">            ``[min, max]`` limits for the x-axis. When ``None`` (default)</span>
+<span class="sd">            the axis spans all intensity levels.</span>
+
 <span class="sd">        pFlag : bool, optional, default=True</span>
 <span class="sd">            If True, the plot is processed (saved/shown).</span>
 
@@ -2722,6 +2764,18 @@
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Restrict to the requested IM range before building any plot data.</span>
+        <span class="c1"># xlims operates in IM-value space; the violin x-axis is categorical</span>
+        <span class="c1"># (integer positions), so filtering here is the only correct approach.</span>
+        <span class="n">intensities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">xlims</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">intensities</span> <span class="o">&gt;=</span> <span class="n">xlims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">intensities</span> <span class="o">&lt;=</span> <span class="n">xlims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">intensities</span> <span class="o">=</span> <span class="n">intensities</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="n">cov</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
         <span class="c1"># Simulating Beta distributions for each intensity measure</span>
         <span class="n">simulated_data</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">intensity_labels</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2731,16 +2785,19 @@
             <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">mean_loss</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.9999</span><span class="p">)</span>
             <span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">cov</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">mu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 
-            <span class="c1"># Constraint: Variance must be &lt; mu * (1 - mu)</span>
-            <span class="n">limit</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">variance</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
-                <span class="n">variance</span> <span class="o">=</span> <span class="n">limit</span> <span class="o">*</span> <span class="mf">0.99</span>  <span class="c1"># Cap variance to allow distribution fitting</span>
+            <span class="k">if</span> <span class="n">variance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Degenerate case (CoV = 0): point mass at mu — no uncertainty</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Constraint: Variance must be &lt; mu * (1 - mu)</span>
+                <span class="n">limit</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">variance</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+                    <span class="n">variance</span> <span class="o">=</span> <span class="n">limit</span> <span class="o">*</span> <span class="mf">0.99</span>
 
-            <span class="n">alpha</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">variance</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">beta_param</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">variance</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">alpha</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">variance</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">beta_param</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">variance</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta_param</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
 
-            <span class="c1"># Generate samples and clip to ensure physical bounds</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta_param</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
             <span class="n">simulated_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">intensity_labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">intensities</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 
@@ -2752,9 +2809,8 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Set plot style</span>
-        <span class="n">default_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Vulnerability Function: </span><span class="si">{</span><span class="n">imt_label</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_plot_style</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span>
-                             <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="n">default_title</span><span class="p">,</span>
+                             <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
                              <span class="n">xlabel</span><span class="o">=</span><span class="n">imt_label</span><span class="p">,</span>
                              <span class="n">ylabel</span><span class="o">=</span><span class="n">loss_label</span><span class="p">)</span>
 
@@ -2768,64 +2824,42 @@
                        <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;skyblue&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Overlay a strip plot for sample density</span>
-        <span class="n">sns</span><span class="o">.</span><span class="n">stripplot</span><span class="p">(</span>
-            <span class="n">x</span><span class="o">=</span><span class="s1">&#39;Intensity Measure&#39;</span><span class="p">,</span>
-            <span class="n">y</span><span class="o">=</span><span class="s1">&#39;Loss_Val&#39;</span><span class="p">,</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">df_sns</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-            <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">,</span>
-            <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-        <span class="c1"># Style the primary axis (Distributions)</span>
+        <span class="c1"># Style the primary axis (distributions)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">labelcolor</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s1">&#39;steelblue&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">labelcolor</span><span class="o">=</span><span class="s1">&#39;steelblue&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Secondary Axis for the Mean Loss Curve</span>
+        <span class="c1"># Secondary axis for the mean loss curve (twinx keeps integer x</span>
+        <span class="c1"># positions aligned with the seaborn categorical violin positions)</span>
         <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="nb">range</span><span class="p">(</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">)),</span>
+            <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">)),</span>
             <span class="n">loss</span><span class="p">,</span>
             <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span>
             <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
             <span class="n">lw</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_widths</span><span class="p">[</span><span class="s1">&#39;medium&#39;</span><span class="p">],</span>
-            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mean Loss Ratio&quot;</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Mean Loss Ratio&#39;</span><span class="p">,</span>
             <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-
-        <span class="c1"># Style the secondary axis (Loss Curve)</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span>
-            <span class="n">loss_label</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
-            <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span>
-            <span class="n">labelpad</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">],</span>
-            <span class="n">fontname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">)</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
-            <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
-            <span class="n">labelcolor</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
-            <span class="n">labelsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;ticks&#39;</span><span class="p">])</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="c1"># Hide right y-axis — same [0, 1] scale as the left axis</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelright</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="c1"># Sync X-axis ticks with intensity values</span>
+        <span class="c1"># Sync x-axis ticks with intensity values</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">)))</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">intensities</span><span class="p">],</span>
-                            <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-
-        <span class="c1"># Combined Legend</span>
-        <span class="n">beta_patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span>
-            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;skyblue&#39;</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Beta Distribution (Uncertainty)&quot;</span><span class="p">)</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
-            <span class="n">handles</span><span class="o">=</span><span class="p">[</span><span class="n">beta_patch</span><span class="p">],</span>
-            <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;legend&#39;</span><span class="p">])</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span>
-            <span class="mi">0</span><span class="p">,</span> <span class="mf">0.93</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;legend&#39;</span><span class="p">])</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">intensities</span><span class="p">],</span>
+                            <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                            <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;ticks&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="c1"># Single combined legend on ax1</span>
+        <span class="n">beta_patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;skyblue&#39;</span><span class="p">,</span>
+                                    <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Beta Distribution (Uncertainty)&#39;</span><span class="p">)</span>
+        <span class="n">mean_handle</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="p">[</span><span class="n">beta_patch</span><span class="p">]</span> <span class="o">+</span> <span class="n">mean_handle</span><span class="p">,</span>
+                   <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+                   <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font_sizes</span><span class="p">[</span><span class="s1">&#39;legend&#39;</span><span class="p">],</span>
+                   <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
 
         <span class="c1"># Save or show</span>
         <span class="k">if</span> <span class="n">pFlag</span><span class="p">:</span>
@@ -2835,10 +2869,11 @@
                     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
 
 </pre></div>
 

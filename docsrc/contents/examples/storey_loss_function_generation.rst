@@ -3,7 +3,8 @@ Storey Loss Function Generation
 
 Demonstrates how to generate Storey Loss Functions (SLFs) using the
 ``slfgenerator`` class. Covers component inventory input, Monte Carlo
-simulation of damage states, and regression fitting of SLF curves.
+simulation of damage states, empirical 16th/50th/84th-percentile storey loss
+statistics, and optional correlation trees between dependent components.
 
 The full notebook is at
 `demos/StoreyLossFunctionGeneration/StoreyLossFunctionGeneration.ipynb
@@ -38,7 +39,6 @@ repository root after ``pip install .``.
        conversion=1.0,
        realizations=500,
        replacement_cost=1.0,
-       regression=None,        # auto-select the best fit
    )
 
    # 3. Drift-sensitive SLF
@@ -66,12 +66,12 @@ repository root after ``pip install .``.
    pl.plot_slf_model(
        psd_slf, psd_cache,
        edp_label="Interstorey Drift Ratio [-]",
-       loss_label="Drift-Sensitive NSC Storey Loss",
-       xlims=[0, 0.05], title="Drift-Sensitive SLF",
+       loss_label="Drift-Sensitive NSC Storey Loss Ratio",
+       xlims=[0, 0.05], ylims=[0, 1], title="Drift-Sensitive SLF",
    )
    pl.plot_slf_model(
        pfa_slf, pfa_cache,
        edp_label="Peak Floor Acceleration [g]",
-       loss_label="Acceleration-Sensitive NSC Storey Loss",
-       xlims=[0, 5.0], title="Acceleration-Sensitive SLF",
+       loss_label="Acceleration-Sensitive NSC Storey Loss Ratio",
+       xlims=[0, 5.0], ylims=[0, 1], title="Acceleration-Sensitive SLF",
    )

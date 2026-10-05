@@ -15,6 +15,8 @@ Fragility Functions from MCA
       pl.plot_fragility_from_mca(
           cloud_dict=cloud_dict,
           imt_label="Sa(T1) [g]",
-          ds_labels=["Slight", "Moderate", "Extensive", "Complete"],
+          xlims=(0.0, 3.0),
+          ylims=(0.0, 1.0),
+          title="Fragility Functions — MCA",
           export_path="fragility_mca.png",
       )

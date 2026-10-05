@@ -119,11 +119,11 @@ class TestImCalculator(unittest.TestCase):
         target_period = np.array([0.3])
         acc_zero = np.zeros_like(self.calculator.acc)
 
-        _, _, _, sa_ref = self.calculator.get_spectrum(
+        _, _, _, psa_ref = self.calculator.get_spectrum(
             periods=target_period, damping_ratio=0.05
         )
-        rotd100_expected = sa_ref[0]
-        rotd50_expected = sa_ref[0] * np.sqrt(2) / 2
+        rotd100_expected = psa_ref[0]
+        rotd50_expected = psa_ref[0] * np.sqrt(2) / 2
 
         _, rotd100 = self.calculator.get_rotdxx(
             acc_zero, percentile=100, periods=target_period

@@ -114,3 +114,25 @@ Modified Cloud Analysis Postprocessing
       )
       print(cloud_dict['fragility']['medians'])
 
+      # Ordinal CLM — constant dispersion (fully-ordered special case)
+      cloud_ord_const = pp.process_mca_results(
+          imls=imls,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          lower_limit=0.001,
+          censored_limit=0.10,
+          fragility_method='ordinal',
+          dispersion_type='constant',   # default
+      )
+
+      # Ordinal CLM — variable dispersion (general hierarchical case)
+      cloud_ord_var = pp.process_mca_results(
+          imls=imls,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
+          lower_limit=0.001,
+          censored_limit=0.10,
+          fragility_method='ordinal',
+          dispersion_type='variable',   # per-DS dispersions
+      )
+

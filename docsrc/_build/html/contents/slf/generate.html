@@ -107,16 +107,23 @@
 <li><p>Sample damage states via Monte Carlo simulation.</p></li>
 <li><p>Enforce correlated damage state constraints.</p></li>
 <li><p>Calculate repair costs per group.</p></li>
-<li><p>Fit regression models to the simulated loss data.</p></li>
-<li><p>Transform results into the output format.</p></li>
-<li><p>Compute empirical statistics (16th, median, 84th percentile).</p></li>
+<li><p>Compute the empirical 16th/50th/84th percentile of the storey
+loss ratio across all Monte Carlo realizations – this IS the
+Storey Loss Function. No parametric curve is fitted to it.</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p><strong>out</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">{group_label:</span> <span class="pre">slf_dict}</span></code> — one SLF record per performance group.</p></li>
-<li><p><strong>cache</strong> (<em>dict</em>) – Intermediate data for each group (fragilities, losses, fitted
-parameters, empirical statistics, etc.).</p></li>
+<li><p><strong>out</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">{group_label:</span> <span class="pre">slf_dict}</span></code> – one SLF record per performance
+group, with <code class="docutils literal notranslate"><span class="pre">'slf_16th'</span></code>, <code class="docutils literal notranslate"><span class="pre">'slf'</span></code> (median), and
+<code class="docutils literal notranslate"><span class="pre">'slf_84th'</span></code> giving the empirical percentiles of the storey
+loss ratio vs. <code class="docutils literal notranslate"><span class="pre">'edp_range'</span></code>.</p></li>
+<li><p><strong>cache</strong> (<em>dict</em>) – Intermediate data for each group: fragilities, raw
+per-realization losses (both absolute <code class="docutils literal notranslate"><span class="pre">'total_loss_storey'</span></code>
+and ratio <code class="docutils literal notranslate"><span class="pre">'total_loss_storey_ratio'</span></code> units), repair costs,
+the group-sliced damage states, and the same empirical
+percentiles as <code class="docutils literal notranslate"><span class="pre">out</span></code> (mirrored here as
+<code class="docutils literal notranslate"><span class="pre">'empirical_16th'</span></code>/<code class="docutils literal notranslate"><span class="pre">'empirical_median'</span></code>/<code class="docutils literal notranslate"><span class="pre">'empirical_84th'</span></code>).</p></li>
 </ul>
 </p>
 </dd>
@@ -147,7 +154,6 @@ notebook.</p>
     <span class="n">conversion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">realizations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
     <span class="n">replacement_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">regression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># 3. Generate and plot the SLF</span>
@@ -155,8 +161,9 @@ notebook.</p>
 <span class="n">plotter</span><span class="p">()</span><span class="o">.</span><span class="n">plot_slf_model</span><span class="p">(</span>
     <span class="n">slf</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span>
     <span class="n">edp_label</span><span class="o">=</span><span class="s2">&quot;Interstorey Drift Ratio [-]&quot;</span><span class="p">,</span>
-    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive NSC Storey Loss&quot;</span><span class="p">,</span>
+    <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive NSC Storey Loss Ratio&quot;</span><span class="p">,</span>
     <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span>
+    <span class="n">ylims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Drift-Sensitive SLF&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -182,18 +189,82 @@ cost <span class="math notranslate nohighlight">\(\ell_c\)</span> is a random va
 <p>Damage states are sampled via Monte Carlo simulation across a user-defined EDP range.
 For <span class="math notranslate nohighlight">\(N\)</span> realisations, each realisation draws a damage state for every component
 at every EDP level. Component costs are summed within each performance group to obtain
-the total group loss per realisation.</p>
-<p><strong>Regression and SLF fitting</strong></p>
-<p>The empirical loss-EDP cloud (from all Monte Carlo realisations) is fitted by
-regression to one of several functional forms (Weibull, Papadopoulos, Generalised
-Pareto, or Lognormal). The fitted curve is the SLF for the group:</p>
+the total group loss ratio per realisation (loss normalised by <code class="docutils literal notranslate"><span class="pre">replacement_cost</span></code>).</p>
+<p><strong>Empirical SLF percentiles</strong></p>
+<p>No parametric curve is fitted to the Monte Carlo loss cloud. Instead, at each EDP
+level the storey loss RATIO is summarised directly from the <code class="docutils literal notranslate"><span class="pre">realizations</span></code> Monte
+Carlo draws via its empirical 16th, 50th (median), and 84th percentiles:</p>
 <div class="math notranslate nohighlight">
-\[\hat{\ell}_g(x) = f_{\boldsymbol{\theta}}(x)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\boldsymbol{\theta}\)</span> are the regression parameters estimated by
-minimising the sum of squared residuals between the empirical median loss and the
-fitted curve.</p>
-<p>Empirical statistics (median, 16th and 84th percentiles) across realisations are
-also retained in the cache for uncertainty characterisation.</p>
+\[\hat{\ell}_g^{(p)}(x) = \text{Percentile}_p\left(\{\ell_g^{(n)}(x)\}_{n=1}^{N}\right),
+\quad p \in \{16, 50, 84\}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\ell_g^{(n)}(x)\)</span> is the simulated storey loss ratio for performance
+group <span class="math notranslate nohighlight">\(g\)</span> at EDP level <span class="math notranslate nohighlight">\(x\)</span> in realisation <span class="math notranslate nohighlight">\(n\)</span>, and <span class="math notranslate nohighlight">\(N\)</span> is
+<code class="docutils literal notranslate"><span class="pre">realizations</span></code>. The median curve (<span class="math notranslate nohighlight">\(p=50\)</span>) is the primary Storey Loss
+Function, returned as <code class="docutils literal notranslate"><span class="pre">out[group]['slf']</span></code>; the 16th and 84th percentiles
+(<code class="docutils literal notranslate"><span class="pre">out[group]['slf_16th']</span></code> / <code class="docutils literal notranslate"><span class="pre">out[group]['slf_84th']</span></code>) bound the Monte Carlo
+scatter and are typically shown as a shaded band around the median curve (see
+<a class="reference internal" href="../plo/plot_slf_model.html#openquake.vmtk.plotter.plotter.plot_slf_model" title="openquake.vmtk.plotter.plotter.plot_slf_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">openquake.vmtk.plotter.plotter.plot_slf_model()</span></code></a>).</p>
+<p>Because no functional form is imposed, the curves are exactly as smooth (or as
+noisy) as the underlying Monte Carlo sample — increasing <code class="docutils literal notranslate"><span class="pre">realizations</span></code> reduces
+sampling noise in the percentile curves without introducing any fitting bias.</p>
+<p><strong>Correlation trees</strong></p>
+<p>Components sharing a common support are rarely damaged independently of one
+another. A <code class="docutils literal notranslate"><span class="pre">correlation_tree</span></code> lets one component’s damage state force a
+<em>minimum</em> damage state on another: whenever the <em>causation</em> component reaches (or
+exceeds) a specified damage state, the <em>dependent</em> component’s simulated damage
+state is raised to at least a specified floor, before repair costs are computed.</p>
+<p>The tree is a <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> with one row per component and the following
+columns:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ID</span></code>: the component’s own <code class="docutils literal notranslate"><span class="pre">Component</span> <span class="pre">ID</span></code>. Every <code class="docutils literal notranslate"><span class="pre">Component</span> <span class="pre">ID</span></code> in
+<code class="docutils literal notranslate"><span class="pre">component_data</span></code> must have a matching row in the tree — the two are joined by
+ID, not by row order, so the tree may list components in any order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DEPENDENT</span> <span class="pre">ON</span> <span class="pre">ITEM</span></code>: <code class="docutils literal notranslate"><span class="pre">'Independent'</span></code> for components with no forced
+dependency, or the causation component’s <code class="docutils literal notranslate"><span class="pre">Component</span> <span class="pre">ID</span></code> (as a string)
+otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DS0</span></code>, <code class="docutils literal notranslate"><span class="pre">DS1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">DS{n}</span></code> (one column per possible damage state of the
+causation component, including <code class="docutils literal notranslate"><span class="pre">DS0</span></code> = undamaged): for a dependent row,
+<code class="docutils literal notranslate"><span class="pre">'Independent'</span></code> below the triggering damage state and <code class="docutils literal notranslate"><span class="pre">'DSk'</span></code> (the forced
+floor) at and above it; for an independent row, <code class="docutils literal notranslate"><span class="pre">'Independent'</span></code> in every
+column.</p></li>
+</ul>
+<p>For example, interior door assemblies are typically framed into a partition
+wall’s studs — once the partition passes cosmetic cracking (DS2), the door frame
+racks along with it. If component 5 (the partition, 4 damage states) causes
+component 3 (the door) to be forced to at least DS1:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">correlation_tree</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;ID&quot;</span><span class="p">:</span>                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+    <span class="s2">&quot;DEPENDENT ON ITEM&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;DS0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Independent&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="s2">&quot;DS1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Independent&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="s2">&quot;DS2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;DS1&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;DS3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;DS1&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;DS4&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;DS1&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">,</span> <span class="s2">&quot;Independent&quot;</span><span class="p">],</span>
+<span class="p">})</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">slfgenerator</span><span class="p">(</span>
+    <span class="n">component_data</span><span class="o">=</span><span class="n">inventory</span><span class="p">,</span>
+    <span class="n">edp</span><span class="o">=</span><span class="s2">&quot;PSD&quot;</span><span class="p">,</span>
+    <span class="n">correlation_tree</span><span class="o">=</span><span class="n">correlation_tree</span><span class="p">,</span>
+    <span class="n">grouping_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">realizations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">slfgenerator</span></code> validates the tree at construction time: every <code class="docutils literal notranslate"><span class="pre">Component</span> <span class="pre">ID</span></code>
+in the inventory must have a matching row in the tree, and no forced damage state
+may exceed the number of damage states defined for that component. Both
+<code class="docutils literal notranslate"><span class="pre">component_data['Component</span> <span class="pre">ID']</span></code> and <code class="docutils literal notranslate"><span class="pre">correlation_tree['ID']</span></code> must be unique
+positive integers — the class indexes fragilities, damage states, and repair costs
+internally by <code class="docutils literal notranslate"><span class="pre">Component</span> <span class="pre">ID</span></code>, so duplicate IDs raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> at
+construction time rather than silently mismatching components.</p>
 </div>
 </section>
 </section>

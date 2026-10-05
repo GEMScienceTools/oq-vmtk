@@ -41,11 +41,14 @@ Response Spectrum
    .. math::
 
       S_d(T) = \max_t |u(t)|, \qquad
-      S_v(T) = \omega\,S_d(T), \qquad
-      S_a(T) = \omega^2 S_d(T) / g
+      PSV(T) = \omega\,S_d(T), \qquad
+      PSA(T) = \omega^2 S_d(T) / g
 
-   where :math:`S_d`, :math:`S_v`, and :math:`S_a` are the spectral displacement,
-   pseudo-velocity, and pseudo-acceleration respectively.
+   where :math:`S_d` is the (exact) spectral displacement, and :math:`PSV`,
+   :math:`PSA` are the pseudo-spectral velocity and pseudo-spectral
+   acceleration respectively — algebraic approximations derived from
+   :math:`S_d`, not the true peak relative velocity or peak total
+   acceleration of the oscillator.
 
 .. admonition:: Example
    :class: note
@@ -58,5 +61,5 @@ Response Spectrum
       acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
       im = imcalculator(acc, dt=0.005)
 
-      periods, sd, sv, sa = im.get_spectrum()
-      print(f"Peak Sa = {max(sa):.3f} g at T = {periods[sa.argmax()]:.2f} s")
+      periods, sd, psv, psa = im.get_spectrum()
+      print(f"Peak PSA = {max(psa):.3f} g at T = {periods[psa.argmax()]:.2f} s")

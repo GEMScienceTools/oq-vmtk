@@ -5,7 +5,10 @@ The ``slf_generator`` class generates Storey Loss Functions (SLFs) from fragilit
 consequence, and quantity data. SLFs link expected repair loss at a storey to the
 Engineering Demand Parameter (EDP). A Monte Carlo approach is used to sample damage
 states and associated repair costs across a user-defined inventory of damageable
-components.
+components; the SLF itself is the empirical 16th/50th/84th-percentile storey loss
+ratio across those realisations — no parametric curve is fitted. An optional
+``correlation_tree`` lets one component's damage state force a minimum damage state
+on another (e.g. a partition wall and the door framed into it).
 
 .. toctree::
 

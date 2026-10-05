@@ -110,8 +110,13 @@
 <p>For each intensity stripe the method plots:
 - Individual ground-motion response points coloured and sized by IM level.
 - A filled lognormal PDF silhouette scaled to the inter-stripe spacing.
-- A vertical line at the lognormal median and dashed lines at the 16th/84th percentiles, both labelled on the first stripe only.
-- A horizontal bracket connecting the 16th and 84th percentile ticks per stripe.</p>
+- A vertical line at the lognormal median and dashed lines at the</p>
+<blockquote>
+<div><p>16th/84th percentiles, both labelled on the first stripe only.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>A horizontal bracket connecting the 16th and 84th percentile ticks per stripe.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -123,7 +128,7 @@ Converted to percent internally.</p></li>
 <li><p><strong>edp_label</strong> (<em>str</em>) – X-axis label (e.g. ‘Peak Inter-Storey Drift’).  ‘[%]’ is appended.</p></li>
 <li><p><strong>xlims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) for the EDP (x) axis.</p></li>
 <li><p><strong>ylims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) for the IM (y) axis.</p></li>
-<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Figure title.  Defaults to a standard MSA title.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Figure title. If not provided, no title is displayed.</p></li>
 <li><p><strong>pFlag</strong> (<em>bool</em><em>, </em><em>default True</em>) – Show/save the figure when True; close silently when False.</p></li>
 <li><p><strong>export_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Full file path to save the figure.</p></li>
 </ul>

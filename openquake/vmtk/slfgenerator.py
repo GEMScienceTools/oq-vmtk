@@ -3,8 +3,6 @@ import warnings
 import numpy as np
 import pandas as pd
 from scipy import stats
-from scipy.optimize import curve_fit
-from scipy.stats import genpareto, lognorm
 from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field, validator
 
@@ -168,51 +166,6 @@ class simulation_model(BaseModel):
         arbitrary_types_allowed = True
 
 
-class fitting_model(BaseModel):
-    """Optimised parameters and covariance matrix from curve fitting.
-
-    Attributes
-    ----------
-    popt : np.ndarray
-        Optimised parameter vector.
-    pcov : np.ndarray
-        Covariance matrix of the optimised parameters.
-    """
-
-    popt: np.ndarray
-    pcov: np.ndarray
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class fitting_parameters_model(BaseModel):
-    """Fitting results for multiple quantiles.
-
-    Attributes
-    ----------
-    RootModel : Dict[str, fitting_model]
-        Mapping of quantile label → :class:`fitting_model`.
-    """
-
-    RootModel: Dict[str, fitting_model]
-
-
-class fitted_loss_model(BaseModel):
-    """Fitted loss-function arrays for multiple quantiles.
-
-    Attributes
-    ----------
-    RootModel : Dict[str, np.ndarray]
-        Mapping of quantile label → fitted loss array.
-    """
-
-    RootModel: Dict[str, np.ndarray]
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
 class loss_model(BaseModel):
     """Absolute and normalised loss results per component.
 
@@ -243,8 +196,13 @@ class slf_model(BaseModel):
         Engineering Demand Parameter label.
     edp_range : List[float]
         EDP values over which the SLF is defined.
+    slf_16th : List[float]
+        Empirical 16th-percentile Storey Loss Function values (loss ratio).
     slf : List[float]
-        Mean Storey Loss Function values.
+        Empirical median (50th-percentile) Storey Loss Function values
+        (loss ratio) -- the primary SLF curve.
+    slf_84th : List[float]
+        Empirical 84th-percentile Storey Loss Function values (loss ratio).
     """
 
     directionality: Optional[int]  = Field(alias="Directionality")
@@ -252,7 +210,9 @@ class slf_model(BaseModel):
     storey: Optional[Union[int, List[int]]] = Field(alias="Storey")
     edp: str
     edp_range: List[float]
+    slf_16th: List[float]
     slf: List[float]
+    slf_84th: List[float]
 
 
 # ---------------------------------------------------------------------------
@@ -293,7 +253,6 @@ class slfgenerator:
                  conversion: float = 1.0,
                  realizations: int = 20,
                  replacement_cost: float = 1.0,
-                 regression: str = "Weibull",
                  storey: Union[int, List[int]] = None,
                  directionality: int = None):
         """Initialise the SLF generator.
@@ -322,9 +281,6 @@ class slfgenerator:
             Number of Monte Carlo realizations. Default ``20``.
         replacement_cost : float, optional
             Normalising replacement cost. Default ``1.0``.
-        regression : str, optional
-            Regression model: ``'Weibull'``, ``'Papadopoulos'``, ``'Gdp'``,
-            or ``'Lognormal'``. Default ``'Weibull'``.
         storey : int or List[int], optional
             Storey level(s) to include. Default ``None``.
         directionality : int, optional
@@ -338,7 +294,6 @@ class slfgenerator:
         self.conversion = conversion
         self.realizations = realizations
         self.replacement_cost = replacement_cost
-        self.regression = regression.lower() if regression is not None else None
         self.storey = storey
         self.directionality = directionality
         self.correlation_tree = correlation_tree
@@ -405,6 +360,18 @@ class slfgenerator:
         missing ``Description`` values default to ``'B'``; missing values in
         all other columns (except ``Performance Group`` and ``Typology``) are
         set to ``0``.
+
+        Builds ``self.id_to_pos``, the sole mapping from a component's real
+        ``Component ID`` to its row position in ``self.component_data``.
+        Every other method identifies components by their actual ID (not
+        row position) and consults this map only where it needs to index
+        into a positional array or ``.iloc``.
+
+        Raises
+        ------
+        ValueError
+            If, after auto-assigning missing IDs, ``Component ID`` contains
+            duplicate values.
         """
         self._validate_component_data_schema()
 
@@ -434,6 +401,17 @@ class slfgenerator:
         self.component_data[cols_to_fill] = (
             self.component_data[cols_to_fill].fillna(0)
         )
+
+        ids = self.component_data["Component ID"].astype(int).tolist()
+        if len(set(ids)) != len(ids):
+            dupes = sorted({cid for cid in ids if ids.count(cid) > 1})
+            raise ValueError(
+                f"Duplicate 'Component ID' value(s) after auto-assigning "
+                f"missing IDs: {dupes}. Provide explicit, unique Component "
+                "ID values for every row, or leave them all blank to have "
+                "1..n auto-assigned."
+            )
+        self.id_to_pos = {cid: pos for pos, cid in enumerate(ids)}
 
     def _group_components(self):
         """Partition components into performance groups.
@@ -484,26 +462,39 @@ class slfgenerator:
     def _get_correlation_tree(self):
         """Build the internal correlation matrix from the correlation tree.
 
+        The tree is joined to ``component_data`` by ``Component ID`` (not
+        row order), via ``correlation_tree.set_index('ID').loc[component_ids]``
+        -- so the two DataFrames may list components in different orders.
+
         The matrix has shape
         ``(n_components, n_damage_states + 1)`` where the first column stores
         the causation component ID and the remaining columns store the minimum
         damage state required on the causation component before the dependent
-        component sustains damage.
+        component sustains damage. Row ``i`` of the matrix corresponds to
+        the component whose ID is ``self.correlation_item_ids[i]``, which is
+        also persisted for use by :meth:`validate_ds_dependence`.
 
         Notes
         -----
-        The user is responsible for ensuring that the minimum DS assigned does
-        not exceed the available DS defined for each component.  This is not
-        validated automatically.
+        Both the component inventory and the correlation tree are matched by
+        ``Component ID``/``ID`` -- every ``Component ID`` in the inventory
+        must have a matching row in the tree (enforced by
+        :meth:`_validate_correlation_tree_schema`, which also checks that no
+        minimum DS assigned in the tree exceeds the DS range actually
+        defined for that component).
         """
         damage_states = list(self.component_data["Damage States"])
-        correlation_data = self.correlation_tree.loc[
-            self.component_data.index
-        ].values
+        component_ids = self.component_data["Component ID"].astype(int).tolist()
 
-        self._validate_correlation_tree_schema(damage_states)
+        self._validate_correlation_tree_schema(damage_states, component_ids)
+
+        tree_by_id = self.correlation_tree.set_index("ID")
+        correlation_data = tree_by_id.loc[component_ids].reset_index().values
+        # Row i now corresponds to component_data row i by Component ID,
+        # regardless of the correlation tree's own row order.
 
         item_ids = correlation_data[:, 0]
+        self.correlation_item_ids = item_ids.astype(int)
         correlation_values = np.delete(correlation_data, 0, axis=1)
         self.matrix = np.full(correlation_values.shape, np.nan, dtype=float)
 
@@ -567,19 +558,22 @@ class slfgenerator:
                     "and 'Best Fit'."
                 )
 
-    def _validate_correlation_tree_schema(self, damage_states):
+    def _validate_correlation_tree_schema(self, damage_states, component_ids):
         """Validate the correlation tree against the component inventory.
 
         Parameters
         ----------
         damage_states : list of int
-            Number of damage states for each component (in order).
+            Number of damage states for each component, in the same row
+            order as ``component_ids``.
+        component_ids : list of int
+            ``component_data['Component ID']`` values, in row order.
 
         Raises
         ------
         ValueError
             On duplicate IDs, insufficient columns, DS range violations, or
-            dimension mismatches between the tree and the component data.
+            a component inventory ID missing from the correlation tree.
         """
         corr_dict = self.correlation_tree.to_dict(orient="records")
 
@@ -590,83 +584,30 @@ class slfgenerator:
                 raise ValueError(f"Duplicate ITEM: {model.ID}")
             id_set.add(model.ID)
 
+        missing = [cid for cid in component_ids if cid not in id_set]
+        if missing:
+            raise ValueError(
+                "The correlation tree is missing a row for Component "
+                f"ID(s) {missing} present in the component inventory. "
+                "Every component needs a correlation-tree row (mark it "
+                "'Independent' if it has no forced dependency)."
+            )
+
         if len(self.correlation_tree.keys()) < max(damage_states) + 3:
             raise ValueError(
                 "Unexpected (fewer) number of features in the correlations "
                 "DataFrame."
             )
 
-        for idx, item in enumerate(self.component_data.index):
-            for feature in self.correlation_tree.keys():
-                ds = str(self.correlation_tree.loc[item][feature])
-                if ds == f"DS{damage_states[idx] + 1}":
+        tree_by_id = self.correlation_tree.set_index("ID")
+        for cid, n_ds in zip(component_ids, damage_states):
+            row = tree_by_id.loc[cid]
+            for feature in tree_by_id.columns:
+                if str(row[feature]) == f"DS{n_ds + 1}":
                     raise ValueError(
                         "MIN DS in the correlation tree must not exceed the "
                         "possible DS defined for the element."
                     )
-
-        if len(self.component_data) != len(self.correlation_tree):
-            raise ValueError(
-                "Number of items in the correlation tree and component data "
-                "must match."
-            )
-
-    def _fit_regression(self, losses, edp_range, fitting_function, percentiles):
-        """Fit a single regression model across all requested quantiles.
-
-        Parameters
-        ----------
-        losses : dict
-            Quantile tables for ``'loss'`` and ``'loss_ratio'``.
-        edp_range : np.ndarray
-            EDP values used as the independent variable for fitting.
-        fitting_function : dict
-            Dictionary with keys ``'func'`` (callable) and ``'p0'`` (initial
-            parameter guess list).
-        percentiles : list of float
-            Quantiles to fit (e.g. ``[0.16, 0.50, 0.84]``).
-
-        Returns
-        -------
-        losses_fitted : dict
-            Fitted loss-ratio arrays keyed by quantile label and ``'mean'``.
-        fitting_parameters : dict
-            Fitted ``popt`` and ``pcov`` keyed by quantile label and ``'mean'``.
-        error_max : float
-            Maximum absolute regression error as a percentage.
-        error_cum : float
-            Cumulative regression error as a percentage.
-        """
-        losses_fitted = {}
-        fitting_parameters = {}
-
-        for q in percentiles + ["mean"]:
-            max_val = max(losses["loss_ratio"].loc[q])
-            normalised = losses["loss_ratio"].loc[q] / max_val
-
-            try:
-                popt, pcov = curve_fit(
-                    fitting_function["func"],
-                    edp_range,
-                    normalised,
-                    p0=fitting_function["p0"],
-                    maxfev=10 ** 6,
-                )
-            except RuntimeError as exc:
-                print(
-                    f"Regression failed at quantile {q}: {exc}"
-                )
-                continue
-
-            fitted = fitting_function["func"](edp_range, *popt) * max_val
-            fitted[fitted <= 0] = 0.0
-            losses_fitted[q] = fitted
-            fitting_parameters[q] = {"popt": popt, "pcov": pcov}
-
-        error_max, error_cum = self.estimate_accuracy(
-            losses["loss_ratio"].loc["mean"], losses_fitted["mean"]
-        )
-        return losses_fitted, fitting_parameters, error_max, error_cum
 
     # -----------------------------------------------------------------------
     # Public methods
@@ -679,7 +620,7 @@ class slfgenerator:
         -------
         fragilities : dict
             Keys ``'EDP'`` (np.ndarray) and ``'IDs'`` (nested dict mapping
-            component index → DS label → exceedance probability array).
+            Component ID → DS label → exceedance probability array).
         means_cost : np.ndarray
             Shape ``(n_components, n_ds)`` — mean repair costs per DS.
         covs_cost : np.ndarray
@@ -692,6 +633,7 @@ class slfgenerator:
                     "Damage States"],
             axis=1,
         ).values
+        component_ids = self.component_data["Component ID"].astype(int).to_numpy()
 
         num_components = len(data)
         means_fr  = data[:, :n_ds]
@@ -701,14 +643,15 @@ class slfgenerator:
 
         fragilities = {"EDP": self.edp_range, "IDs": {}}
 
-        for item in range(num_components):
-            fragilities["IDs"][item + 1] = {}
+        for pos in range(num_components):
+            cid = int(component_ids[pos])
+            fragilities["IDs"][cid] = {}
             for ds in range(n_ds):
-                mean_val = means_fr[item, ds]
-                cov_val  = covs_fr[item, ds]
+                mean_val = means_fr[pos, ds]
+                cov_val  = covs_fr[pos, ds]
 
                 if mean_val == 0:
-                    fragilities["IDs"][item + 1][f"DS{ds + 1}"] = np.zeros(
+                    fragilities["IDs"][cid][f"DS{ds + 1}"] = np.zeros(
                         len(self.edp_range)
                     )
                 else:
@@ -717,7 +660,7 @@ class slfgenerator:
                     curve = stats.norm.cdf(
                         np.log(self.edp_range / log_mean) / log_std
                     )
-                    fragilities["IDs"][item + 1][f"DS{ds + 1}"] = (
+                    fragilities["IDs"][cid][f"DS{ds + 1}"] = (
                         np.nan_to_num(curve)
                     )
 
@@ -736,7 +679,7 @@ class slfgenerator:
         dict
             ``{item_id: {realization_index: damage_state_array}}``.
         """
-        n_ds = len(fragilities["IDs"][1])
+        n_ds = len(next(iter(fragilities["IDs"].values())))
         ds_range = np.arange(0, n_ds + 1)
 
         # Pre-generate all random numbers at once
@@ -784,18 +727,19 @@ class slfgenerator:
             return damage_state
 
         for i in range(self.matrix.shape[0]):
-            if i + 1 == self.matrix[i][0]:
+            own_id = int(self.correlation_item_ids[i])
+            if own_id == int(self.matrix[i][0]):
                 continue  # Independent component — skip
 
             m = int(self.matrix[i][0])   # causation component ID
-            j = i + 1                    # dependent component ID
+            j = own_id                    # dependent component ID (from the tree)
             for n in range(self.realizations):
                 causation_ds  = damage_state[m][n]
                 correlated_ds = damage_state[j][n]
 
                 temp = np.zeros(causation_ds.shape)
                 for ds in range(1, self.matrix.shape[1]):
-                    temp[causation_ds == ds - 1] = self.matrix[j - 1][ds]
+                    temp[causation_ds == ds - 1] = self.matrix[i][ds]
 
                 damage_state[j][n] = np.maximum(correlated_ds, temp)
 
@@ -836,7 +780,7 @@ class slfgenerator:
 
         repair_cost = {}
         for item in damage_state:
-            idx = int(item) - 1
+            pos = self.id_to_pos[item]
             repair_cost[item] = {}
             for n in range(self.realizations):
                 for ds in range(num_ds + 1):
@@ -846,33 +790,47 @@ class slfgenerator:
                         )
                     else:
                         best_fit = (
-                            self.component_data.iloc[item - 1][
+                            self.component_data.iloc[pos][
                                 f"DS{ds}, Best Fit"
                             ].lower()
                         )
-                        mu  = means_cost[idx][ds - 1]
-                        cov = covs_cost[idx][ds - 1]
+                        mu  = means_cost[pos][ds - 1]
+                        cov = covs_cost[pos][ds - 1]
                         idx_list = np.where(damage_state[item][n] == ds)[0]
+                        n_repair = len(idx_list)
 
-                        for idx_repair in idx_list:
+                        if n_repair:
                             if best_fit == "lognormal":
                                 # Lognormal is always positive — sample directly,
                                 # no rejection loop needed.
                                 std_log = np.sqrt(np.log(1.0 + cov ** 2))
                                 m_log   = np.log(mu) - 0.5 * std_log ** 2
-                                a = np.random.lognormal(m_log, std_log)
+                                a_vals = np.random.lognormal(
+                                    m_log, std_log, size=n_repair
+                                )
+                            elif cov > 0:
+                                # Normal truncated at 0 -- same distribution as
+                                # "resample until positive", but no unbounded
+                                # rejection loop (which could hang if cov == 0
+                                # and mu <= 0, since every draw would then be
+                                # the same non-positive value). Drawn in one
+                                # batched call per (component, realization, DS)
+                                # rather than one at a time -- scipy's rv_continuous
+                                # machinery has substantial per-call overhead.
+                                a_std = cov * mu
+                                a_vals = stats.truncnorm.rvs(
+                                    (0 - mu) / a_std, np.inf,
+                                    loc=mu, scale=a_std, size=n_repair,
+                                )
                             else:
-                                # Normal can yield negatives — resample until positive.
-                                a = np.random.normal(mu, cov * mu)
-                                while a < 0:
-                                    a = np.random.normal(mu, cov * mu)
+                                a_vals = np.full(n_repair, mu)
 
-                            repair_cost[item][n][idx_repair] = a
+                            repair_cost[item][n][idx_list] = a_vals
 
         # Aggregate to storey-level totals
         total_repair_cost = {
             item: {
-                n: repair_cost[item][n] * quantities.iloc[item - 1]
+                n: repair_cost[item][n] * quantities.iloc[self.id_to_pos[item]]
                 for n in range(self.realizations)
             }
             for item in damage_state
@@ -896,170 +854,18 @@ class slfgenerator:
 
         return total_loss_storey, total_loss_storey_ratio, repair_cost
 
-    def perform_regression(self,
-                           loss: dict,
-                           loss_ratio: dict,
-                           regression_type: str = None,
-                           percentiles: List[float] = None) -> tuple:
-        """Fit a regression model to the simulated loss data.
-
-        If ``regression_type`` is ``None`` all supported models are tried and
-        the one with the lowest combined error is selected.
-
-        Parameters
-        ----------
-        loss : dict
-            Raw storey-loss arrays ``{realization: array}``.
-        loss_ratio : dict
-            Normalised storey-loss ratio arrays ``{realization: array}``.
-        regression_type : str, optional
-            One of ``'weibull'``, ``'papadopoulos'``, ``'gpd'``,
-            ``'lognormal'``.  If ``None``, all models are tried.
-        percentiles : list of float, optional
-            Quantiles to compute. Default ``[0.16, 0.50, 0.84]``.
-
-        Returns
-        -------
-        losses : dict
-            Quantile tables for ``'loss'`` and ``'loss_ratio'``.
-        losses_fitted : dict
-            Fitted loss-ratio arrays for each quantile and the mean.
-        fitting_parameters : dict
-            Fitted parameters per quantile.
-        error_max : float
-            Maximum regression error (%).
-        error_cum : float
-            Cumulative regression error (%).
-
-        Raises
-        ------
-        ValueError
-            If ``regression_type`` is not a supported model name.
-        """
-        percentiles = percentiles or [0.16, 0.50, 0.84]
-
-        loss_df       = pd.DataFrame.from_dict(loss)
-        loss_ratio_df = pd.DataFrame.from_dict(loss_ratio)
-
-        losses = {
-            "loss":       loss_df.quantile(percentiles, axis=1),
-            "loss_ratio": loss_ratio_df.quantile(percentiles, axis=1),
-        }
-        losses["loss"].loc["mean"]       = loss_df.mean(axis=1)
-        losses["loss_ratio"].loc["mean"] = loss_ratio_df.mean(axis=1)
-
-        edp_range = (
-            self.edp_range * 100
-            if self.edp in ("idr", "psd")
-            else self.edp_range
-        )
-
-        fitting_functions = {
-            "weibull": {
-                "func": lambda x, a, b, c: a * (1 - np.exp(-((x / b) ** c))),
-                "p0": [1.0, 1.0, 1.0],
-            },
-            "papadopoulos": {
-                "func": (
-                    lambda x, a, b, c, d, e:
-                    e * (x ** a) / (b ** a + x ** a)
-                    + (1 - e) * (x ** c) / (d ** c + x ** c)
-                ),
-                "p0": [1.0, 1.0, 1.0, 1.0, 0.5],
-            },
-            "gpd": {
-                "func": lambda x, c, loc, scale: genpareto.cdf(
-                    x, c, loc=loc, scale=scale
-                ),
-                "p0": [0.1, 0.0, 1.0],
-            },
-            "lognormal": {
-                "func": lambda x, mean, sigma: lognorm.cdf(
-                    x, sigma, scale=np.exp(mean)
-                ),
-                "p0": [1.0, 1.0],
-            },
-        }
-
-        if regression_type is None:
-            best = {
-                "losses_fitted": None,
-                "fitting_parameters": None,
-                "error_max": float("inf"),
-                "error_cum": float("inf"),
-            }
-            for reg_type, fn in fitting_functions.items():
-                try:
-                    lf, fp, em, ec = self._fit_regression(
-                        losses, edp_range, fn, percentiles
-                    )
-                    if em < best["error_max"] and ec < best["error_cum"]:
-                        best.update(
-                            losses_fitted=lf,
-                            fitting_parameters=fp,
-                            error_max=em,
-                            error_cum=ec,
-                        )
-                        self.regression = reg_type
-                except Exception as exc:
-                    print(f"Regression failed for '{reg_type}': {exc}")
-
-            return (
-                losses,
-                best["losses_fitted"],
-                best["fitting_parameters"],
-                best["error_max"],
-                best["error_cum"],
-            )
-
-        if regression_type not in fitting_functions:
-            raise ValueError(
-                f"Regression type '{regression_type}' is not supported. "
-                f"Choose from: {list(fitting_functions)}."
-            )
-
-        lf, fp, em, ec = self._fit_regression(
-            losses, edp_range, fitting_functions[regression_type], percentiles
-        )
-        return losses, lf, fp, em, ec
-
-    def estimate_accuracy(self,
-                          y: np.ndarray,
-                          yhat: np.ndarray) -> tuple:
-        """Compute max and cumulative regression errors as percentages.
-
-        Parameters
-        ----------
-        y : np.ndarray
-            Observed (true) values.
-        yhat : np.ndarray
-            Predicted values.
-
-        Returns
-        -------
-        error_max : float
-            Largest absolute error as a percentage of ``max(y)``.
-        error_cum : float
-            Sum of absolute errors weighted by ``edp_bin``, as a percentage
-            of ``max(y)``.
-        """
-        y    = np.asarray(y)
-        yhat = np.asarray(yhat)
-        abs_error = np.abs(y - yhat)
-        max_y = np.max(y)
-        error_max = np.max(abs_error) / max_y * 100
-        error_cum = self.edp_bin * np.sum(abs_error) / max_y * 100
-        return error_max, error_cum
-
     def transform_output(self,
-                         losses_fitted: dict,
+                         slf_16th: np.ndarray,
+                         slf_median: np.ndarray,
+                         slf_84th: np.ndarray,
                          typology: str = None) -> dict:
-        """Convert fitted SLF results into the standard output dictionary.
+        """Build the SLF output record for a performance group.
 
         Parameters
         ----------
-        losses_fitted : dict
-            Fitted loss functions as returned by :meth:`perform_regression`.
+        slf_16th, slf_median, slf_84th : np.ndarray
+            Empirical 16th/50th/84th percentile of the storey loss RATIO,
+            evaluated at every point in ``self.edp_range``.
         typology : str, optional
             Component type label (e.g. ``'PSD, NS'``). Default ``None``.
 
@@ -1067,7 +873,9 @@ class slfgenerator:
         -------
         dict
             SLF record with keys ``'Directionality'``, ``'Component-type'``,
-            ``'Storey'``, ``'edp'``, ``'edp_range'``, and ``'slf'``.
+            ``'Storey'``, ``'edp'``, ``'edp_range'``, ``'slf_16th'``,
+            ``'slf'`` (the empirical median -- the primary SLF curve), and
+            ``'slf_84th'``.
         """
         return {
             "Directionality": self.directionality,
@@ -1075,7 +883,9 @@ class slfgenerator:
             "Storey":         self.storey,
             "edp":            self.edp,
             "edp_range":      list(self.edp_range),
-            "slf":            list(losses_fitted["mean"]),
+            "slf_16th":       list(slf_16th),
+            "slf":            list(slf_median),
+            "slf_84th":       list(slf_84th),
         }
 
     def generate(self) -> tuple:
@@ -1087,17 +897,24 @@ class slfgenerator:
         2. Sample damage states via Monte Carlo simulation.
         3. Enforce correlated damage state constraints.
         4. Calculate repair costs per group.
-        5. Fit regression models to the simulated loss data.
-        6. Transform results into the output format.
-        7. Compute empirical statistics (16th, median, 84th percentile).
+        5. Compute the empirical 16th/50th/84th percentile of the storey
+           loss ratio across all Monte Carlo realizations -- this IS the
+           Storey Loss Function. No parametric curve is fitted to it.
 
         Returns
         -------
         out : dict
-            ``{group_label: slf_dict}`` — one SLF record per performance group.
+            ``{group_label: slf_dict}`` -- one SLF record per performance
+            group, with ``'slf_16th'``, ``'slf'`` (median), and
+            ``'slf_84th'`` giving the empirical percentiles of the storey
+            loss ratio vs. ``'edp_range'``.
         cache : dict
-            Intermediate data for each group (fragilities, losses, fitted
-            parameters, empirical statistics, etc.).
+            Intermediate data for each group: fragilities, raw
+            per-realization losses (both absolute ``'total_loss_storey'``
+            and ratio ``'total_loss_storey_ratio'`` units), repair costs,
+            the group-sliced damage states, and the same empirical
+            percentiles as ``out`` (mirrored here as
+            ``'empirical_16th'``/``'empirical_median'``/``'empirical_84th'``).
         """
         out, cache = {}, {}
 
@@ -1129,35 +946,32 @@ class slfgenerator:
             total, ratio, repair_cost = self.calculate_costs(
                 ds_group, means_cost, covs_cost
             )
-            losses, losses_fitted, fitting_parameters, error_max, error_cum = (
-                self.perform_regression(total, ratio, self.regression)
-            )
+
+            # Empirical percentiles of the storey loss RATIO -- the
+            # canonical (dimensionless) Storey Loss Function. Computed
+            # once and reused for both 'out' and 'cache' so they never
+            # diverge.
+            ratio_matrix = np.array([ratio[i] for i in range(len(ratio))])
+            slf_16th   = np.percentile(ratio_matrix, 16, axis=0)
+            slf_median = np.median(ratio_matrix, axis=0)
+            slf_84th   = np.percentile(ratio_matrix, 84, axis=0)
 
             group_str = str(group)
-            out[group_str] = self.transform_output(losses_fitted, typology)
-            out[group_str]["error_max"] = error_max
-            out[group_str]["error_cum"] = error_cum
-
-            # Compute empirical statistics over all realizations
-            loss_matrix = np.array(
-                [total[i] for i in range(len(total))]
+            out[group_str] = self.transform_output(
+                slf_16th, slf_median, slf_84th, typology
             )
+
             cache[group_str] = {
-                "component":             component_data_group,
-                "fragilities":           fragilities_group,
-                "total_loss_storey":     total,
+                "component":               component_data_group,
+                "fragilities":             fragilities_group,
+                "total_loss_storey":       total,
                 "total_loss_storey_ratio": ratio,
-                "repair_cost":           repair_cost,
-                "damage_states":         damage_state,
-                "losses":                losses,
-                "slfs":                  losses_fitted,
-                "fit_pars":              fitting_parameters,
-                "accuracy":              [error_max, error_cum],
-                "regression":            self.regression,
-                "edp":                   self.edp,
-                "empirical_median":      np.median(loss_matrix, axis=0),
-                "empirical_16th":        np.percentile(loss_matrix, 16, axis=0),
-                "empirical_84th":        np.percentile(loss_matrix, 84, axis=0),
+                "repair_cost":             repair_cost,
+                "damage_states":           ds_group,
+                "edp":                     self.edp,
+                "empirical_16th":          slf_16th,
+                "empirical_median":        slf_median,
+                "empirical_84th":          slf_84th,
             }
 
         self.cache = cache

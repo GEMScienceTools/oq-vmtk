@@ -60,7 +60,7 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 
 ### Structural Modelling
 - Compile idealised SDOF and MDOF stick-and-mass models directly in Python via OpenSeesPy.
-- Calibrate MDOF inter-storey properties from SDOF capacity curves to achieve consistency in fundamental period and modal participation.
+- Calibrate MDOF inter-storey force-deformation properties from SDOF capacity curves via a first-mode shape assumption (power-law for frame buildings, eigenvector-derived otherwise) and modal participation.
 - Run modal analysis, static/cyclic pushover, gravity analysis, and nonlinear time-history analysis within a unified API.
 
 ### Ground Motion Processing
@@ -75,9 +75,9 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 - Nine fragility fitting approaches including lognormal CDF variants, GLM (logit/probit), ordinal CLMs (constant and variable dispersion), and MCMC.
 
 ### Vulnerability & Loss Assessment
-- Combine fragility functions with consequence models (damage-to-loss ratios) to derive mean vulnerability functions with explicit uncertainty treatment (Beta distribution, explicit and Silva 2019 COV methods).
+- Combine fragility functions with consequence models (damage-to-loss ratios) to derive mean vulnerability functions with explicit uncertainty treatment (Beta distribution, law-of-total-variance COV method).
 - Apply storey loss functions to derive component-level and system-level vulnerability models.
-- Compute Average Annual Damage Probability (AADP) and Average Annual Loss Ratio (AALR) by integrating with site hazard curves.
+- Compute Average Annual Damage Probability (AADP) and Average Annual Loss Ratio (AALR) via a single `calculate_risk` method, by integrating fragility or vulnerability curves with site hazard curves.
 
 ---
 

@@ -2461,18 +2461,22 @@ class plotter:
         """
         Generate a plot to visualize the Storey Loss Function (SLF) model output.
 
-        This function visualizes the storey loss for different realizations of a model
-        by plotting the following:
-        1. Scatter plot of total storey loss for each realization.
-        2. Shaded region representing the 16th to 84th percentiles of the empirical data.
-        3. Plot of the median of the empirical data for simulations.
-        4. Fitted Storey Loss Function (SLF) curve.
+        Visualises, for every performance-group key shared by ``out`` and
+        ``cache`` (overlaid on the same axes if more than one key is
+        present -- e.g. to compare two ``slfgenerator`` runs side by side):
 
-        The plot includes:
-        - A scatter plot of the total loss per storey for each realization.
-        - A shaded area representing the empirical 16th to 84th percentiles.
-        - The median storey loss curve based on simulations.
-        - The fitted SLF curve.
+        1. A scatter cloud of the per-realization storey loss RATIO
+           (``cache[key]['total_loss_storey_ratio']``) vs. EDP.
+        2. A shaded band spanning the empirical 16th-84th percentile of the
+           loss ratio (``out[key]['slf_16th']`` / ``out[key]['slf_84th']``).
+        3. The empirical median loss-ratio curve (``out[key]['slf']``) --
+           this IS the Storey Loss Function; no fitted/regression curve is
+           plotted, since :meth:`slfgenerator.generate` no longer fits one.
+
+        All three are expressed as loss RATIO (loss / replacement cost),
+        the conventional, dimensionless definition of a Storey Loss
+        Function, so the scatter, band, and median line share consistent
+        units on a single set of axes.
 
         The figure uses ``self.figsize`` with ``constrained_layout`` and is
         saved without ``bbox_inches='tight'`` so that every output image has
@@ -2481,24 +2485,31 @@ class plotter:
         Parameters
         ----------
         out : dict
-            Results dictionary with keys ``'edp_range'`` and ``'slf'``
-            (the fitted Storey Loss Function curve).
+            ``{group_key: slf_dict}`` as returned by
+            :meth:`openquake.vmtk.slfgenerator.slfgenerator.generate`. Each
+            ``slf_dict`` must provide ``'edp_range'``, ``'slf_16th'``,
+            ``'slf'`` (median), and ``'slf_84th'`` (all loss-ratio values).
+            Pass a dict with more than one key (e.g.
+            ``{'Example A': out_a[...], 'Example B': out_b[...]}``) to
+            overlay several SLF results on one figure.
 
         cache : dict
-            Cached simulation data with keys ``'total_loss_storey'``,
-            ``'empirical_16th'``, ``'empirical_84th'``, and ``'empirical_median'``.
+            ``{group_key: cache_dict}`` as returned by
+            :meth:`openquake.vmtk.slfgenerator.slfgenerator.generate`. Each
+            ``cache_dict`` must provide ``'total_loss_storey_ratio'``
+            (``{realization: array}``).
 
         edp_label : str
             Label for the x-axis (Engineering Demand Parameter).
 
         loss_label : str
-            Label for the y-axis (Storey Loss Ratio).
+            Label for the y-axis. Typically ``'Storey Loss Ratio [-]'``.
 
         xlims : tuple of float
             (min, max) limits for the X-axis (EDP axis).
 
         ylims : tuple of float
-            (min, max) limits for the Y-axis (Loss axis).
+            (min, max) limits for the Y-axis (loss-ratio axis).
 
         title : str, optional
             Custom plot title.
@@ -2515,44 +2526,45 @@ class plotter:
         None
         """
         keys_list = list(cache.keys())
-        for i, current_key in enumerate(keys_list):
-            rlz = len(cache[current_key]['total_loss_storey'])
-            total_loss_storey_array = np.array(
-                [cache[current_key]['total_loss_storey'][i] for i in range(rlz)])
+        # self.colors['gem'] has near-duplicate shades at adjacent indices
+        # (e.g. indices 0/1 are both dark teal, 2/3 both bright cyan) --
+        # cycle through one representative of each visually distinct
+        # cluster first so a 2-3 way comparison stays legible.
+        gem = self.colors['gem']
+        palette_order = [0, 2, 4, 1, 3, 5, 6]
+        palette = [gem[i] for i in palette_order if i < len(gem)]
 
-            fig, ax = plt.subplots(
-                figsize=self.figsize, constrained_layout=True)
-            self._set_plot_style(ax, xlabel=edp_label, ylabel='Storey Loss')
+        fig, ax = plt.subplots(figsize=self.figsize, constrained_layout=True)
+
+        for k, current_key in enumerate(keys_list):
+            color = palette[k % len(palette)]
+            edp_range = out[current_key]['edp_range']
+
+            ratio_dict = cache[current_key]['total_loss_storey_ratio']
+            rlz = len(ratio_dict)
+            ratio_array = np.array([ratio_dict[i] for i in range(rlz)])
 
             for i in range(rlz):
-                ax.scatter(out[current_key]['edp_range'],
-                           total_loss_storey_array[i,
-                                                   :],
-                           color=self.colors['gem'][3],
-                           s=self.marker_sizes['small'],
-                           alpha=0.5)
+                ax.scatter(edp_range,
+                          ratio_array[i, :],
+                          color=color,
+                          s=self.marker_sizes['small'],
+                          alpha=0.3)
 
+            suffix = f' — {current_key}' if len(keys_list) > 1 else ''
             ax.fill_between(
-                out[current_key]['edp_range'],
-                cache[current_key]['empirical_16th'],
-                cache[current_key]['empirical_84th'],
-                color='gray',
-                alpha=0.3,
-                label=r'16$^{\text{th}}$-84$^{\text{th}}$ Percentile')
+                edp_range,
+                out[current_key]['slf_16th'],
+                out[current_key]['slf_84th'],
+                color=color,
+                alpha=0.2,
+                label=fr'16$^{{\text{{th}}}}$-84$^{{\text{{th}}}}$ Percentile{suffix}')
             ax.plot(
-                out[current_key]['edp_range'],
-                cache[current_key]['empirical_median'],
-                lw=self.line_widths['medium'],
-                color='blue',
-                label='Simulations - Median')
-            ax.plot(
-                out[current_key]['edp_range'],
+                edp_range,
                 out[current_key]['slf'],
-                color='black',
                 lw=self.line_widths['medium'],
-                label='SLF - Fitted')
-
-            ax.legend(fontsize=self.font_sizes['legend'])
+                color=color,
+                label=f'SLF - Median{suffix}')
 
         self._set_plot_style(ax,
                              title=title,

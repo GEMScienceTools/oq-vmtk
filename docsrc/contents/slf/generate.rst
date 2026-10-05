@@ -31,7 +31,6 @@ notebook.
        conversion=1.0,
        realizations=500,
        replacement_cost=1.0,
-       regression=None,
    )
 
    # 3. Generate and plot the SLF
@@ -39,8 +38,9 @@ notebook.
    plotter().plot_slf_model(
        slf, cache,
        edp_label="Interstorey Drift Ratio [-]",
-       loss_label="Drift-Sensitive NSC Storey Loss",
+       loss_label="Drift-Sensitive NSC Storey Loss Ratio",
        xlims=[0, 0.05],
+       ylims=[0, 1],
        title="Drift-Sensitive SLF",
    )
 
@@ -74,23 +74,91 @@ notebook.
    Damage states are sampled via Monte Carlo simulation across a user-defined EDP range.
    For :math:`N` realisations, each realisation draws a damage state for every component
    at every EDP level. Component costs are summed within each performance group to obtain
-   the total group loss per realisation.
+   the total group loss ratio per realisation (loss normalised by ``replacement_cost``).
 
-   **Regression and SLF fitting**
+   **Empirical SLF percentiles**
 
-   The empirical loss-EDP cloud (from all Monte Carlo realisations) is fitted by
-   regression to one of several functional forms (Weibull, Papadopoulos, Generalised
-   Pareto, or Lognormal). The fitted curve is the SLF for the group:
+   No parametric curve is fitted to the Monte Carlo loss cloud. Instead, at each EDP
+   level the storey loss RATIO is summarised directly from the ``realizations`` Monte
+   Carlo draws via its empirical 16th, 50th (median), and 84th percentiles:
 
    .. math::
 
-      \hat{\ell}_g(x) = f_{\boldsymbol{\theta}}(x)
+      \hat{\ell}_g^{(p)}(x) = \text{Percentile}_p\left(\{\ell_g^{(n)}(x)\}_{n=1}^{N}\right),
+      \quad p \in \{16, 50, 84\}
 
-   where :math:`\boldsymbol{\theta}` are the regression parameters estimated by
-   minimising the sum of squared residuals between the empirical median loss and the
-   fitted curve.
+   where :math:`\ell_g^{(n)}(x)` is the simulated storey loss ratio for performance
+   group :math:`g` at EDP level :math:`x` in realisation :math:`n`, and :math:`N` is
+   ``realizations``. The median curve (:math:`p=50`) is the primary Storey Loss
+   Function, returned as ``out[group]['slf']``; the 16th and 84th percentiles
+   (``out[group]['slf_16th']`` / ``out[group]['slf_84th']``) bound the Monte Carlo
+   scatter and are typically shown as a shaded band around the median curve (see
+   :meth:`openquake.vmtk.plotter.plotter.plot_slf_model`).
 
-   Empirical statistics (median, 16th and 84th percentiles) across realisations are
-   also retained in the cache for uncertainty characterisation.
+   Because no functional form is imposed, the curves are exactly as smooth (or as
+   noisy) as the underlying Monte Carlo sample — increasing ``realizations`` reduces
+   sampling noise in the percentile curves without introducing any fitting bias.
 
+   **Correlation trees**
+
+   Components sharing a common support are rarely damaged independently of one
+   another. A ``correlation_tree`` lets one component's damage state force a
+   *minimum* damage state on another: whenever the *causation* component reaches (or
+   exceeds) a specified damage state, the *dependent* component's simulated damage
+   state is raised to at least a specified floor, before repair costs are computed.
+
+   The tree is a ``pandas.DataFrame`` with one row per component and the following
+   columns:
+
+   - ``ID``: the component's own ``Component ID``. Every ``Component ID`` in
+     ``component_data`` must have a matching row in the tree — the two are joined by
+     ID, not by row order, so the tree may list components in any order.
+   - ``DEPENDENT ON ITEM``: ``'Independent'`` for components with no forced
+     dependency, or the causation component's ``Component ID`` (as a string)
+     otherwise.
+   - ``DS0``, ``DS1``, ..., ``DS{n}`` (one column per possible damage state of the
+     causation component, including ``DS0`` = undamaged): for a dependent row,
+     ``'Independent'`` below the triggering damage state and ``'DSk'`` (the forced
+     floor) at and above it; for an independent row, ``'Independent'`` in every
+     column.
+
+   For example, interior door assemblies are typically framed into a partition
+   wall's studs — once the partition passes cosmetic cracking (DS2), the door frame
+   racks along with it. If component 5 (the partition, 4 damage states) causes
+   component 3 (the door) to be forced to at least DS1:
+
+   .. code-block:: python
+
+      import pandas as pd
+
+      correlation_tree = pd.DataFrame({
+          "ID":                [1, 2, 3, 4, 5, 6, 7],
+          "DEPENDENT ON ITEM": ["Independent", "Independent", "5",
+                                 "Independent", "Independent",
+                                 "Independent", "Independent"],
+          "DS0": ["Independent"] * 7,
+          "DS1": ["Independent"] * 7,
+          "DS2": ["Independent", "Independent", "DS1", "Independent",
+                  "Independent", "Independent", "Independent"],
+          "DS3": ["Independent", "Independent", "DS1", "Independent",
+                  "Independent", "Independent", "Independent"],
+          "DS4": ["Independent", "Independent", "DS1", "Independent",
+                  "Independent", "Independent", "Independent"],
+      })
+
+      model = slfgenerator(
+          component_data=inventory,
+          edp="PSD",
+          correlation_tree=correlation_tree,
+          grouping_flag=True,
+          realizations=500,
+      )
+
+   ``slfgenerator`` validates the tree at construction time: every ``Component ID``
+   in the inventory must have a matching row in the tree, and no forced damage state
+   may exceed the number of damage states defined for that component. Both
+   ``component_data['Component ID']`` and ``correlation_tree['ID']`` must be unique
+   positive integers — the class indexes fragilities, damage states, and repair costs
+   internally by ``Component ID``, so duplicate IDs raise a ``ValueError`` at
+   construction time rather than silently mismatching components.
 

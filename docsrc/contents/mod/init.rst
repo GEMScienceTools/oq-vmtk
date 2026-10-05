@@ -19,4 +19,8 @@ Initialisation
                                   [0., 0.005, 0.02, 0.06]]),
           storey_forces=np.array([[0., 250., 320., 200.],
                                   [0., 220., 280., 180.]]),
+          degradation=True,
+          # Optional: override individual Pinching4 parameters; any
+          # key not provided falls back to the toolkit's default.
+          pinching4_params={'gK2': 0.15, 'gFLim': 0.8},
       )

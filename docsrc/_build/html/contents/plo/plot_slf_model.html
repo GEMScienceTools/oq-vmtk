@@ -107,31 +107,43 @@
 <dt class="sig sig-object py" id="openquake.vmtk.plotter.plotter.plot_slf_model">
 <span class="sig-prename descclassname"><span class="pre">plotter.</span></span><span class="sig-name descname"><span class="pre">plot_slf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edp_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pFlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/plotter.html#plotter.plot_slf_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.plotter.plotter.plot_slf_model" title="Link to this definition"></a></dt>
 <dd><p>Generate a plot to visualize the Storey Loss Function (SLF) model output.</p>
-<p>This function visualizes the storey loss for different realizations of a model
-by plotting the following:
-1. Scatter plot of total storey loss for each realization.
-2. Shaded region representing the 16th to 84th percentiles of the empirical data.
-3. Plot of the median of the empirical data for simulations.
-4. Fitted Storey Loss Function (SLF) curve.</p>
-<p>The plot includes:
-- A scatter plot of the total loss per storey for each realization.
-- A shaded area representing the empirical 16th to 84th percentiles.
-- The median storey loss curve based on simulations.
-- The fitted SLF curve.</p>
+<p>Visualises, for every performance-group key shared by <code class="docutils literal notranslate"><span class="pre">out</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cache</span></code> (overlaid on the same axes if more than one key is
+present – e.g. to compare two <code class="docutils literal notranslate"><span class="pre">slfgenerator</span></code> runs side by side):</p>
+<ol class="arabic simple">
+<li><p>A scatter cloud of the per-realization storey loss RATIO
+(<code class="docutils literal notranslate"><span class="pre">cache[key]['total_loss_storey_ratio']</span></code>) vs. EDP.</p></li>
+<li><p>A shaded band spanning the empirical 16th-84th percentile of the
+loss ratio (<code class="docutils literal notranslate"><span class="pre">out[key]['slf_16th']</span></code> / <code class="docutils literal notranslate"><span class="pre">out[key]['slf_84th']</span></code>).</p></li>
+<li><p>The empirical median loss-ratio curve (<code class="docutils literal notranslate"><span class="pre">out[key]['slf']</span></code>) –
+this IS the Storey Loss Function; no fitted/regression curve is
+plotted, since <code class="xref py py-meth docutils literal notranslate"><span class="pre">slfgenerator.generate()</span></code> no longer fits one.</p></li>
+</ol>
+<p>All three are expressed as loss RATIO (loss / replacement cost),
+the conventional, dimensionless definition of a Storey Loss
+Function, so the scatter, band, and median line share consistent
+units on a single set of axes.</p>
 <p>The figure uses <code class="docutils literal notranslate"><span class="pre">self.figsize</span></code> with <code class="docutils literal notranslate"><span class="pre">constrained_layout</span></code> and is
 saved without <code class="docutils literal notranslate"><span class="pre">bbox_inches='tight'</span></code> so that every output image has
 identical, deterministic pixel dimensions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>out</strong> (<em>dict</em>) – Results dictionary with keys <code class="docutils literal notranslate"><span class="pre">'edp_range'</span></code> and <code class="docutils literal notranslate"><span class="pre">'slf'</span></code>
-(the fitted Storey Loss Function curve).</p></li>
-<li><p><strong>cache</strong> (<em>dict</em>) – Cached simulation data with keys <code class="docutils literal notranslate"><span class="pre">'total_loss_storey'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'empirical_16th'</span></code>, <code class="docutils literal notranslate"><span class="pre">'empirical_84th'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'empirical_median'</span></code>.</p></li>
+<li><p><strong>out</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">{group_key:</span> <span class="pre">slf_dict}</span></code> as returned by
+<a class="reference internal" href="../slf/generate.html#openquake.vmtk.slfgenerator.slfgenerator.generate" title="openquake.vmtk.slfgenerator.slfgenerator.generate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">openquake.vmtk.slfgenerator.slfgenerator.generate()</span></code></a>. Each
+<code class="docutils literal notranslate"><span class="pre">slf_dict</span></code> must provide <code class="docutils literal notranslate"><span class="pre">'edp_range'</span></code>, <code class="docutils literal notranslate"><span class="pre">'slf_16th'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'slf'</span></code> (median), and <code class="docutils literal notranslate"><span class="pre">'slf_84th'</span></code> (all loss-ratio values).
+Pass a dict with more than one key (e.g.
+<code class="docutils literal notranslate"><span class="pre">{'Example</span> <span class="pre">A':</span> <span class="pre">out_a[...],</span> <span class="pre">'Example</span> <span class="pre">B':</span> <span class="pre">out_b[...]}</span></code>) to
+overlay several SLF results on one figure.</p></li>
+<li><p><strong>cache</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">{group_key:</span> <span class="pre">cache_dict}</span></code> as returned by
+<a class="reference internal" href="../slf/generate.html#openquake.vmtk.slfgenerator.slfgenerator.generate" title="openquake.vmtk.slfgenerator.slfgenerator.generate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">openquake.vmtk.slfgenerator.slfgenerator.generate()</span></code></a>. Each
+<code class="docutils literal notranslate"><span class="pre">cache_dict</span></code> must provide <code class="docutils literal notranslate"><span class="pre">'total_loss_storey_ratio'</span></code>
+(<code class="docutils literal notranslate"><span class="pre">{realization:</span> <span class="pre">array}</span></code>).</p></li>
 <li><p><strong>edp_label</strong> (<em>str</em>) – Label for the x-axis (Engineering Demand Parameter).</p></li>
-<li><p><strong>loss_label</strong> (<em>str</em>) – Label for the y-axis (Storey Loss Ratio).</p></li>
+<li><p><strong>loss_label</strong> (<em>str</em>) – Label for the y-axis. Typically <code class="docutils literal notranslate"><span class="pre">'Storey</span> <span class="pre">Loss</span> <span class="pre">Ratio</span> <span class="pre">[-]'</span></code>.</p></li>
 <li><p><strong>xlims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) limits for the X-axis (EDP axis).</p></li>
-<li><p><strong>ylims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) limits for the Y-axis (Loss axis).</p></li>
+<li><p><strong>ylims</strong> (<em>tuple</em><em> of </em><em>float</em>) – (min, max) limits for the Y-axis (loss-ratio axis).</p></li>
 <li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Custom plot title.</p></li>
 <li><p><strong>pFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> the plot is displayed or saved. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>export_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Full path including filename to save the plot. Directories are created
@@ -149,12 +161,14 @@ if missing.</p></li>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openquake.vmtk.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotter</span>
 
 <span class="n">pl</span> <span class="o">=</span> <span class="n">plotter</span><span class="p">()</span>
-<span class="c1"># slf, cache from slfgenerator.generate()</span>
+<span class="c1"># out, cache from slfgenerator.generate()</span>
 <span class="n">pl</span><span class="o">.</span><span class="n">plot_slf_model</span><span class="p">(</span>
-    <span class="n">slf</span><span class="o">=</span><span class="n">slf</span><span class="p">,</span>
+    <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span>
     <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
     <span class="n">edp_label</span><span class="o">=</span><span class="s2">&quot;Interstorey Drift Ratio [-]&quot;</span><span class="p">,</span>
     <span class="n">loss_label</span><span class="o">=</span><span class="s2">&quot;Storey Loss Ratio [-]&quot;</span><span class="p">,</span>
+    <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span>
+    <span class="n">ylims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
     <span class="n">export_path</span><span class="o">=</span><span class="s2">&quot;slf_model.png&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>

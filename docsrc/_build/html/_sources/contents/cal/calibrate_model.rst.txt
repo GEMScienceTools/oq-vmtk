@@ -1,7 +1,7 @@
 SDOF-to-MDOF Calibration
 ========================
 
-.. automethod:: openquake.vmtk.calibration.calibration.calibrate_model
+.. autofunction:: openquake.vmtk.calibration.calibrate_model
 
 .. admonition:: Theoretical Background
 
@@ -9,67 +9,64 @@ SDOF-to-MDOF Calibration
    capacity curve to storey-level force-deformation relationships for a stick-and-mass
    MDOF model (Xu et al., 2016; Lu et al., 2020).
 
-   **First-mode participation**
+   **First-mode shape**
 
-   The SDOF spectral displacement :math:`S_d` is related to the roof displacement
-   :math:`u_{\text{roof}}` through the first-mode participation factor
-   :math:`\Gamma_1` and the normalised first-mode shape :math:`\phi_1`:
+   The normalised first-mode shape :math:`\phi_1` (roof value 1.0) is obtained in
+   one of two ways:
 
-   .. math::
+   - **Frame buildings** (``is_frame=True``, :math:`n \le 12` storeys, not
+     soft-storey): an assumed power law,
 
-      u_{\text{roof}} = \Gamma_1 \cdot \phi_1^{(n)} \cdot S_d
+     .. math::
 
-   where the participation factor is:
+        \phi_1^{(i)} = \left(\frac{i}{n}\right)^{0.6}, \quad i = 1, \ldots, n
 
-   .. math::
+   - **Everything else** (including all soft-storey buildings, regardless of
+     ``is_frame``): the first eigenvector of a uniform tri-diagonal lateral
+     stiffness matrix (unit diagonal terms of 2, roof term of 1), solved against
+     a diagonal mass matrix with a reduced roof mass factor of 0.75. For
+     soft-storey systems (``is_sos=True``) the ground-floor stiffness term is
+     softened to 1.20 instead of 2, so the soft-storey mode-shape softening is
+     never bypassed by ``is_frame``.
 
-      \Gamma_1 = \frac{\boldsymbol{\phi}_1^T \mathbf{M} \mathbf{1}}
-                      {\boldsymbol{\phi}_1^T \mathbf{M} \boldsymbol{\phi}_1}
+   **Unit effective modal mass**
 
-   **Storey force distribution**
-
-   The storey shear forces are distributed proportionally to the first-mode shape.
-   For storey :math:`i`, the lateral force is:
-
-   .. math::
-
-      F_i = \frac{m_i \phi_1^{(i)}}{\sum_{j=1}^{n} m_j \phi_1^{(j)}} \cdot V_{\text{base}}
-
-   where :math:`V_{\text{base}} = S_a \cdot M_{\text{eff}}` is the base shear and
-   :math:`M_{\text{eff}} = \Gamma_1 \sum_i m_i \phi_1^{(i)}` is the effective modal mass.
-
-   **Mass matrix**
-
-   A lumped-mass idealisation assigns one translational degree of freedom per storey.
-   The consistent mass matrix is diagonal:
+   Floor masses are scaled so that the assumed mode shape carries unit
+   effective modal mass, consistent with the unit-mass SDOF capacity curve:
 
    .. math::
 
-      \mathbf{M} = \text{diag}(m_1, m_2, \ldots, m_n)
+      m = \frac{\boldsymbol{\phi}_1^T \mathbf{I} \boldsymbol{\phi}_1}
+               {\left(\boldsymbol{\phi}_1^T \mathbf{I} \mathbf{1}\right)^2}
 
-   with :math:`m_i = m_{\text{floor}}` for intermediate storeys and
-   :math:`m_n = r_{\text{roof}} \cdot m_{\text{floor}}` at the roof (default
-   :math:`r_{\text{roof}} = 0.75`).
-
-   **Stiffness grouping and decay**
-
-   Adjacent storeys are paired into groups of size 2. Within each group the spring
-   stiffness decays with normalised height :math:`h \in [0, 1]`:
+   with the modal participation factor given by
 
    .. math::
 
-      k_i = k_0 \cdot \max(1.0 - 0.30\,h_i,\; 0.50)
+      \Gamma_1 = \frac{\boldsymbol{\phi}_1^T \mathbf{I} \mathbf{1}}
+                      {\boldsymbol{\phi}_1^T \mathbf{I} \boldsymbol{\phi}_1}
 
-   For soft-storey systems a further reduction factor is applied to the ground-floor
-   spring to reproduce the characteristic weak-storey behaviour.
+   **Storey force and drift distribution**
 
-   **Period matching**
+   The storey shear force at storey :math:`i` is the SDOF spectral acceleration
+   distributed over the modal mass tributary to storeys :math:`i` through the
+   roof:
 
-   The assembled stiffness and mass matrices are used in an eigenvalue problem
-   :math:`(\mathbf{K} - \omega^2 \mathbf{M})\boldsymbol{\phi} = \mathbf{0}` to obtain
-   the computed fundamental period :math:`T_{\text{computed}}`. The stiffness matrix
-   is then scaled so that :math:`T_{\text{computed}} = T_{\text{target}}`, where
-   :math:`T_{\text{target}}` is inferred from the first point of the SDOF capacity curve.
+   .. math::
+
+      F_i = S_a \cdot \Gamma_1 \sum_{j=i}^{n} \phi_1^{(j)} m_j
+
+   The first-storey drift follows directly from the SDOF spectral displacement,
+   :math:`\delta_1 = S_d \cdot \Gamma_1 \cdot \phi_1^{(1)}`; every other storey
+   drift is scaled by the mode-shape increment relative to the first storey:
+
+   .. math::
+
+      \delta_i = \delta_1 \cdot \frac{\phi_1^{(i)} - \phi_1^{(i-1)}}{\phi_1^{(1)}}
+
+   No iterative period-matching or OpenSees verification step is performed —
+   the calibration is a single closed-form pass driven entirely by the assumed
+   mode shape.
 
 .. admonition:: Example
    :class: note
@@ -77,7 +74,7 @@ SDOF-to-MDOF Calibration
    .. code-block:: python
 
       import numpy as np
-      from openquake.vmtk.calibration import calibration
+      from openquake.vmtk.calibration import calibrate_model
 
       sdof_capacity = np.array([
           [0.000, 0.00],
@@ -85,11 +82,9 @@ SDOF-to-MDOF Calibration
           [0.080, 0.22],
           [0.150, 0.10],
       ])
-      cal = calibration(
+      floor_masses, storey_drifts, storey_forces, phi, metadata = calibrate_model(
           nst=4,
           sdof_capacity=sdof_capacity,
           storey_heights=[3.0, 3.0, 3.0, 3.0],
-          roof_mass_factor=0.75,
       )
-      storey_disps, storey_forces, masses, _ = cal.calibrate_model()
-      print(f"Floor masses: {masses}")
+      print(f"Floor masses: {floor_masses}")

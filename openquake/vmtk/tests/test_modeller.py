@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("openseespy.opensees",
                     reason="openseespy not installed — modeller tests skipped")
 
-from openquake.vmtk.modeller import modeller
+from openquake.vmtk.modeller import modeller, _DEFAULT_PINCHING4_PARAMS
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +219,45 @@ class TestModellerInit(unittest.TestCase):
         with self.assertRaises(TypeError):
             make_modeller(degradation="True")
 
+    # --- pinching4_params -----------------------------------------------------
+
+    def test_pinching4_params_default_matches_module_defaults(self):
+        m = make_modeller()
+        self.assertEqual(m.pinching4_params, _DEFAULT_PINCHING4_PARAMS)
+
+    def test_pinching4_params_partial_override_merges_with_defaults(self):
+        m = make_modeller(pinching4_params={'gK2': 0.5})
+        self.assertEqual(m.pinching4_params['gK2'], 0.5)
+        for key, value in _DEFAULT_PINCHING4_PARAMS.items():
+            if key != 'gK2':
+                self.assertEqual(m.pinching4_params[key], value)
+
+    def test_pinching4_params_unknown_key_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(pinching4_params={'bogus': 1.0})
+
+    def test_pinching4_params_non_dict_raises(self):
+        with self.assertRaises(TypeError):
+            make_modeller(pinching4_params=[1, 2, 3])
+
+    # --- minmax_multiplier ---------------------------------------------------
+
+    def test_minmax_multiplier_default(self):
+        m = make_modeller()
+        self.assertEqual(m.minmax_multiplier, 1.0)
+
+    def test_minmax_multiplier_zero_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(minmax_multiplier=0)
+
+    def test_minmax_multiplier_negative_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(minmax_multiplier=-1.5)
+
+    def test_minmax_multiplier_string_raises(self):
+        with self.assertRaises(ValueError):
+            make_modeller(minmax_multiplier="1.5")
+
 
 # ---------------------------------------------------------------------------
 # Analysis method tests
@@ -262,10 +301,19 @@ class TestModellerMethods(unittest.TestCase):
         # Normalise by the maximum absolute component — OpenSees does not
         # guarantee a consistent eigenvector scale across platforms/versions.
         normalised = raw / np.abs(raw).max()
+        # Eigenvectors are only defined up to a sign; different OpenSeesPy
+        # builds (e.g. Windows openseespy vs. macOS openseespymac) can
+        # return either +phi or -phi for the same mode. Canonicalise the
+        # sign so the top-storey component (last entry, matching PHI's
+        # convention of ending in +1.0) is always positive.
+        if normalised[-1] < 0:
+            normalised = -normalised
         np.testing.assert_array_almost_equal(normalised, self.PHI, decimal=4)
 
     def test_spo_analysis(self):
-        self.model.do_spo_analysis(0.01, 5, 1, self.PHI, pFlag=False)
+        spo_dict = self.model.do_spo_analysis(0.01, 5, 1, self.PHI, pFlag=False)
+        self.assertIn('conv_index', spo_dict)
+        self.assertEqual(spo_dict['conv_index'], 0)
 
     def test_cpo_analysis(self):
         self.model.do_cpo_analysis(
@@ -372,6 +420,67 @@ class TestModellerMethods(unittest.TestCase):
         self.assertIsInstance(n_sequences, int)
         self.assertGreater(n_sequences, 0)
         self.assertEqual(len(boundaries), n_sequences)
+
+
+# ---------------------------------------------------------------------------
+# Collapse detection (nodal cross-check regression tests)
+# ---------------------------------------------------------------------------
+class TestCollapseDetection(unittest.TestCase):
+    """
+    Regression tests for the nodal-displacement cross-check back-ported
+    from do_cpo_analysis into do_nrha_analysis/do_nrha_analysis_sequences.
+    Uses a deliberately fragile 1-storey model (very low ultimate drift
+    capacity, softening backbone) so the existing test acceleration
+    record reliably drives it past collapse — verifying that collapse is
+    actually detected (conv_index == -1) rather than silently reported as
+    a success.
+    """
+
+    def setUp(self):
+        self.model = modeller(
+            number_storeys=1,
+            storey_heights=[3.0],
+            floor_masses=[200.0],
+            storey_drifts=np.array([[0.001, 0.002, 0.003, 0.005]]),
+            storey_forces=np.array([[20.0, 22.0, 15.0, 5.0]]),
+            degradation=True,
+        )
+        self.model.compile_model()
+        self.model.do_gravity_analysis()
+        self.model.do_modal_analysis(num_modes=1)
+
+        cd = os.path.dirname(__file__)
+        acc = np.loadtxt(os.path.join(cd, "test_data", "acceleration.txt"))
+        self.fnames = [os.path.join(cd, "test_data", "acceleration.txt")]
+        self.dt_gm = 0.005
+        # The strong-motion phase of this record arrives around t=30-40s;
+        # t_max must extend past it for collapse to actually occur.
+        self.t_max = 45.0
+        self.time_vector = np.arange(len(acc)) * self.dt_gm
+
+    def test_nrha_analysis_detects_collapse(self):
+        result = self.model.do_nrha_analysis(
+            self.fnames,
+            self.dt_gm,
+            sf=9.81,
+            t_max=self.t_max,
+            dt_ansys=0.001,
+            pFlag=False,
+            xi=0.05,
+        )
+        _, conv_index, *_ = result
+        self.assertEqual(conv_index, -1)
+
+    def test_nrha_analysis_sequences_detects_collapse(self):
+        result = self.model.do_nrha_analysis_sequences(
+            self.fnames,
+            self.time_vector,
+            sf=9.81,
+            pFlag=False,
+            xi=0.05,
+        )
+        conv_index = result[1]
+        self.assertEqual(conv_index, -1)
 
 
 if __name__ == "__main__":
