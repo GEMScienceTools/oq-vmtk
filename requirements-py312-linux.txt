@@ -10,7 +10,7 @@ https://wheelhouse.openquake.org/unified/pandas-2.2.3-cp312-cp312-manylinux_2_17
 https://wheelhouse.openquake.org/unified/pyproj-3.7.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 https://wheelhouse.openquake.org/unified/scipy-1.17.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 https://wheelhouse.openquake.org/unified/shapely-2.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-https://wheelhouse.openquake.org/unified/statsmodels-0.14.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+https://wheelhouse.openquake.org/unified/statsmodels-0.14.6-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
 #
 https://wheelhouse.openquake.org/unified/click-8.5.0-py3-none-any.whl
 https://wheelhouse.openquake.org/unified/pydantic-2.13.5-py3-none-any.whl
