@@ -77,7 +77,7 @@ jobs:
         export PIP_DEFAULT_TIMEOUT=100
         pip install --upgrade pip
         pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
-        requirements-py312-linux.txt
+        pip install -r requirements-py312-linux.txt
         pip install -e .
     - name: Make html pages
       run: |
