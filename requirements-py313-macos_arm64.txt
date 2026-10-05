@@ -22,4 +22,4 @@ https://wheelhouse.openquake.org/unified/pytz-2026.5-py2.py3-none-any.whl
 https://wheelhouse.openquake.org/unified/tzdata-2026.5-py2.py3-none-any.whl
 https://wheelhouse.openquake.org/unified/six-1.17.0-py2.py3-none-any.whl
 #
-openseespymac==3.8.0.0
+https://wheelhouse.openquake.org/unified/openseespymac-3.8.0.0-py3-none-macosx_13_0_arm64.whl
