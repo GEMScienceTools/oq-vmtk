@@ -69,13 +69,16 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: "3.11"
+        python-version: "3.12"
     - name: Install sphinx and themes
       run: |
-        python -m pip install --upgrade pip
-        pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
         # Install package so autodoc can import modules (openseespy mocked in conf.py)
-        pip install numpy scipy pandas matplotlib
+        PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
+        echo $PY_VER
+        export PIP_DEFAULT_TIMEOUT=100
+        pip install --upgrade pip
+        pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
+        pip install -r requirements-$PY_VER-linux.txt
         pip install -e .
     - name: Make html pages
       run: |
