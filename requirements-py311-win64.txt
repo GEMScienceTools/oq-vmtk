@@ -21,5 +21,5 @@ https://wheelhouse.openquake.org/unified/pytz-2026.5-py2.py3-none-any.whl
 https://wheelhouse.openquake.org/unified/tzdata-2026.5-py2.py3-none-any.whl
 https://wheelhouse.openquake.org/unified/six-1.17.0-py2.py3-none-any.whl
 #
-openseespy==3.6.0.3
-openseespywin==3.6.0.3
+https://wheelhouse.openquake.org/unified/openseespy-3.6.0.3-py3-none-any.whl
+https://wheelhouse.openquake.org/unified/openseespywin-3.6.0.3-py3-none-any.whl
