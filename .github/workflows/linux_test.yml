@@ -73,12 +73,11 @@ jobs:
     - name: Install sphinx and themes
       run: |
         # Install package so autodoc can import modules (openseespy mocked in conf.py)
-        PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
-        echo $PY_VER
+        # Use python3.12
         export PIP_DEFAULT_TIMEOUT=100
         pip install --upgrade pip
         pip install sphinx recommonmark sphinx_rtd_theme nbsphinx
-        pip install -r requirements-$PY_VER-linux.txt
+        requirements-py312-linux.txt
         pip install -e .
     - name: Make html pages
       run: |
