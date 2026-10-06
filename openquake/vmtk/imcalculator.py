@@ -53,12 +53,13 @@ class imcalculator:
         Computes the geometric mean of spectral accelerations for a
         user-defined list of periods.
 
-    get_vel_disp_history()
+    get_vel_disp_history(highpass_hz)
         Computes velocity and displacement history with zero-phase
-        high-pass filtering and baseline drift correction.
+        high-pass filtering (zero-padded) for baseline drift correction.
 
-    get_amplitude_ims()
-        Computes amplitude-based intensity measures (PGA, PGV, PGD).
+    get_amplitude_ims(highpass_hz)
+        Computes amplitude-based intensity measures (PGA, PGV, PGD);
+        PGV and PGD from the drift-corrected histories.
 
     get_arias_intensity()
         Computes the Arias Intensity.
@@ -365,21 +366,17 @@ class imcalculator:
         # Geometric mean via log-space averaging
         return np.exp(np.mean(np.log(psa_values)))
 
-    def get_vel_disp_history(self):
+    def _integrate_vel_disp(self, highpass_hz):
         """
-        Computes velocity and displacement time histories with
-        baseline drift correction.
-
-        A zero-phase fourth-order Butterworth high-pass filter
-        (corner frequency 0.1 Hz) is applied to the acceleration
-        record before integration. Velocity and displacement are
-        obtained by trapezoidal integration of the filtered
-        acceleration, with linear detrending applied after each
-        integration step to remove residual drift.
+        Velocity and displacement histories by trapezoidal integration,
+        optionally after a zero-phase high-pass filter with zero padding.
 
         Parameters
         ----------
-        None
+        highpass_hz : float or None
+            Corner frequency (Hz) of the zero-phase fourth-order
+            Butterworth high-pass filter. ``None`` integrates the record
+            as it is (no drift correction).
 
         Returns
         -------
@@ -391,48 +388,91 @@ class imcalculator:
 
         Notes
         -----
-        The zero-phase filter (``sosfiltfilt``) applies the
-        Butterworth filter in both the forward and backward
-        directions, eliminating phase distortion.
+        The record is padded with zeros at both ends before filtering
+        and the padding is removed after integration, so the filter
+        transients and the integration constants do not distort the
+        record (Boore, 2005). Each pad is ``1.5 * order / highpass_hz``
+        seconds long.
+
+        References
+        ----------
+        Boore, D. M., 2005. On pads and filters: Processing strong-motion
+            data. Bulletin of the Seismological Society of America,
+            95(2), 745-750. DOI: 10.1785/0120040160
 
         """
-        # Acceleration in m/s²
         acc_m_s2 = self.acc_m_s2
+        if highpass_hz is None:
+            vel = integrate.cumulative_trapezoid(acc_m_s2, dx=self.dt, initial=0)
+            disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
+            return vel, disp
 
-        # Apply a zero-phase 4th-order Butterworth high-pass filter
-        # (corner at 0.1 Hz) to remove baseline drift without
-        # introducing phase distortion
+        nyquist = 0.5 / self.dt
+        if not 0 < highpass_hz < nyquist:
+            raise ValueError(
+                f"'highpass_hz' must be between 0 and the Nyquist "
+                f"frequency ({nyquist:g} Hz), got {highpass_hz}"
+            )
+        order = 4
+        npad = int(np.ceil(1.5 * order / highpass_hz / self.dt))
+        padded = np.concatenate([np.zeros(npad), acc_m_s2, np.zeros(npad)])
+
+        # Zero-phase fourth-order Butterworth high-pass filter
         sos = signal.butter(
-            4, 0.1, btype="highpass", fs=1 / self.dt, output="sos"
+            order, highpass_hz, btype="highpass", fs=1 / self.dt, output="sos"
         )
-        acc_filtered = signal.sosfiltfilt(sos, acc_m_s2)
+        acc_filtered = signal.sosfiltfilt(sos, padded)
 
-        # Integrate filtered acceleration to obtain velocity
-        vel = integrate.cumulative_trapezoid(
-            acc_filtered, dx=self.dt, initial=0
-        )
-        # Remove linear drift from velocity
-        vel = signal.detrend(vel, type="linear")
-
-        # Integrate velocity to obtain displacement
+        # Integrate the padded record, then remove the pads
+        vel = integrate.cumulative_trapezoid(acc_filtered, dx=self.dt, initial=0)
         disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
-        # Remove residual linear drift from displacement
-        disp = signal.detrend(disp, type="linear")
+        return vel[npad:-npad], disp[npad:-npad]
 
-        return vel, disp
-
-    def get_amplitude_ims(self):
+    def get_vel_disp_history(self, highpass_hz=0.05):
         """
-        Computes amplitude-based intensity measures.
+        Computes velocity and displacement time histories with
+        baseline drift correction.
 
-        Peak Ground Acceleration (PGA), Peak Ground Velocity (PGV),
-        and Peak Ground Displacement (PGD) are computed from the
-        acceleration time series by successive trapezoidal
-        integration.
+        A zero-phase fourth-order Butterworth high-pass filter is
+        applied to the zero-padded acceleration record before
+        trapezoidal integration (Boore, 2005); the pads are removed
+        afterwards.
 
         Parameters
         ----------
-        None
+        highpass_hz : float or None, optional
+            Corner frequency (Hz) of the high-pass filter. Default is
+            0.05 Hz. Use the record's own usable-frequency limit when
+            it is known (e.g. from a flatfile). ``None`` integrates the
+            record without drift correction.
+
+        Returns
+        -------
+        vel : numpy.ndarray
+            Velocity time history (m/s).
+
+        disp : numpy.ndarray
+            Displacement time history (m).
+
+        """
+        return self._integrate_vel_disp(highpass_hz)
+
+    def get_amplitude_ims(self, highpass_hz=0.05):
+        """
+        Computes amplitude-based intensity measures.
+
+        Peak Ground Acceleration (PGA) is the peak of the record. Peak
+        Ground Velocity (PGV) and Peak Ground Displacement (PGD) are the
+        peaks of the drift-corrected velocity and displacement histories
+        of ``get_vel_disp_history``.
+
+        Parameters
+        ----------
+        highpass_hz : float or None, optional
+            Corner frequency (Hz) of the high-pass filter applied before
+            integration. Default is 0.05 Hz. ``None`` integrates the
+            record without drift correction, which inflates PGD (and to
+            a lesser extent PGV) through baseline drift.
 
         Returns
         -------
@@ -446,15 +486,7 @@ class imcalculator:
             Peak ground displacement (m).
 
         """
-        # Acceleration in m/s²
-        acc_m_s2 = self.acc_m_s2
-        # Integrate acceleration to obtain velocity
-        vel = integrate.cumulative_trapezoid(
-            acc_m_s2, dx=self.dt, initial=0
-        )
-        # Integrate velocity to obtain displacement
-        disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
-
+        vel, disp = self._integrate_vel_disp(highpass_hz)
         return (
             np.max(np.abs(self.acc)),
             np.max(np.abs(vel)),

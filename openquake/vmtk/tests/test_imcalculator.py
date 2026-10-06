@@ -8,7 +8,8 @@ implementation. They are not regression snapshots — they were verified against
 the published reference for each IM:
 
 * PGA / PGV / PGD: numerical integration of the record (trapezoidal rule),
-  cross-checked against SeismoSignal.
+  cross-checked against SeismoSignal (``highpass_hz=None``; the default
+  drift-corrected values are tested to stay within 0.2% of them).
 * Sa(T) and AvgSa(T): single-DOF response computed with the Newmark-beta
   algorithm at 5% damping; cross-checked against the response spectra produced
   by the OpenQuake engine's ``response_spectrum`` utility.
@@ -83,10 +84,56 @@ class TestImCalculator(unittest.TestCase):
         self.assertAlmostEqual(sa_avg_user, self.user_avgsa_test, places=4)
 
     def test_get_amplitude_ims(self):
-        pga, pgv, pgd = self.calculator.get_amplitude_ims()
+        # Reference values are for plain trapezoidal integration
+        pga, pgv, pgd = self.calculator.get_amplitude_ims(highpass_hz=None)
         self.assertAlmostEqual(pga, self.pga_test, places=4)
         self.assertAlmostEqual(pgv, self.pgv_test, places=4)
         self.assertAlmostEqual(pgd, self.pgd_test, places=4)
+
+    def test_get_amplitude_ims_default_keeps_clean_record(self):
+        # The default drift correction (0.05 Hz) must not alter a
+        # well-processed record: within 0.2% of the reference values
+        pga, pgv, pgd = self.calculator.get_amplitude_ims()
+        self.assertAlmostEqual(pga, self.pga_test, places=4)
+        self.assertLess(abs(pgv / self.pgv_test - 1), 2e-3)
+        self.assertLess(abs(pgd / self.pgd_test - 1), 2e-3)
+
+    def test_get_amplitude_ims_removes_baseline_drift(self):
+        # Record with a known exact displacement that starts and ends at
+        # rest: d(t) = D env(t) sin(w t), with a Gaussian envelope env;
+        # acceleration = d''(t). A small constant acceleration offset
+        # (baseline error) makes the displacement drift quadratically
+        # when integrated as it is; the default high-pass removes it.
+        dt, D, w, t0, s = 0.01, 0.05, 2 * np.pi, 30.0, 6.0
+        t = np.arange(0, 60, dt)
+        env = np.exp(-(((t - t0) / s) ** 2))
+        d_env = env * (-2 * (t - t0) / s**2)
+        dd_env = env * (4 * (t - t0) ** 2 / s**4 - 2 / s**2)
+        disp_exact = D * env * np.sin(w * t)
+        vel_exact = D * (d_env * np.sin(w * t) + env * w * np.cos(w * t))
+        acc = D * (dd_env * np.sin(w * t) + 2 * d_env * w * np.cos(w * t)
+                   - env * w**2 * np.sin(w * t))
+        calc = imcalculator(acc / 9.81 + 0.001, dt)
+        _, _, pgd_raw = calc.get_amplitude_ims(highpass_hz=None)
+        _, pgv, pgd = calc.get_amplitude_ims()
+        pgv_exact = np.max(np.abs(vel_exact))
+        pgd_exact = np.max(np.abs(disp_exact))
+        self.assertGreater(pgd_raw, 100 * pgd_exact)
+        self.assertLess(abs(pgv / pgv_exact - 1), 0.01)
+        self.assertLess(abs(pgd / pgd_exact - 1), 0.01)
+
+    def test_get_vel_disp_history_matches_amplitude_ims(self):
+        vel, disp = self.calculator.get_vel_disp_history()
+        _, pgv, pgd = self.calculator.get_amplitude_ims()
+        self.assertEqual(len(vel), len(self.calculator.acc))
+        self.assertEqual(len(disp), len(self.calculator.acc))
+        self.assertAlmostEqual(np.max(np.abs(vel)), pgv, places=12)
+        self.assertAlmostEqual(np.max(np.abs(disp)), pgd, places=12)
+
+    def test_get_amplitude_ims_rejects_invalid_corner(self):
+        for bad in (0.0, -0.1, 0.5 / self.calculator.dt):
+            with self.assertRaises(ValueError):
+                self.calculator.get_amplitude_ims(highpass_hz=bad)
 
     def test_get_arias_intensity(self):
         ai = self.calculator.get_arias_intensity()
