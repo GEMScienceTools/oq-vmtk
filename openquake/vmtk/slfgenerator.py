@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from typing import Dict, List, Optional, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 warnings.filterwarnings("ignore")
 
@@ -42,13 +42,15 @@ class component_data_model(BaseModel):
     Quantity:                  float
     Damage_States:               int = Field(alias="Damage States")
 
-    @validator("Component_ID")
+    @field_validator("Component_ID")
+    @classmethod
     def validate_id(cls, v):
         if v is not None and v < 0:
             raise ValueError("Component ID must be a positive integer")
         return v
 
-    @validator("Performance_Group", "Component_ID", pre=True)
+    @field_validator("Performance_Group", "Component_ID", mode="before")
+    @classmethod
     def allow_none(cls, v):
         if v is None or (isinstance(v, float) and np.isnan(v)):
             return None
@@ -69,7 +71,8 @@ class correlation_tree_model(BaseModel):
     ID: int
     dependent_on_item: str = Field(alias="DEPENDENT ON ITEM")
 
-    @validator("ID")
+    @field_validator("ID")
+    @classmethod
     def validate_id(cls, vid):
         if vid < 0:
             raise ValueError("Component ID must be a positive integer")

@@ -67,6 +67,15 @@ Then pick the matching file. The naming convention is
    # macOS (arm64)
    pip install -r requirements-py312-macos_arm64.txt
 
+The pinned files download large wheels, so slow connections may time out. Pass
+``--timeout=100`` to ``pip install``, or, to keep the conventional
+``pip install -r requirements-...`` command, set the timeout globally once
+before installing:
+
+.. code-block:: bash
+
+   pip config set global.timeout 100
+
 Install the Package
 -------------------
 

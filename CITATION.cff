@@ -16,8 +16,8 @@ authors:
 license: AGPL-3.0-only
 repository-code: "https://github.com/GEMScienceTools/oq-vmtk"
 url: "https://gemsciencetools.github.io/oq-vmtk/"
-version: "1.1.0"
-date-released: "2026-05-12"
+version: "1.2.0"
+date-released: "2026-10-09"
 identifiers:
   - type: doi
     value: 10.5281/zenodo.17524871
