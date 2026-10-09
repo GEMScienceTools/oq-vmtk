@@ -91,6 +91,6 @@ For first-time users, we recommend the following order:
 1. ``IntensityMeasureProcessing`` — get familiar with the IM types.
 2. ``ModelCompilation`` — build an MDOF stick model.
 3. ``NonlinearTimeHistoryAnalysis`` — run dynamic analysis.
-4. ``CloudAnalysis`` — full vulnerability workflow.
+4. ``ModifiedCloudAnalysis`` — full vulnerability workflow.
 5. ``StoreyLossFunctionGeneration`` and ``StoreyLossFunctionApplication`` —
    add component-level loss modelling.

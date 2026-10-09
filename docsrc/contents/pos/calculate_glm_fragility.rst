@@ -58,10 +58,11 @@ GLM Fragility Functions
 
       pp = postprocessor()
       intensities = np.geomspace(0.05, 3.0, 50)
-      # imls: 1-D array of IM levels; ds_flags: 1-D binary array (0/1) per record
+      # imls, edps: 1-D arrays with the IM level and the peak EDP of each record
       poes = pp.calculate_glm_fragility(
           imls=imls,
-          ds_flags=ds_flags,
+          edps=edps,
+          damage_thresholds=[0.005, 0.015, 0.040],
           intensities=intensities,
-          method="logit",
+          fragility_method="logit",
       )

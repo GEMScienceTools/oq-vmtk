@@ -1396,6 +1396,7 @@ class plotter:
         Generate demand profile plots for peak storey drifts and peak floor accelerations.
 
         This method creates two side-by-side plots:
+
         - A plot of peak storey drift (%), displaying how the drift ratio varies with floor number.
         - A plot of peak floor acceleration (g), displaying how the acceleration varies with
           floor number.
@@ -1407,7 +1408,7 @@ class plotter:
         saved without ``bbox_inches='tight'`` so that every output image has
         identical, deterministic pixel dimensions.
 
-        Parameters:
+        Parameters
         ----------
         peak_drift_list : list of np.ndarray
             A list of arrays where each array contains peak drift values for each floor, with the
@@ -1430,8 +1431,8 @@ class plotter:
         export_path : str, optional
             Full path including filename to save the plot. Creates directories if missing.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             This function saves the plot to a file in the specified output directory.
 

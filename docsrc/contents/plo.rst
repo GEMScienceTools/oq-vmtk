@@ -16,6 +16,7 @@ keep their own layouts.
 .. toctree::
 
    plo/plot_modes
+   plo/plot_demand_profiles
    plo/animate_spo
    plo/animate_cpo
    plo/animate_nrha

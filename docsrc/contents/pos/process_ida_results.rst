@@ -63,11 +63,12 @@ Incremental Dynamic Analysis Postprocessing
       from openquake.vmtk.postprocessor import postprocessor
 
       pp = postprocessor()
-      # stripe_imls, stripe_edps: 2-D arrays (n_records × n_stripes) from IDA
+      # ansys_dict: IDA results ('max_peak_drift_list', 'sf_matrix');
+      # im_matrix: IM levels, 2-D array (n_records × n_runs)
       ida_dict = pp.process_ida_results(
-          stripe_imls=stripe_imls,
-          stripe_edps=stripe_edps,
+          ansys_dict=ansys_dict,
+          im_matrix=im_matrix,
           damage_thresholds=[0.005, 0.015, 0.040],
-          imt_key="Sa(T1)",
+          edp_key="max_peak_drift_list",
       )
       print(ida_dict['fragility']['medians'])

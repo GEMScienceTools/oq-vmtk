@@ -15,5 +15,5 @@ User-Defined Average Spectral Acceleration
       im = imcalculator(acc, dt=0.005)
 
       periods = np.linspace(0.1, 1.0, 10)
-      avg_sa = im.get_saavg_user_defined(periods=periods)
+      avg_sa = im.get_saavg_user_defined(periods_list=periods)
       print(f"User-defined AvgSa = {avg_sa:.4f} g")

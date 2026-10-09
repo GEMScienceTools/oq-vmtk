@@ -182,7 +182,7 @@ pip install -e .
 python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
 ```
 
-Expected output: `1.1.0`
+Expected output: `1.2.0`
 
 ---
 
@@ -223,7 +223,7 @@ If you use OQ-VMTK in academic or professional work, please cite both the softwa
 
 ### Software
 
-The v1.1.0 release is archived on Zenodo:
+The software is archived on Zenodo:
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17524871-1082c3)](https://doi.org/10.5281/zenodo.17524871)
 
@@ -231,8 +231,8 @@ The v1.1.0 release is archived on Zenodo:
 @software{oq_vmtk_2025,
   author    = {{GEM Foundation}},
   title     = {{OpenQuake Vulnerability Modeller's Toolkit (oq-vmtk)}},
-  version   = {1.1.0},
-  year      = {2025},
+  version   = {1.2.0},
+  year      = {2026},
   doi       = {10.5281/zenodo.17524871},
   url       = {https://github.com/GEMScienceTools/oq-vmtk}
 }
