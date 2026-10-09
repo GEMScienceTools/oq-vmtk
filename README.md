@@ -47,7 +47,7 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 |--------|-------------|
 | `calibration` | Calibrates storey-based force–deformation relationships for MDOF stick-and-mass models from SDOF capacity curves. |
 | `modeller` | Compiles and runs idealised stick-and-mass structural models (SDOFs and MDOFs) in OpenSeesPy: gravity, modal analysis, static/cyclic pushover, and nonlinear time-history analysis (including incremental dynamic analyses). |
-| `imcalculator` | Reads ground motion record files and computes a wide range of intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias Intensity, CAV, D5–95, FIV3). |
+| `imcalculator` | Reads ground motion record files and computes a wide range of intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias Intensity, CAV, D5–95, FIV3), including their RotD50/RotDxx versions from two horizontal components. |
 | `imselection` | Evaluates and ranks intensity measure candidates for seismic demand modelling using Efficiency, Proficiency, Practicality, and the Relative Sufficiency Measure (RSM). |
 | `postprocessor` | Derives probabilistic seismic demand models, fragility and vulnerability functions from nonlinear analysis results (Modified Cloud Analysis, Multiple Stripe Analysis, Incremental Dynamic Analysis). Supports lognormal CDFs, GLMs, ordinal CLMs, and MCMC methods. |
 | `slfgenerator` | Generates storey loss functions (SLFs) from damageable component inventory data (structural, nonstructural, and contents) via Monte Carlo simulations. |

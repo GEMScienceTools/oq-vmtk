@@ -15,7 +15,9 @@ changelog; the API documented here is the one supported going forward.
   analysis (IDA), with collapse detection and animated outputs.
 - `imcalculator`: intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias
   Intensity, CAV, D5–95, FIV3), RotDxx spectra; PGV/PGD are computed from
-  drift-corrected (Boore, 2005) histories.
+  drift-corrected (Boore, 2005) histories. RotDxx (e.g. RotD50) versions of
+  PGA/PGV/PGD, CAV, Arias Intensity, D5–95, AvgSA and FIV3 are computed over
+  180 rotation angles (`get_rotdxx_*`).
 - `imselection`: IM ranking by efficiency, proficiency, practicality and
   relative sufficiency measure (RSM).
 - `postprocessor`: probabilistic seismic demand models and fragility

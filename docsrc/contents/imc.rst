@@ -5,8 +5,8 @@ The ``imcalculator`` class computes intensity measures (IMs) from an acceleratio
 time series. Supported IMs include response spectra, peak ground motion parameters
 (PGA, PGV, PGD), spectral accelerations, average spectral acceleration (AvgSA),
 Arias Intensity, Cumulative Absolute Velocity (CAV), significant duration, the
-filtered incremental velocity (FIV3), and orientation-independent spectral
-acceleration (RotDxx).
+filtered incremental velocity (FIV3), and their orientation-independent
+(RotDxx, e.g. RotD50) counterparts computed from two horizontal components.
 
 .. toctree::
 
@@ -22,6 +22,7 @@ acceleration (RotDxx).
    imc/get_significant_duration
    imc/get_FIV3
    imc/get_rotdxx
+   imc/get_rotdxx_ims
 
 References
 ----------

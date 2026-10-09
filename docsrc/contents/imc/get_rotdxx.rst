@@ -73,5 +73,13 @@ Orientation-Independent Spectral Acceleration (RotDxx)
       acc2 = acc1 * 0.85   # synthetic orthogonal component
       im = imcalculator(acc1, dt=0.005)
 
-      rotd50 = im.get_rotdxx(period=1.0, acc2=acc2, percentile=50)
-      print(f"RotD50(T=1.0s) = {rotd50:.4f} g")
+      periods, rotd50 = im.get_rotdxx(
+          acc2, percentile=50, periods=np.array([0.3, 0.6, 1.0])
+      )
+      for t, sa in zip(periods, rotd50):
+          print(f"RotD50(T={t:.1f}s) = {sa:.4f} g")
+
+.. seealso::
+
+   :doc:`get_rotdxx_ims` for the RotDxx of PGA/PGV/PGD, CAV, Arias
+   Intensity, significant duration, AvgSA and FIV3.
