@@ -1021,16 +1021,16 @@ class plotter:
         """
         Animate the seismic response for a nonlinear time-history analysis (NRHA).
 
-        Four-panel layout (self.figsize_anim)
-        -------------------------------------
-        Panel 1 - Floor displacement profile [m] vs. elevation.
-        Panel 2 - Storey drift profile [%] vs. elevation (staircase style,
-                  matching plot_demand_profiles).
-        Panel 3 - Floor acceleration profile [g] vs. elevation.
-        Panel 4 - Input ground motion time-history with elapsed portion
-                  highlighted. If collapse_time is provided, an 'X' marker is
-                  drawn at that instant to indicate when the MinMax material
-                  limit was exceeded.
+        Four-panel layout (``self.figsize_anim``):
+
+        - Panel 1: floor displacement profile [m] vs. elevation.
+        - Panel 2: storey drift profile [%] vs. elevation (staircase style,
+          matching plot_demand_profiles).
+        - Panel 3: floor acceleration profile [g] vs. elevation.
+        - Panel 4: input ground motion time-history with elapsed portion
+          highlighted. If collapse_time is provided, an 'X' marker is
+          drawn at that instant to indicate when the MinMax material
+          limit was exceeded.
 
         Line colours update cumulatively based on worst damage state reached so
         far (blue -> green -> yellow -> orange -> red) when drift_thresholds given.
@@ -1881,6 +1881,7 @@ class plotter:
         Visualizes Multiple Stripe Analysis (MSA) results.
 
         For each intensity stripe the method plots:
+
         - Individual ground-motion response points coloured and sized by IM level.
         - A filled lognormal PDF silhouette scaled to the inter-stripe spacing.
         - A vertical line at the lognormal median and dashed lines at the
