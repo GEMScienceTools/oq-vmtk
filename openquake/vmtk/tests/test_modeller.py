@@ -1,11 +1,15 @@
 import os
+import platform
 import shutil
 import unittest
 import numpy as np
 import pytest
 
-pytest.importorskip("openseespy.opensees",
-                    reason="openseespy not installed — modeller tests skipped")
+# macOS ships OpenSeesPy as `openseespymac` (see modeller.py)
+_OPS_MODULE = ("openseespymac.opensees" if platform.system() == "Darwin"
+               else "openseespy.opensees")
+pytest.importorskip(_OPS_MODULE,
+                    reason="OpenSeesPy not installed — modeller tests skipped")
 
 from openquake.vmtk.modeller import modeller, _DEFAULT_PINCHING4_PARAMS
 
