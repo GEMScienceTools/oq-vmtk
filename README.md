@@ -242,14 +242,14 @@ A `CITATION.cff` file is provided at the repository root; GitHub displays a **Ci
 
 ### Companion Paper
 
-> Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
+> Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modeller's Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
 
 ```bibtex
 @article{nafeh2026vmtk,
   author  = {Nafeh, Al Mouayed Bellah and Aljawhari, Karim and Ettorre, Antonio and Silva, Vitor and Crowley, Helen},
-  title   = {The {OpenQuake} {Vulnerability} {Modellers}' {Toolkit}: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications},
+  title   = {The {OpenQuake} {Vulnerability} {Modeller's} {Toolkit}: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications},
   journal = {(In Press)},
-  year    = {2026}
+  year    = {202x}
 }
 ```
 
@@ -257,7 +257,9 @@ A `CITATION.cff` file is provided at the repository root; GitHub displays a **Ci
 
 ## References
 
-- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
+- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modeller's Toolkit (OQ-VMTK)* (v1.2.0). Zenodo. DOI: [10.5281/zenodo.17524871](https://doi.org/10.5281/zenodo.17524871)
+
+- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modeller's Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
 
 ---
 

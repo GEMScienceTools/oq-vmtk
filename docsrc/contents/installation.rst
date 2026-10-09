@@ -99,6 +99,7 @@ Verify the Installation
 
    python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
 
-This should print the installed version (e.g., ``1.2.0``). The version reported
-here is the same version archived on Zenodo (DOI
-`10.5281/zenodo.17524871 <https://doi.org/10.5281/zenodo.17524871>`_).
+This should print the installed version (e.g., ``1.2.0``). All releases
+are archived on Zenodo under the concept DOI
+`10.5281/zenodo.17524871 <https://doi.org/10.5281/zenodo.17524871>`_, which
+always resolves to the latest version.
