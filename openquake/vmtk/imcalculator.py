@@ -18,6 +18,10 @@ class imcalculator:
     duration, and the filtered incremental velocity (FIV3) from an
     acceleration time series.
 
+    Given a second horizontal component, every IM can also be
+    computed as an orientation-independent RotDxx measure
+    (e.g., RotD50, RotD100).
+
     The input acceleration may be supplied in units of g or m/s².
     Internally, all computations normalise the record to g; the
     ``acc_m_s2`` property provides the record in m/s² at any time.
@@ -312,7 +316,7 @@ class imcalculator:
             the defined period range.
 
         References
-        -------
+        ----------
         Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.
             Development of a two-parameter seismic intensity measure and
             probabilistic assessment procedure. 2nd US–Japan Workshop on
@@ -357,7 +361,7 @@ class imcalculator:
             the user-defined periods.
 
         References
-        -------
+        ----------
         Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.
             Development of a two-parameter seismic intensity measure and
             probabilistic assessment procedure. 2nd US–Japan Workshop on
@@ -528,7 +532,7 @@ class imcalculator:
             Arias Intensity (m/s).
 
         References
-        -------
+        ----------
         Arias, A., 1970. A measure of earthquake intensity. 
             Hansen, R. J. (ed.), Seismic Design for Nuclear Power 
             Plants (pp. 438–483). Cambridge, MA: MIT Press.
@@ -561,7 +565,7 @@ class imcalculator:
             Cumulative Absolute Velocity (m/s).
 
         References
-        -------
+        ----------
         O’Hara, T. F., and Jacobson, J. P., 1991. Standardization
             of the cumulative absolute velocity (EPRI-TR--100082; 
             ON: UN92004453). Palo Alto, CA.
@@ -598,7 +602,7 @@ class imcalculator:
             Significant duration (s).
 
         References
-        -------
+        ----------
         Trifunac, M. D., and Brady, A. G., 1975. A study on the duration
             of strong earthquake ground motion. Bulletin of the 
             Seismological Society of America, 65(3), 581–626.
@@ -804,10 +808,11 @@ class imcalculator:
 
         Notes
         -----
-        Common choices are RotD50 (``percentile=50``), which is
-        used as the reference IM in ASCE 7-22 ground-motion
-        selection, and RotD100 (``percentile=100``), the
-        orientation-independent maximum.
+        Common choices are RotD50 (``percentile=50``), the median over
+        all orientations, which is the horizontal-component definition
+        adopted by most recent ground-motion models (e.g., NGA-West2),
+        and RotD100 (``percentile=100``), the maximum-direction
+        response.
 
         When the second component is zero, RotD100 equals the
         single-component PSA and RotD50 equals PSA · √2/2 (the
@@ -815,11 +820,10 @@ class imcalculator:
 
         References
         ----------
-        Boore, D.M. (2010). "Orientation-independent, nongeometric-
-        mean measures of seismic intensity from two horizontal
-        components of motion." *Bulletin of the Seismological
-        Society of America*, 100(4), 1830–1835.
-        DOI: 10.1785/0120090400.
+        Boore, D. M., 2010. Orientation-independent, nongeometric-mean
+            measures of seismic intensity from two horizontal components
+            of motion. Bulletin of the Seismological Society of America,
+            100(4), 1830–1835. DOI: 10.1785/0120090400
 
         """
         periods, psa_rot = self._rotated_psa(acc2, periods, damping_ratio)

@@ -58,8 +58,10 @@ Orientation-Independent Spectral Acceleration (RotDxx)
       \text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{PSA(T,\theta) :
       \theta \in \{0°, 1°, \ldots, 179°\}\bigr\}
 
-   Common choices are **RotD50** (median, used as reference IM in ASCE 7-22)
-   and **RotD100** (maximum, the largest possible single-component response).
+   Common choices are **RotD50** (median over all orientations, the
+   horizontal-component definition adopted by most recent ground-motion
+   models, e.g. NGA-West2) and **RotD100** (maximum, the largest possible
+   single-component response).
 
 .. admonition:: Example
    :class: note
