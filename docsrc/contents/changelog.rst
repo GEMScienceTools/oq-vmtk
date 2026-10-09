@@ -6,58 +6,44 @@ changelog is maintained in
 `CHANGELOG.md <https://github.com/GEMScienceTools/oq-vmtk/blob/main/CHANGELOG.md>`_
 on GitHub.
 
-v1.1.0 (in development)
-------------------------
+v1.2.0 (2026-10-09)
+-------------------
 
-Added
-~~~~~
+First stable release of OQ-VMTK. This version is the starting point of the
+changelog; the API documented here is the one supported going forward.
 
-- **Intensity Measure Selection module** (``openquake/vmtk/im_selection.py``):
-  new ``imselection`` class implementing the Relative Sufficiency Measure (RSM)
-  framework from Ebrahimian & Jalayer (2021). Supports Modified Cloud Analysis (MCA)
-  and Incremental Dynamic Analysis (IDA) workflows. Methods: ``compute_efficiency_mca``,
-  ``compute_efficiency_ida``, ``compute_proficiency_mca``, ``compute_proficiency_ida``,
-  ``compute_rsm_mca``, ``compute_rsm_ida``, ``compute_rsm_general``, ``compare_ims``.
-
-- **Demo notebook**: ``demos/IntensityMeasureSelection/IntensityMeasureSelection.ipynb``
-  demonstrating MCA and IDA IM selection workflows.
-
-- **``postprocessor`` — logistic collapse parameters**: ``cloud_dict['regression']``
-  now exposes ``alpha0`` and ``alpha1`` (logistic intercept and slope) as scalar keys,
-  enabling direct use in the RSM computation.
-
-Changed
+Modules
 ~~~~~~~
 
-- **``postprocessor`` method renames** (no logic changes, backwards-incompatible):
+- ``calibration``: ``calibrate_model()`` derives storey-level force–deformation
+  properties of MDOF stick-and-mass models from SDOF capacity curves (assumed
+  power-law or eigenvector first-mode shape; soft-storey option).
+- ``modeller``: compiles and runs SDOF/MDOF models in OpenSeesPy — gravity and
+  modal analysis, static (SPO) and cyclic (CPO) pushover, nonlinear
+  time-history analysis (single records and sequences) and incremental dynamic
+  analysis (IDA), with collapse detection and animated outputs.
+- ``imcalculator``: intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias
+  Intensity, CAV, D5–95, FIV3) and RotDxx spectra; PGV/PGD are computed from
+  drift-corrected (Boore, 2005) histories. RotDxx (e.g. RotD50) versions of
+  PGA/PGV/PGD, CAV, Arias Intensity, D5–95, AvgSA and FIV3 are computed over
+  180 rotation angles (``get_rotdxx_*``).
+- ``imselection``: IM ranking by efficiency, proficiency, practicality and
+  relative sufficiency measure (RSM).
+- ``postprocessor``: probabilistic seismic demand models and fragility
+  functions from Modified Cloud Analysis (classical, bootstrap, MCMC), Multiple
+  Stripe Analysis and IDA; vulnerability functions with explicit uncertainty
+  propagation; ``calculate_risk`` for AADP/AALR.
+- ``slfgenerator``: Monte Carlo storey loss functions from component
+  inventories (independent or correlated components), returning the empirical
+  16th/50th/84th percentiles of the loss ratio vs. EDP.
+- ``plotter``: figures for the whole workflow with a uniform plotting grid.
+- ``utilities``: I/O helpers and OpenQuake Engine interoperability.
 
-  ============================================  ============================
-  Old name                                      New name
-  ============================================  ============================
-  ``do_modified_cloud_analysis``                ``process_mca_results``
-  ``do_multiple_stripe_analysis``               ``process_msa_results``
-  ``do_incremental_dynamic_analysis``           ``process_ida_results``
-  ============================================  ============================
+Demos and documentation
+~~~~~~~~~~~~~~~~~~~~~~~
 
-  The old ``do_*`` names implied that the methods *run* the nonlinear analysis.
-  They only postprocess already-computed structural response data; the new names
-  reflect this clearly.
-
-- **``imcalculator.get_duration_ims`` removed**: this convenience wrapper around
-  ``get_arias_intensity``, ``get_cav``, and ``get_significant_duration`` has been
-  deleted. Call each method individually.
-
-- **Documentation**: all module pages now use ``.. autoclass::`` / ``.. automethod::``
-  directives so the API reference updates automatically from source docstrings on
-  every build. Pages are numbered (1–9) and each method appears as a numbered
-  sub-section in the sidebar.
-
-v1.0.0
-------
-
-Added or Changed
-~~~~~~~~~~~~~~~~
-
-- Stable source code for vulnerability-toolkit.
-- Added AGPL v3 license.
-- Added ``CONTRIBUTORS.txt``.
+- Thirteen demo notebooks covering the full workflow, including the
+  ``EQSpectraExample`` supplement to the EQ Spectra paper.
+- Sphinx documentation, ``README.md`` and ``CITATION.cff``.
+- Python 3.11–3.13 supported; CI on Linux, Windows and macOS ARM64 with
+  platform-specific pinned requirements files.

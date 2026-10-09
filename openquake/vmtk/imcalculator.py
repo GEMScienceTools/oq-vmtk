@@ -18,6 +18,10 @@ class imcalculator:
     duration, and the filtered incremental velocity (FIV3) from an
     acceleration time series.
 
+    Given a second horizontal component, every IM can also be
+    computed as an orientation-independent RotDxx measure
+    (e.g., RotD50, RotD100).
+
     The input acceleration may be supplied in units of g or m/s².
     Internally, all computations normalise the record to g; the
     ``acc_m_s2`` property provides the record in m/s² at any time.
@@ -53,12 +57,13 @@ class imcalculator:
         Computes the geometric mean of spectral accelerations for a
         user-defined list of periods.
 
-    get_vel_disp_history()
+    get_vel_disp_history(highpass_hz)
         Computes velocity and displacement history with zero-phase
-        high-pass filtering and baseline drift correction.
+        high-pass filtering (zero-padded) for baseline drift correction.
 
-    get_amplitude_ims()
-        Computes amplitude-based intensity measures (PGA, PGV, PGD).
+    get_amplitude_ims(highpass_hz)
+        Computes amplitude-based intensity measures (PGA, PGV, PGD);
+        PGV and PGD from the drift-corrected histories.
 
     get_arias_intensity()
         Computes the Arias Intensity.
@@ -75,6 +80,21 @@ class imcalculator:
 
     get_rotdxx(acc2, percentile, periods, damping_ratio)
         Computes the RotDxx orientation-independent spectral acceleration.
+
+    get_rotdxx_amplitude_ims(acc2, percentile, highpass_hz)
+        Computes the RotDxx PGA, PGV and PGD.
+
+    get_rotdxx_cav(acc2, percentile)
+        Computes the RotDxx Cumulative Absolute Velocity.
+
+    get_rotdxx_arias_duration(acc2, percentile, start, end)
+        Computes the RotDxx Arias Intensity and significant duration.
+
+    get_rotdxx_saavg(acc2, period, periods_list, percentile)
+        Computes the RotDxx average spectral acceleration.
+
+    get_rotdxx_FIV3(acc2, period, alpha, beta, percentile)
+        Computes the RotDxx filtered incremental velocity (FIV3).
 
     """
 
@@ -296,7 +316,7 @@ class imcalculator:
             the defined period range.
 
         References
-        -------
+        ----------
         Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.
             Development of a two-parameter seismic intensity measure and
             probabilistic assessment procedure. 2nd US–Japan Workshop on
@@ -341,7 +361,7 @@ class imcalculator:
             the user-defined periods.
 
         References
-        -------
+        ----------
         Cordova, P., Deierlein, G., Mehanny, S., and Cornell, A., 2000.
             Development of a two-parameter seismic intensity measure and
             probabilistic assessment procedure. 2nd US–Japan Workshop on
@@ -365,21 +385,17 @@ class imcalculator:
         # Geometric mean via log-space averaging
         return np.exp(np.mean(np.log(psa_values)))
 
-    def get_vel_disp_history(self):
+    def _integrate_vel_disp(self, highpass_hz):
         """
-        Computes velocity and displacement time histories with
-        baseline drift correction.
-
-        A zero-phase fourth-order Butterworth high-pass filter
-        (corner frequency 0.1 Hz) is applied to the acceleration
-        record before integration. Velocity and displacement are
-        obtained by trapezoidal integration of the filtered
-        acceleration, with linear detrending applied after each
-        integration step to remove residual drift.
+        Velocity and displacement histories by trapezoidal integration,
+        optionally after a zero-phase high-pass filter with zero padding.
 
         Parameters
         ----------
-        None
+        highpass_hz : float or None
+            Corner frequency (Hz) of the zero-phase fourth-order
+            Butterworth high-pass filter. ``None`` integrates the record
+            as it is (no drift correction).
 
         Returns
         -------
@@ -391,48 +407,91 @@ class imcalculator:
 
         Notes
         -----
-        The zero-phase filter (``sosfiltfilt``) applies the
-        Butterworth filter in both the forward and backward
-        directions, eliminating phase distortion.
+        The record is padded with zeros at both ends before filtering
+        and the padding is removed after integration, so the filter
+        transients and the integration constants do not distort the
+        record (Boore, 2005). Each pad is ``1.5 * order / highpass_hz``
+        seconds long.
+
+        References
+        ----------
+        Boore, D. M., 2005. On pads and filters: Processing strong-motion
+            data. Bulletin of the Seismological Society of America,
+            95(2), 745-750. DOI: 10.1785/0120040160
 
         """
-        # Acceleration in m/s²
         acc_m_s2 = self.acc_m_s2
+        if highpass_hz is None:
+            vel = integrate.cumulative_trapezoid(acc_m_s2, dx=self.dt, initial=0)
+            disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
+            return vel, disp
 
-        # Apply a zero-phase 4th-order Butterworth high-pass filter
-        # (corner at 0.1 Hz) to remove baseline drift without
-        # introducing phase distortion
+        nyquist = 0.5 / self.dt
+        if not 0 < highpass_hz < nyquist:
+            raise ValueError(
+                f"'highpass_hz' must be between 0 and the Nyquist "
+                f"frequency ({nyquist:g} Hz), got {highpass_hz}"
+            )
+        order = 4
+        npad = int(np.ceil(1.5 * order / highpass_hz / self.dt))
+        padded = np.concatenate([np.zeros(npad), acc_m_s2, np.zeros(npad)])
+
+        # Zero-phase fourth-order Butterworth high-pass filter
         sos = signal.butter(
-            4, 0.1, btype="highpass", fs=1 / self.dt, output="sos"
+            order, highpass_hz, btype="highpass", fs=1 / self.dt, output="sos"
         )
-        acc_filtered = signal.sosfiltfilt(sos, acc_m_s2)
+        acc_filtered = signal.sosfiltfilt(sos, padded)
 
-        # Integrate filtered acceleration to obtain velocity
-        vel = integrate.cumulative_trapezoid(
-            acc_filtered, dx=self.dt, initial=0
-        )
-        # Remove linear drift from velocity
-        vel = signal.detrend(vel, type="linear")
-
-        # Integrate velocity to obtain displacement
+        # Integrate the padded record, then remove the pads
+        vel = integrate.cumulative_trapezoid(acc_filtered, dx=self.dt, initial=0)
         disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
-        # Remove residual linear drift from displacement
-        disp = signal.detrend(disp, type="linear")
+        return vel[npad:-npad], disp[npad:-npad]
 
-        return vel, disp
-
-    def get_amplitude_ims(self):
+    def get_vel_disp_history(self, highpass_hz=0.05):
         """
-        Computes amplitude-based intensity measures.
+        Computes velocity and displacement time histories with
+        baseline drift correction.
 
-        Peak Ground Acceleration (PGA), Peak Ground Velocity (PGV),
-        and Peak Ground Displacement (PGD) are computed from the
-        acceleration time series by successive trapezoidal
-        integration.
+        A zero-phase fourth-order Butterworth high-pass filter is
+        applied to the zero-padded acceleration record before
+        trapezoidal integration (Boore, 2005); the pads are removed
+        afterwards.
 
         Parameters
         ----------
-        None
+        highpass_hz : float or None, optional
+            Corner frequency (Hz) of the high-pass filter. Default is
+            0.05 Hz. Use the record's own usable-frequency limit when
+            it is known (e.g. from a flatfile). ``None`` integrates the
+            record without drift correction.
+
+        Returns
+        -------
+        vel : numpy.ndarray
+            Velocity time history (m/s).
+
+        disp : numpy.ndarray
+            Displacement time history (m).
+
+        """
+        return self._integrate_vel_disp(highpass_hz)
+
+    def get_amplitude_ims(self, highpass_hz=0.05):
+        """
+        Computes amplitude-based intensity measures.
+
+        Peak Ground Acceleration (PGA) is the peak of the record. Peak
+        Ground Velocity (PGV) and Peak Ground Displacement (PGD) are the
+        peaks of the drift-corrected velocity and displacement histories
+        of ``get_vel_disp_history``.
+
+        Parameters
+        ----------
+        highpass_hz : float or None, optional
+            Corner frequency (Hz) of the high-pass filter applied before
+            integration. Default is 0.05 Hz. ``None`` integrates the
+            record without drift correction, which inflates PGD (and to
+            a lesser extent PGV) through baseline drift.
 
         Returns
         -------
@@ -446,15 +505,7 @@ class imcalculator:
             Peak ground displacement (m).
 
         """
-        # Acceleration in m/s²
-        acc_m_s2 = self.acc_m_s2
-        # Integrate acceleration to obtain velocity
-        vel = integrate.cumulative_trapezoid(
-            acc_m_s2, dx=self.dt, initial=0
-        )
-        # Integrate velocity to obtain displacement
-        disp = integrate.cumulative_trapezoid(vel, dx=self.dt, initial=0)
-
+        vel, disp = self._integrate_vel_disp(highpass_hz)
         return (
             np.max(np.abs(self.acc)),
             np.max(np.abs(vel)),
@@ -481,7 +532,7 @@ class imcalculator:
             Arias Intensity (m/s).
 
         References
-        -------
+        ----------
         Arias, A., 1970. A measure of earthquake intensity. 
             Hansen, R. J. (ed.), Seismic Design for Nuclear Power 
             Plants (pp. 438–483). Cambridge, MA: MIT Press.
@@ -514,7 +565,7 @@ class imcalculator:
             Cumulative Absolute Velocity (m/s).
 
         References
-        -------
+        ----------
         O’Hara, T. F., and Jacobson, J. P., 1991. Standardization
             of the cumulative absolute velocity (EPRI-TR--100082; 
             ON: UN92004453). Palo Alto, CA.
@@ -551,7 +602,7 @@ class imcalculator:
             Significant duration (s).
 
         References
-        -------
+        ----------
         Trifunac, M. D., and Brady, A. G., 1975. A study on the duration
             of strong earthquake ground motion. Bulletin of the 
             Seismological Society of America, 65(3), 581–626.
@@ -674,24 +725,26 @@ class imcalculator:
         )
         t = tim[valid_idx]
 
-        # Find the peaks and troughs of the FIV array
-        pks_ind, _ = signal.find_peaks(FIV)
-        trs_ind, _ = signal.find_peaks(-FIV)
+        # Three largest peaks / deepest troughs and their FIV3 (Eq. 3)
+        FIV3, pks, trs = self._fiv3_from_series(FIV)
 
-        # Sort peak and trough values
-        pks_srt = np.sort(FIV[pks_ind])
-        trs_srt = np.sort(FIV[trs_ind])
+        return FIV3, FIV, t, ugf, pks, trs
+
+    @staticmethod
+    def _fiv3_from_series(fiv):
+        """FIV3, three largest peaks and three deepest troughs of a
+        filtered incremental velocity series."""
+        pks_ind, _ = signal.find_peaks(fiv)
+        trs_ind, _ = signal.find_peaks(-fiv)
 
         # Extract the three largest peaks and three deepest troughs
-        pks = pks_srt[-3:]
-        trs = trs_srt[0:3]
+        pks = np.sort(fiv[pks_ind])[-3:]
+        trs = np.sort(fiv[trs_ind])[0:3]
 
         # FIV3 = max of summed peak energy vs summed trough energy.
         # Troughs are negative, so compare absolute values and return
         # the dominant (unsigned) magnitude per Eq. (3) of the paper.
-        FIV3 = np.max([np.sum(pks), np.abs(np.sum(trs))])
-
-        return FIV3, FIV, t, ugf, pks, trs
+        return np.max([np.sum(pks), np.abs(np.sum(trs))]), pks, trs
 
     def get_rotdxx(
         self,
@@ -755,10 +808,11 @@ class imcalculator:
 
         Notes
         -----
-        Common choices are RotD50 (``percentile=50``), which is
-        used as the reference IM in ASCE 7-22 ground-motion
-        selection, and RotD100 (``percentile=100``), the
-        orientation-independent maximum.
+        Common choices are RotD50 (``percentile=50``), the median over
+        all orientations, which is the horizontal-component definition
+        adopted by most recent ground-motion models (e.g., NGA-West2),
+        and RotD100 (``percentile=100``), the maximum-direction
+        response.
 
         When the second component is zero, RotD100 equals the
         single-component PSA and RotD50 equals PSA · √2/2 (the
@@ -766,97 +820,286 @@ class imcalculator:
 
         References
         ----------
-        Boore, D.M. (2010). "Orientation-independent, nongeometric-
-        mean measures of seismic intensity from two horizontal
-        components of motion." *Bulletin of the Seismological
-        Society of America*, 100(4), 1830–1835.
-        DOI: 10.1785/0120090400.
+        Boore, D. M., 2010. Orientation-independent, nongeometric-mean
+            measures of seismic intensity from two horizontal components
+            of motion. Bulletin of the Seismological Society of America,
+            100(4), 1830–1835. DOI: 10.1785/0120090400
 
         """
-        if damping_ratio is None:
-            damping_ratio = self.damping
+        periods, psa_rot = self._rotated_psa(acc2, periods, damping_ratio)
+        # RotDxx: percentile across the 180 rotation angles
+        return periods, np.percentile(psa_rot, percentile, axis=0)
 
-        # Newmark-beta integration constants (constant average
-        # acceleration — unconditionally stable)
-        gamma_nb = 0.5
-        beta_nb = 0.25
-        ms = 1.0  # Unit mass (kg)
-        dt = self.dt
+    # ------------------------------------------------------------------
+    # RotDxx versions of the other intensity measures
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _rot_cos_sin():
+        """cos and sin of the 180 rotation angles 0°, 1°, ..., 179°,
+        as (180, 1) columns."""
+        th = np.deg2rad(np.arange(180))[:, np.newaxis]
+        return np.cos(th), np.sin(th)
 
-        # Convert acc2 to g (matching the internal storage of acc1)
+    def _second_component(self, acc2):
+        """Validate the second horizontal component and return an
+        imcalculator for it (same dt and damping, stored in g)."""
         acc2 = np.array(acc2, dtype=float)
-        if self.unit in ("m/s2", "m/s^2"):
-            acc2_g = acc2 / _G
-        else:
-            acc2_g = acc2
+        if acc2.shape != self.acc.shape:
+            raise ValueError(
+                "'acc2' must have the same length as the first "
+                f"component ({len(self.acc)}), got {len(acc2)}."
+            )
+        return imcalculator(acc2, self.dt, self.damping, self.unit)
 
-        # Precompute SDOF system properties (vectorised over periods)
-        periods = np.asarray(periods, dtype=float)
-        omega = 2 * np.pi / periods          # (n_periods,)
-        k = ms * omega**2                    # Stiffness (N/m)
-        c = 2 * damping_ratio * ms * omega   # Damping coefficient
+    def _rotate(self, x1, x2):
+        """Rotate a linear pair of series to the 180 angles:
+        x(θ) = x1·cos θ + x2·sin θ, shape (180, n_time)."""
+        ct, st = self._rot_cos_sin()
+        return ct * x1[np.newaxis, :] + st * x2[np.newaxis, :]
 
-        k_bar = (
-            k
-            + (gamma_nb / (beta_nb * dt)) * c
-            + ms / (beta_nb * dt**2)
-        )
+    def _newmark_disp(self, acc_g, periods, damping_ratio):
+        """SDOF displacement histories (n_periods, n_time) and the
+        circular frequencies for acceleration ``acc_g`` (in g), by
+        constant-average-acceleration Newmark integration of all the
+        periods at once."""
+        gamma_nb, beta_nb, ms, dt = 0.5, 0.25, 1.0, self.dt
+        omega = 2 * np.pi / periods
+        c = 2 * damping_ratio * ms * omega
+        k_bar = (ms * omega**2 + (gamma_nb / (beta_nb * dt)) * c
+                 + ms / (beta_nb * dt**2))
         A = ms / (beta_nb * dt) + (gamma_nb / beta_nb) * c
         B = ms / (2 * beta_nb) + dt * c * (gamma_nb / (2 * beta_nb) - 1)
+        p = -ms * acc_g * _G
+        u = np.zeros((len(periods), len(p)))
+        v = np.zeros(len(periods))
+        a = np.full(len(periods), p[0] / ms)
+        for i in range(len(p) - 1):
+            dp_bar = p[i + 1] - p[i] + A * v + B * a
+            du = dp_bar / k_bar
+            dv = ((gamma_nb / (beta_nb * dt)) * du
+                  - (gamma_nb / beta_nb) * v
+                  + dt * (1 - gamma_nb / (2 * beta_nb)) * a)
+            da = du / (beta_nb * dt**2) - v / (beta_nb * dt) \
+                - a / (2 * beta_nb)
+            u[:, i + 1] = u[:, i] + du
+            v, a = v + dv, a + da
+        return u, omega
 
-        def _newmark_u(acc_g):
-            """Return displacement history (n_periods, n_time) for acc_g."""
-            acc_ms2 = acc_g * _G
-            p = -ms * acc_ms2
-            n_time = len(acc_ms2)
-            n_per = len(periods)
+    def _rotated_psa(self, acc2, periods, damping_ratio=None):
+        """PSA (g) of the rotated record at each (angle, period), shape
+        (180, n_periods). Because the oscillator is linear, Newmark is
+        run once per component and the displacement histories are
+        rotated: u(θ) = cos θ · u1 + sin θ · u2."""
+        if damping_ratio is None:
+            damping_ratio = self.damping
+        periods = np.asarray(periods, dtype=float)
+        acc2_g = self._second_component(acc2).acc
+        u1, omega = self._newmark_disp(self.acc, periods, damping_ratio)
+        u2, _ = self._newmark_disp(acc2_g, periods, damping_ratio)
+        ct, st = self._rot_cos_sin()
+        psa = np.empty((180, len(periods)))
+        for j in range(len(periods)):
+            sd = np.max(np.abs(ct * u1[j] + st * u2[j]), axis=1)
+            psa[:, j] = sd * omega[j] ** 2 / _G
+        return periods, psa
 
-            u = np.zeros((n_per, n_time))
-            v = np.zeros((n_per, n_time))
-            a = np.zeros((n_per, n_time))
+    def get_rotdxx_amplitude_ims(self, acc2, percentile=50,
+                                 highpass_hz=0.05):
+        """
+        Computes the RotDxx PGA, PGV and PGD.
 
-            a[:, 0] = p[0] / ms
+        Acceleration, velocity and displacement are linear in the
+        record, so the drift-corrected histories of each component
+        (see ``get_vel_disp_history``) are rotated to the 180 angles
+        0°, 1°, ..., 179°; the peak absolute value is taken at every
+        angle and the ``percentile`` of the 180 peaks is returned.
 
-            for i in range(n_time - 1):
-                dp = p[i + 1] - p[i]
-                dp_bar = dp + A * v[:, i] + B * a[:, i]
-                du = dp_bar / k_bar
-                dv = (
-                    (gamma_nb / (beta_nb * dt)) * du
-                    - (gamma_nb / beta_nb) * v[:, i]
-                    + dt * (1 - gamma_nb / (2 * beta_nb)) * a[:, i]
-                )
-                da = (
-                    du / (beta_nb * dt**2)
-                    - v[:, i] / (beta_nb * dt)
-                    - a[:, i] / (2 * beta_nb)
-                )
-                u[:, i + 1] = u[:, i] + du
-                v[:, i + 1] = v[:, i] + dv
-                a[:, i + 1] = a[:, i] + da
+        Parameters
+        ----------
+        acc2 : array_like
+            Second horizontal component, same length and unit as the
+            first one.
 
-            return u
+        percentile : float, optional
+            Percentile across angles (50 = RotD50, 100 = RotD100).
 
-        # SDOF displacement responses for the two components
-        u1 = _newmark_u(self.acc)   # (n_periods, n_time)
-        u2 = _newmark_u(acc2_g)     # (n_periods, n_time)
+        highpass_hz : float or None, optional
+            Corner frequency (Hz) of the drift-correcting high-pass
+            filter, as in ``get_amplitude_ims``.
 
-        # 180 rotation angles: 0°, 1°, …, 179°
-        theta_rad = np.deg2rad(np.arange(180))   # (180,)
+        Returns
+        -------
+        pga : float
+            RotDxx peak ground acceleration (g).
 
-        # PSA at each (angle, period) combination
-        # u_rot(θ) = cos(θ)*u1 + sin(θ)*u2  →  shape (n_periods, n_time)
-        # Vectorise over angles by broadcasting
-        # cos_th: (180, 1, 1), u1: (1, n_periods, n_time)
-        cos_th = np.cos(theta_rad)[:, np.newaxis, np.newaxis]  # (180,1,1)
-        sin_th = np.sin(theta_rad)[:, np.newaxis, np.newaxis]  # (180,1,1)
-        u_rot = cos_th * u1[np.newaxis] + sin_th * u2[np.newaxis]
-        # u_rot shape: (180, n_periods, n_time)
+        pgv : float
+            RotDxx peak ground velocity (m/s).
 
-        sd_rot = np.max(np.abs(u_rot), axis=2)   # (180, n_periods)
-        psa_rot = sd_rot * omega[np.newaxis, :] ** 2 / _G   # (180, n_periods)
+        pgd : float
+            RotDxx peak ground displacement (m).
 
-        # RotDxx: percentile across the 180 rotation angles
-        rotdxx = np.percentile(psa_rot, percentile, axis=0)   # (n_periods,)
+        """
+        other = self._second_component(acc2)
+        v1, d1 = self._integrate_vel_disp(highpass_hz)
+        v2, d2 = other._integrate_vel_disp(highpass_hz)
+        out = []
+        for x1, x2 in ((self.acc, other.acc), (v1, v2), (d1, d2)):
+            peaks = np.max(np.abs(self._rotate(x1, x2)), axis=1)
+            out.append(np.percentile(peaks, percentile))
+        return tuple(out)
 
-        return periods, rotdxx
+    def get_rotdxx_cav(self, acc2, percentile=50):
+        """
+        Computes the RotDxx Cumulative Absolute Velocity.
+
+        CAV is not linear in the record, so it is recomputed on the
+        rotated accelerogram at each of the 180 angles and the
+        ``percentile`` across angles is returned.
+
+        Parameters
+        ----------
+        acc2 : array_like
+            Second horizontal component, same length and unit as the
+            first one.
+
+        percentile : float, optional
+            Percentile across angles (50 = RotD50, 100 = RotD100).
+
+        Returns
+        -------
+        cav : float
+            RotDxx cumulative absolute velocity (m/s).
+
+        """
+        other = self._second_component(acc2)
+        acc_rot = self._rotate(self.acc_m_s2, other.acc_m_s2)
+        cav = np.sum(np.abs(acc_rot), axis=1) * self.dt
+        return np.percentile(cav, percentile)
+
+    def get_rotdxx_arias_duration(self, acc2, percentile=50, start=0.05,
+                                  end=0.95):
+        """
+        Computes the RotDxx Arias Intensity and significant duration.
+
+        The rotated cumulative Arias Intensity is a quadratic form of
+        the two components, so it is assembled from the cumulative sums
+        of a1², a2² and a1·a2 at each of the 180 angles (no rotated
+        record is built). The ``percentile`` across angles of the final
+        Arias Intensity and of the time between the ``start`` and
+        ``end`` fractions of it is returned.
+
+        Parameters
+        ----------
+        acc2 : array_like
+            Second horizontal component, same length and unit as the
+            first one.
+
+        percentile : float, optional
+            Percentile across angles (50 = RotD50, 100 = RotD100).
+
+        start, end : float, optional
+            Fractions of the normalised Arias Intensity defining the
+            duration. Default is 0.05 and 0.95 (D5-95).
+
+        Returns
+        -------
+        ai : float
+            RotDxx Arias Intensity (m/s).
+
+        duration : float
+            RotDxx significant duration (s).
+
+        """
+        other = self._second_component(acc2)
+        a1, a2 = self.acc_m_s2, other.acc_m_s2
+        ct, st = self._rot_cos_sin()
+        energy = (ct**2 * np.cumsum(a1 * a1) + st**2 * np.cumsum(a2 * a2)
+                  + 2 * ct * st * np.cumsum(a1 * a2))
+        ai = energy[:, -1] * (np.pi / (2 * _G)) * self.dt
+        norm = energy / energy[:, -1:]
+        # first sample at or above each fraction (as np.searchsorted)
+        i_start = np.argmax(norm >= start, axis=1)
+        i_end = np.argmax(norm >= end, axis=1)
+        dur = (i_end - i_start) * self.dt
+        return np.percentile(ai, percentile), np.percentile(dur, percentile)
+
+    def get_rotdxx_saavg(self, acc2, period=None, periods_list=None,
+                         percentile=50, damping_ratio=None):
+        """
+        Computes the RotDxx average spectral acceleration.
+
+        The geometric mean of the spectral accelerations is taken at
+        every rotation angle (not of the RotDxx spectrum), and the
+        ``percentile`` of the 180 values is returned, i.e. RotDxx of
+        the AvgSA definition. The oscillators are integrated at the
+        exact periods (no interpolation on a spectrum grid).
+
+        Parameters
+        ----------
+        acc2 : array_like
+            Second horizontal component, same length and unit as the
+            first one.
+
+        period : float, optional
+            Conditioning period (s): AvgSA over 10 equally spaced
+            periods in [0.2*period, 1.5*period], as in ``get_saavg``.
+
+        periods_list : array_like, optional
+            User-defined periods (s), as in ``get_saavg_user_defined``.
+            Takes precedence over ``period``.
+
+        percentile : float, optional
+            Percentile across angles (50 = RotD50, 100 = RotD100).
+
+        damping_ratio : float, optional
+            Oscillator damping. Defaults to ``self.damping``.
+
+        Returns
+        -------
+        saavg : float
+            RotDxx average spectral acceleration (g).
+
+        """
+        if periods_list is None:
+            if period is None:
+                raise ValueError("Provide 'period' or 'periods_list'.")
+            periods_list = np.linspace(0.2 * period, 1.5 * period, 10)
+        _, psa = self._rotated_psa(acc2, periods_list, damping_ratio)
+        # Clip to prevent underflow in the log-space geometric mean
+        psa = np.clip(psa, 1e-6, None)
+        gmean = np.exp(np.mean(np.log(psa), axis=1))
+        return np.percentile(gmean, percentile)
+
+    def get_rotdxx_FIV3(self, acc2, period, alpha, beta, percentile=50):
+        """
+        Computes the RotDxx filtered incremental velocity (FIV3).
+
+        The FIV series (low-pass filter plus window integral) is linear
+        in the record, so the series of the two components are rotated
+        and only the peak/trough picking of ``get_FIV3`` is repeated at
+        each of the 180 angles.
+
+        Parameters
+        ----------
+        acc2 : array_like
+            Second horizontal component, same length and unit as the
+            first one.
+
+        period, alpha, beta : float
+            As in ``get_FIV3``.
+
+        percentile : float, optional
+            Percentile across angles (50 = RotD50, 100 = RotD100).
+
+        Returns
+        -------
+        FIV3 : float
+            RotDxx FIV3 (g·s).
+
+        """
+        other = self._second_component(acc2)
+        fiv1 = self.get_FIV3(period, alpha, beta)[1]
+        fiv2 = other.get_FIV3(period, alpha, beta)[1]
+        vals = [self._fiv3_from_series(f)[0]
+                for f in self._rotate(fiv1, fiv2)]
+        return np.percentile(vals, percentile)

@@ -6,7 +6,8 @@ using the OpenSees framework. Each storey is represented by a Pinching4 hysteret
 spring; its pinching and damage parameters are configurable via the
 ``pinching4_params`` argument to ``modeller.__init__``, defaulting to the toolkit's
 standard values. Supported analysis types include gravity analysis, modal analysis, static
-pushover (SPO), and nonlinear time-history analysis (NRHA).
+pushover (SPO), cyclic pushover (CPO), nonlinear time-history analysis (NRHA,
+including sequences of records) and incremental dynamic analysis (IDA).
 
 .. toctree::
 
@@ -16,7 +17,10 @@ pushover (SPO), and nonlinear time-history analysis (NRHA).
    mod/do_gravity_analysis
    mod/do_modal_analysis
    mod/do_spo_analysis
+   mod/do_cpo_analysis
    mod/do_nrha_analysis
+   mod/do_nrha_analysis_sequences
+   mod/do_ida_analysis
 
 References
 ----------

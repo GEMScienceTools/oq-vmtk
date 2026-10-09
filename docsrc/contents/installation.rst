@@ -67,6 +67,15 @@ Then pick the matching file. The naming convention is
    # macOS (arm64)
    pip install -r requirements-py312-macos_arm64.txt
 
+The pinned files download large wheels, so slow connections may time out. Pass
+``--timeout=100`` to ``pip install``, or, to keep the conventional
+``pip install -r requirements-...`` command, set the timeout globally once
+before installing:
+
+.. code-block:: bash
+
+   pip config set global.timeout 100
+
 Install the Package
 -------------------
 
@@ -90,6 +99,7 @@ Verify the Installation
 
    python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
 
-This should print the installed version (e.g., ``1.0.0``). The version reported
-here is the same version archived on Zenodo (DOI
-`10.5281/zenodo.17524871 <https://doi.org/10.5281/zenodo.17524871>`_).
+This should print the installed version (e.g., ``1.2.0``). All releases
+are archived on Zenodo under the concept DOI
+`10.5281/zenodo.17524871 <https://doi.org/10.5281/zenodo.17524871>`_, which
+always resolves to the latest version.

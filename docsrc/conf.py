@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'OpenQuake Vulnerability Modellers Toolkit Suite'
+project = "OpenQuake Vulnerability Modeller's Toolkit Suite"
 copyright = '2024-2025, GEM Risk'
 author = 'GEM Risk'
 

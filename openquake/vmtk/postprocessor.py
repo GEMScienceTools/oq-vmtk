@@ -568,7 +568,13 @@ class postprocessor:
 
         sigma_build2build : float, optional
             Additional modeling uncertainty (building-to-building
-            variability). Default is 0.3.
+            variability). Default is 0.3. For ``'lognormal'`` (both
+            ``cloud_method`` options) it is combined with the PSDM
+            dispersion in EDP space; for ``'probit'``, ``'logit'`` and
+            ``'ordinal'`` it is combined in IM space with the
+            lognormal-equivalent record-to-record dispersion of the
+            fitted curves, which are then re-expressed as lognormal CDFs
+            with the total dispersion.
 
         sigma_ds : float, optional
             The logarithmic standard deviation representing uncertainty
@@ -733,108 +739,67 @@ class postprocessor:
             return im_nc, edp_nc, im_c
 
         # Compute exceedance probabilities using the specified fragility method
-        if fragility_method in ['probit', 'logit']:
+        if fragility_method.lower() in ['probit', 'logit', 'ordinal']:
 
-            # Get the probabilities of exceedance
-            poes = self.calculate_glm_fragility(
-                imls, edps, damage_thresholds,
-                fragility_method=fragility_method)
+            n_ds = len(damage_thresholds)
 
-            # Compute lognormal equivalent fragility parameters
-            # Equivalent median intensities
-            thetas = [np.interp(0.50, poes[:, ds], intensities)
-                      for ds in range(len(damage_thresholds))]
-            sigmas_record2record = [
-                np.abs(0.50 * (
-                    np.log(np.interp(0.84, poes[:, ds], intensities))
-                    - np.log(np.interp(
-                        0.16, poes[:, ds], intensities))))
-                for ds in range(len(damage_thresholds))
-            ]  # Equivalent record-to-record variability
-            # Modelling uncertainty
-            sigmas_build2build = np.full(
-                len(damage_thresholds), sigma_build2build)
-            # Uncertainty in DS thresholds
-            sigmas_ds = np.full(len(damage_thresholds), sigma_ds)
+            # Fit the GLM / CLM to the binary (or ordinal) outcomes. The
+            # fitted curves reflect record-to-record variability only.
+            if fragility_method.lower() == 'ordinal':
+                poes_rtr = self.calculate_ordinal_fragility(
+                    imls, edps, damage_thresholds,
+                    intensities=intensities,
+                    dispersion_type=dispersion_type)
+            else:
+                poes_rtr = self.calculate_glm_fragility(
+                    imls, edps, damage_thresholds,
+                    intensities=intensities,
+                    fragility_method=fragility_method.lower())
+
+            # Keep one column per damage state (the constant-dispersion
+            # ordinal model also returns a trailing, near-zero column)
+            poes_rtr = np.asarray(poes_rtr)[:, :n_ds]
+
+            # Lognormal-equivalent parameters of the fitted curves:
+            # median (50th percentile) and record-to-record dispersion
+            # from the 16th and 84th percentiles, beta = ln(IM84/IM16)/2
+            thetas = []
+            sigmas_record2record = []
+            for ds in range(n_ds):
+                im50 = np.interp(0.50, poes_rtr[:, ds], intensities)
+                im16 = np.interp(0.16, poes_rtr[:, ds], intensities)
+                im84 = np.interp(0.84, poes_rtr[:, ds], intensities)
+                thetas.append(im50)
+                sigmas_record2record.append(
+                    np.abs(0.50 * (np.log(im84) - np.log(im16))))
+
+            # Combine with the user-defined building-to-building and
+            # damage-state threshold uncertainties (SRSS, IM space)
+            sigmas_build2build = np.full(n_ds, sigma_build2build)
+            sigmas_ds = np.full(n_ds, sigma_ds)
             betas_total = [
-                np.sqrt(
-                    sigma_record2record**2
-                    + sigma_build2build**2
-                    + sigma_ds**2)
-                for sigma_record2record, sigma_build2build, sigma_ds
-                in zip(
-                    sigmas_record2record,
-                    sigmas_build2build,
-                    sigmas_ds)
-            ]  # Total dispersion
+                np.sqrt(s_rr**2 + s_b2b**2 + s_ds**2)
+                for s_rr, s_b2b, s_ds in zip(
+                    sigmas_record2record, sigmas_build2build, sigmas_ds)
+            ]
+
+            # Re-express the fragility functions as lognormal CDFs with the
+            # total dispersion, so that the returned curves are consistent
+            # with 'betas_total'
+            poes = np.column_stack([
+                self.calculate_lognormal_fragility(
+                    theta, beta_total,
+                    sigma_build2build=0.0, sigma_ds=0.0,
+                    intensities=intensities)
+                for theta, beta_total in zip(thetas, betas_total)])
+
+            # Prevent crossing (a higher DS can never be more likely)
+            for ds in range(n_ds - 2, -1, -1):
+                poes[:, ds] = np.maximum(poes[:, ds], poes[:, ds + 1])
 
             # Create the dictionary
             cloud_dict = {
-                # Add a nested dictionary for the inputs of the regression
-                'cloud inputs': {'imls': imls,
-                                 'edps': edps,
-                                 'lower_limit': None,
-                                 'upper_limit': None,
-                                 'damage_thresholds': damage_thresholds},
-
-                # Add a nested dictionary for fragility functions parameters
-                'fragility': {'fragility_method': fragility_method.lower(),
-                              'intensities': intensities,
-                              'poes': poes,
-                              'medians': thetas,
-                              'sigma_record2record': sigmas_record2record,
-                              'sigma_build2build': sigmas_build2build,
-                              'sigma_ds': sigmas_ds,
-                              'betas_total': betas_total},
-
-                # Add a nested dictionary for regression coefficients
-                'regression': {'b1': None,   # Store 'b1' coefficient
-                               'b0': None,   # Store 'b0' coefficient
-                               'sigma': None,   # Store 'sigma' value
-                               'fitted_x': None,   # Store the fitted x-values
-                               'fitted_y': None}   # Store the fitted y-values
-            }
-
-            return cloud_dict
-
-        elif fragility_method.lower() == 'ordinal':
-
-            # Compute exceedance probabilities via ordinal fragility
-            poes = self.calculate_ordinal_fragility(
-                imls, edps, damage_thresholds,
-                dispersion_type=dispersion_type)
-
-            # Compute lognormal equivalent fragility parameters
-            # Equivalent median intensities
-            thetas = [np.interp(0.50, poes[:, ds], intensities)
-                      for ds in range(len(damage_thresholds))]
-            sigmas_record2record = [
-                np.abs(0.50 * (
-                    np.log(np.interp(0.84, poes[:, ds], intensities))
-                    - np.log(np.interp(
-                        0.16, poes[:, ds], intensities))))
-                for ds in range(len(damage_thresholds))
-            ]  # Equivalent record-to-record variability
-            # Modelling uncertainty
-            sigmas_build2build = np.full(
-                len(damage_thresholds), sigma_build2build)
-            # Uncertainty in DS thresholds
-            sigmas_ds = np.full(len(damage_thresholds), sigma_ds)
-            betas_total = [
-                np.sqrt(
-                    sigma_record2record**2
-                    + sigma_build2build**2
-                    + sigma_ds**2)
-                for sigma_record2record, sigma_build2build, sigma_ds
-                in zip(
-                    sigmas_record2record,
-                    sigmas_build2build,
-                    sigmas_ds)
-            ]  # Total dispersion
-
-            # Create the dictionary
-            cloud_dict = {
-                # Add a nested dictionary for the inputs of the regression
+                # Inputs of the regression
                 'cloud inputs': {
                     'imls': imls,
                     'edps': edps,
@@ -847,18 +812,19 @@ class postprocessor:
                     'fragility_method': fragility_method.lower(),
                     'intensities': intensities,
                     'poes': poes,
+                    'poes_record2record': poes_rtr,
                     'medians': thetas,
                     'sigma_record2record': sigmas_record2record,
                     'sigma_build2build': sigmas_build2build,
                     'sigma_ds': sigmas_ds,
                     'betas_total': betas_total},
 
-                # Add a nested dictionary for regression coefficients
-                'regression': {'b1': None,   # Store 'b1' coefficient
-                               'b0': None,   # Store 'b0' coefficient
-                               'sigma': None,   # Store 'sigma' value
-                               'fitted_x': None,   # Store the fitted x-values
-                               'fitted_y': None}   # Store the fitted y-values
+                # Regression coefficients (not applicable to GLM/CLM)
+                'regression': {'b1': None,
+                               'b0': None,
+                               'sigma': None,
+                               'fitted_x': None,
+                               'fitted_y': None}
             }
 
             return cloud_dict
@@ -1026,7 +992,8 @@ class postprocessor:
                             medians[ds],
                             betas_total[ds],
                             sigma_build2build=0.0,
-                            sigma_ds=0.0))
+                            sigma_ds=0.0,
+                            intensities=intensities))
 
                 # Final cleanup: prevent fragility crossing
                 for i in range(n_ds - 1, -1, -1):
@@ -1268,10 +1235,17 @@ class postprocessor:
                     p_c_j = 1.0 / (1.0 + np.exp(-eta_j))
                     mu_ln_j = ln_a_j + b_j * ln_intensities
 
+                    # Total dispersion in EDP space: posterior sample of the
+                    # record-to-record term combined (SRSS) with the
+                    # user-defined building-to-building and DS-threshold
+                    # uncertainties, consistent with the bootstrap method
+                    beta_tot_j = np.sqrt(
+                        beta_j**2 + sigma_build2build**2 + sigma_ds**2)
+
                     for ds in range(n_ds):
                         poe_nc_j = 1.0 - norm.cdf(
                             np.log(damage_thresholds[ds]),
-                            loc=mu_ln_j, scale=beta_j)
+                            loc=mu_ln_j, scale=beta_tot_j)
                         poes_mcmc[j, :, ds] = (
                             poe_nc_j * (1.0 - p_c_j) + p_c_j)
 
@@ -1624,17 +1598,23 @@ class postprocessor:
                             sigma_ds=0.3,
                             intensities=np.round(
                                 np.geomspace(0.05, 10.0, 50), 3),
-                            edp_range=np.linspace(0.00, 0.05, 101)):
+                            edp_range=np.linspace(0.00, 0.05, 101),
+                            collapse_edp=None):
         """
         Perform fragility function fitting and statistical processing on
         Incremental Dynamic Analysis (IDA) results.
 
-        This method processes raw IDA data by interpolating individual
-        record response curves to a continuous Engineering Demand
-        Parameter (EDP) range. It accounts for "flatlining" (global
-        dynamic instability) using Maximum Likelihood Estimation (MLE)
-        for censored data to estimate the fragility parameters (median
-        and dispersion) for multiple damage states.
+        For each record and damage state, the IM capacity is taken as the
+        IM at which the monotonic IDA curve first reaches the DS
+        threshold, interpolated between the two bracketing runs. Records
+        that collapse (flatline) before reaching the threshold are
+        assigned the flatline IM, i.e. the IM of the last non-collapsed
+        run. Records that neither reach the threshold nor collapse within
+        the analysed range are treated as right-censored at the highest
+        IM analysed for that record. The lognormal fragility parameters
+        are then estimated by the method of moments when all capacities
+        are observed, or by right-censored maximum likelihood estimation
+        otherwise (Baker, 2015).
 
         Parameters
         ----------
@@ -1678,7 +1658,18 @@ class postprocessor:
         edp_range : numpy.ndarray, optional,
             default=np.linspace(0.00, 0.05, 101) (0% to 5% drift)
             The array of engineering demand parameters over which the
-            IDA curves will be evaluated.
+            IDA curves will be evaluated (used for the statistical IDA
+            curves in ``'stats'`` only; capacities are interpolated at
+            the exact damage thresholds).
+
+        collapse_edp : float, optional, default=None
+            EDP value at or above which a run is treated as collapsed
+            (e.g., the ``target_drift`` used in ``do_ida_analysis``).
+            Runs flagged as non-converged in ``ansys_dict
+            ['conv_index_list']`` (conv_index == -1) are always treated
+            as collapsed when that key is present. If neither source
+            identifies a collapse, a record that does not reach a
+            threshold is treated as right-censored.
 
         Returns
         -------
@@ -1715,13 +1706,22 @@ class postprocessor:
                   (theta) for each damage state.
                 - ``'sigma_record2record'`` : list, length n_DS —
                   record-to-record dispersion per damage state,
-                  estimated via MLE on censored capacities.
+                  estimated by the method of moments or censored MLE.
                 - ``'sigma_build2build'`` : list, length n_DS —
                   building-to-building modelling uncertainty.
                 - ``'sigma_ds'`` : list, length n_DS — uncertainty
                   in the damage-state threshold definition.
                 - ``'betas_total'`` : list, length n_DS — total
                   logarithmic standard deviation per damage state.
+                - ``'fit_method'`` : list, length n_DS —
+                  'method_of_moments', 'censored_mle' or
+                  'insufficient_data' (fewer than two observed
+                  capacities; parameters and PoEs are NaN).
+                - ``'n_censored'`` : list, length n_DS — number of
+                  right-censored records per damage state.
+                - ``'capacities'`` : list, length n_DS — dicts with
+                  the IM ``'capacities'`` and boolean ``'censored'``
+                  flags used in the fit.
 
             **'stats'** : dict
                 Statistical IDA curves across all records.
@@ -1737,10 +1737,17 @@ class postprocessor:
 
         Notes
         -----
-        The method uses a log-likelihood minimization approach to handle
-        records that do not reach a specific damage threshold within the
-        analyzed range (right-censored data), ensuring the fragility
-        curves remain statistically robust even near collapse.
+        The censored likelihood combines the lognormal density of the
+        observed capacities with the lognormal survival function evaluated
+        at each censored record's own maximum analysed IM. The total
+        dispersion combines the fitted record-to-record term with
+        ``sigma_build2build`` and ``sigma_ds`` by SRSS, all in IM space.
+
+        References
+        ----------
+        Baker JW. Efficient Analytical Fragility Function Fitting Using
+        Dynamic Structural Analysis. Earthquake Spectra.
+        2015;31(1):579-599. doi:10.1193/021113EQS025M
         """
 
         drifts_data = ansys_dict[edp_key]
@@ -1805,43 +1812,133 @@ class postprocessor:
             p16_ida_im = np.nanpercentile(im_at_edp_matrix, 16, axis=0)
             p84_ida_im = np.nanpercentile(im_at_edp_matrix, 84, axis=0)
 
-        # Fragility Fitting (MLE for Censored Data)
+        # Fragility fitting: method of moments, or censored MLE
+        # -----------------------------------------------------------------
+        # For each record and damage state, the IM capacity is the IM at
+        # which the (monotonic) IDA curve first reaches the DS threshold,
+        # interpolated between the two bracketing runs. Records that
+        # collapse (flatline) before reaching the threshold are assigned
+        # the flatline IM (last non-collapsed run), since collapse implies
+        # exceedance of every DS. Records that neither reach the threshold
+        # nor collapse within the analysed range are right-censored at the
+        # highest IM analysed for that record (Baker, 2015).
         im_max = np.nanmax(im_matrix)
+        conv_data = ansys_dict.get('conv_index_list')
+
+        # Assemble per-record IDA curves (sorted by IM, truncated at the
+        # first collapsed run) and their flatline IMs
+        records = []
+        for i in range(n_records):
+            pts = []
+            for j, sf in enumerate(sf_matrix[i, :]):
+                if np.isnan(sf) or sf not in drifts_data[i]:
+                    continue
+                edp_val = drifts_data[i][sf]
+                collapsed = False
+                if conv_data is not None and sf in conv_data[i]:
+                    collapsed = conv_data[i][sf] == -1
+                if collapse_edp is not None and edp_val >= collapse_edp:
+                    collapsed = True
+                pts.append((im_matrix[i, j], edp_val, collapsed))
+
+            if not pts:
+                records.append(None)
+                continue
+
+            pts.sort(key=lambda p: p[0])
+            ims = np.array([p[0] for p in pts], dtype=float)
+            edps_rec = np.array([p[1] for p in pts], dtype=float)
+            coll = np.array([p[2] for p in pts], dtype=bool)
+
+            if np.any(coll):
+                k_c = int(np.argmax(coll))  # first collapsed run
+                flatline_im = ims[k_c - 1] if k_c > 0 else ims[0]
+                ims, edps_rec = ims[:k_c], edps_rec[:k_c]
+            else:
+                flatline_im = None
+
+            records.append({'ims': ims,
+                            'edps': np.maximum.accumulate(edps_rec),
+                            'flatline_im': flatline_im})
+
         thetas = []
         sigmas_rec2rec = []
         sigmas_build2build = []
         sigmas_ds = []
+        fit_methods = []
+        n_censored = []
+        capacities_all = []
 
         for threshold in damage_thresholds:
-            thresh_idx = np.argmin(np.abs(edp_range - threshold))
-            capacities = im_at_edp_matrix[:, thresh_idx]
-            num_collapsed = np.sum(~np.isnan(capacities))
+            caps, cens = [], []
+            for rec in records:
+                if rec is None:
+                    continue
+                ims, edps_mono = rec['ims'], rec['edps']
+                hit = (np.where(edps_mono >= threshold)[0]
+                       if edps_mono.size else np.array([], dtype=int))
 
-            if num_collapsed == n_records:
-                ln_cap = np.log(capacities)
-                theta = np.exp(np.mean(ln_cap))
-                beta_rec = np.std(ln_cap, ddof=1)
+                if hit.size:
+                    # Threshold reached before collapse: interpolate
+                    k = hit[0]
+                    if k == 0:
+                        cap = ims[0]
+                    else:
+                        e0, e1 = edps_mono[k - 1], edps_mono[k]
+                        cap = ims[k - 1] + (threshold - e0) / (e1 - e0) * (
+                            ims[k] - ims[k - 1])
+                    caps.append(cap)
+                    cens.append(False)
+                elif rec['flatline_im'] is not None:
+                    # Collapsed before reaching the threshold
+                    caps.append(rec['flatline_im'])
+                    cens.append(False)
+                elif ims.size:
+                    # Neither reached nor collapsed: right-censored
+                    caps.append(ims.max())
+                    cens.append(True)
+
+            caps = np.asarray(caps, dtype=float)
+            cens = np.asarray(cens, dtype=bool)
+            ln_obs = np.log(caps[~cens])
+            ln_cen = np.log(caps[cens])
+
+            if ln_obs.size < 2:
+                # Not enough observed capacities to estimate parameters
+                theta, beta_rec, method = np.nan, np.nan, 'insufficient_data'
+            elif ln_cen.size == 0:
+                # All capacities observed: method of moments
+                theta = np.exp(np.mean(ln_obs))
+                beta_rec = np.std(ln_obs, ddof=1)
+                method = 'method_of_moments'
             else:
-                def log_likelihood(params):
-                    t, b = params
-                    if t <= 0 or b <= 0:
-                        return 1e10
-                    collapsed = capacities[~np.isnan(capacities)]
-                    term1 = np.sum(np.log(stats.norm.pdf(
-                        (np.log(collapsed)-np.log(t))/b)/(collapsed*b)))
-                    term2 = ((n_records - num_collapsed) * np.log(
-                        1 - stats.norm.cdf(
-                            (np.log(im_max) - np.log(t)) / b)))
-                    return -(term1 + term2)
+                # Right-censored maximum likelihood (Baker, 2015)
+                def neg_log_likelihood(params):
+                    ln_t, ln_b = params
+                    b = np.exp(ln_b)
+                    ll_obs = np.sum(
+                        stats.norm.logpdf((ln_obs - ln_t) / b)
+                        - ln_b - ln_obs)
+                    ll_cen = np.sum(
+                        stats.norm.logsf((ln_cen - ln_t) / b))
+                    return -(ll_obs + ll_cen)
 
+                x0 = [np.mean(ln_obs),
+                      np.log(max(np.std(ln_obs, ddof=1), 0.1))]
                 sol = optimize.minimize(
-                    log_likelihood, [im_max, 0.4], method='Nelder-Mead')
-                theta, beta_rec = sol.x[0], sol.x[1]
+                    neg_log_likelihood, x0, method='Nelder-Mead',
+                    options={'xatol': 1e-8, 'fatol': 1e-10,
+                             'maxiter': 5000})
+                theta, beta_rec = np.exp(sol.x[0]), np.exp(sol.x[1])
+                method = 'censored_mle'
 
             thetas.append(theta)
             sigmas_rec2rec.append(beta_rec)
             sigmas_build2build.append(sigma_build2build)
             sigmas_ds.append(sigma_ds)
+            fit_methods.append(method)
+            n_censored.append(int(cens.sum()))
+            capacities_all.append({'capacities': caps, 'censored': cens})
 
         # Generate Probabilities of Exceedance
         poes = np.zeros((len(intensities), len(damage_thresholds)))
@@ -1854,8 +1951,15 @@ class postprocessor:
             beta_total = np.sqrt(
                 beta_rec**2 + sigma_build2build**2 + sigma_ds**2)
             betas_total.append(beta_total)
-            poes[:, i] = self.calculate_lognormal_fragility(
-                theta, beta_total)
+            # beta_total already includes all uncertainty sources, so the
+            # additional terms are set to zero here to avoid double counting
+            if np.isfinite(theta) and np.isfinite(beta_total):
+                poes[:, i] = self.calculate_lognormal_fragility(
+                    theta, beta_total,
+                    sigma_build2build=0.0, sigma_ds=0.0,
+                    intensities=intensities)
+            else:
+                poes[:, i] = np.nan
 
         # 5. Construct the final nested dictionary (Cloud-style)
         ida_dict = {
@@ -1876,7 +1980,10 @@ class postprocessor:
                 'sigma_record2record': sigmas_rec2rec,
                 'sigma_build2build': sigmas_build2build,
                 'sigma_ds': sigmas_ds,
-                'betas_total': betas_total
+                'betas_total': betas_total,
+                'fit_method': fit_methods,
+                'n_censored': n_censored,
+                'capacities': capacities_all
             },
 
             'stats': {

@@ -51,10 +51,10 @@ Multiple Stripe Analysis Postprocessing
       from openquake.vmtk.postprocessor import postprocessor
 
       pp = postprocessor()
-      # stripe_imls, stripe_edps: 2-D arrays (n_records × n_stripes) from MSA
+      # imls, edps: 2-D arrays (n_records × n_stripes) from MSA
       msa_dict = pp.process_msa_results(
-          stripe_imls=stripe_imls,
-          stripe_edps=stripe_edps,
+          imls=imls,
+          edps=edps,
           damage_thresholds=[0.005, 0.015, 0.040],
       )
       print(msa_dict['fragility']['medians'])

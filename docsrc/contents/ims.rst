@@ -4,8 +4,9 @@ Intensity Measure Selection
 The ``imselection`` class evaluates and ranks intensity measures (IMs) using the
 information-theoretic framework of Ebrahimian & Jalayer (2021). The central metric
 is the **Relative Sufficiency Measure (RSM)**, expressed in bits: a positive
-RSM(IM₂ vs IM₁) means IM₂ is the more sufficient IM. Two complementary metrics
-are also provided — efficiency (βD|IM) and proficiency (βIM|DCR=1). Both Modified
+RSM(IM₂ vs IM₁) means IM₂ is the more sufficient IM. Three complementary metrics
+are also provided — efficiency (βD|IM), proficiency (βIM|DCR=1) and practicality
+(the slope of the log-linear IM–EDP relation). Both Modified
 Cloud Analysis (MCA) and Incremental Dynamic Analysis (IDA) workflows are supported.
 
 .. toctree::
@@ -15,6 +16,8 @@ Cloud Analysis (MCA) and Incremental Dynamic Analysis (IDA) workflows are suppor
    ims/compute_efficiency_ida
    ims/compute_proficiency_mca
    ims/compute_proficiency_ida
+   ims/compute_practicality_mca
+   ims/compute_practicality_ida
    ims/compute_rsm_mca
    ims/compute_rsm_ida
    ims/compute_rsm_general

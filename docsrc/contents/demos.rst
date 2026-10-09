@@ -55,7 +55,7 @@ Available Demos
    * - ``NonlinearTimeHistoryAnalysis``
      - Nonlinear response-history analysis using ground-motion records, with
        postprocessing of peak storey drifts and floor accelerations.
-   * - ``CloudAnalysis``
+   * - ``ModifiedCloudAnalysis``
      - End-to-end cloud-analysis workflow producing fragility and
        vulnerability functions from MDOF response.
    * - ``MultipleStripeAnalysis``
@@ -75,6 +75,10 @@ Available Demos
      - Apply previously generated SLFs to derive nonstructural-component
        vulnerability functions. Compares the resulting vulnerability models
        and AALRs between Example A and Example B.
+   * - ``EQSpectraExample``
+     - Illustrative case study accompanying the EQ Spectra paper: the full
+       workflow from SDOF capacity calibration through Modified Cloud Analysis
+       to fragility and vulnerability functions.
 
 Each demo folder contains a short ``README.md`` describing the inputs,
 outputs, and the modules being exercised.
@@ -87,6 +91,6 @@ For first-time users, we recommend the following order:
 1. ``IntensityMeasureProcessing`` — get familiar with the IM types.
 2. ``ModelCompilation`` — build an MDOF stick model.
 3. ``NonlinearTimeHistoryAnalysis`` — run dynamic analysis.
-4. ``CloudAnalysis`` — full vulnerability workflow.
+4. ``ModifiedCloudAnalysis`` — full vulnerability workflow.
 5. ``StoreyLossFunctionGeneration`` and ``StoreyLossFunctionApplication`` —
    add component-level loss modelling.

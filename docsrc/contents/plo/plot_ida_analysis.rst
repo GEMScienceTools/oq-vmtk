@@ -16,5 +16,7 @@ IDA Results
           ida_dict=ida_dict,
           imt_label="Sa(T1) [g]",
           edp_label="Peak Storey Drift [-]",
+          xlims=[0, 0.05],
+          ylims=[0, 1.5],
           export_path="ida_analysis.png",
       )

@@ -58,8 +58,10 @@ Orientation-Independent Spectral Acceleration (RotDxx)
       \text{RotD}xx(T) = \text{percentile}_{xx}\bigl\{PSA(T,\theta) :
       \theta \in \{0°, 1°, \ldots, 179°\}\bigr\}
 
-   Common choices are **RotD50** (median, used as reference IM in ASCE 7-22)
-   and **RotD100** (maximum, the largest possible single-component response).
+   Common choices are **RotD50** (median over all orientations, the
+   horizontal-component definition adopted by most recent ground-motion
+   models, e.g. NGA-West2) and **RotD100** (maximum, the largest possible
+   single-component response).
 
 .. admonition:: Example
    :class: note
@@ -73,5 +75,13 @@ Orientation-Independent Spectral Acceleration (RotDxx)
       acc2 = acc1 * 0.85   # synthetic orthogonal component
       im = imcalculator(acc1, dt=0.005)
 
-      rotd50 = im.get_rotdxx(period=1.0, acc2=acc2, percentile=50)
-      print(f"RotD50(T=1.0s) = {rotd50:.4f} g")
+      periods, rotd50 = im.get_rotdxx(
+          acc2, percentile=50, periods=np.array([0.3, 0.6, 1.0])
+      )
+      for t, sa in zip(periods, rotd50):
+          print(f"RotD50(T={t:.1f}s) = {sa:.4f} g")
+
+.. seealso::
+
+   :doc:`get_rotdxx_ims` for the RotDxx of PGA/PGV/PGD, CAV, Arias
+   Intensity, significant duration, AvgSA and FIV3.

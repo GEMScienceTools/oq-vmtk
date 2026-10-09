@@ -15,6 +15,7 @@ Fragility Functions from MSA
       pl.plot_fragility_from_msa(
           msa_dict=msa_dict,
           imt_label="Sa(T1) [g]",
-          ds_labels=["Slight", "Moderate", "Extensive", "Complete"],
+          xlims=[0, 3],
+          ylims=[0, 1],
           export_path="fragility_msa.png",
       )

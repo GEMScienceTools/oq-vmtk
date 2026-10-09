@@ -58,5 +58,7 @@ Filtered Incremental Velocity
       acc = np.loadtxt("openquake/vmtk/tests/test_data/acceleration.txt")
       im = imcalculator(acc, dt=0.005)
 
-      fiv3 = im.get_FIV3(period=0.3)
-      print(f"FIV3(T=0.3s) = {fiv3:.4f} g")
+      fiv3, fiv, t, ugf, pks, trs = im.get_FIV3(
+          period=0.3, alpha=0.7, beta=0.85
+      )
+      print(f"FIV3(T=0.3s) = {fiv3:.4f} g·s")

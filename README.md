@@ -19,7 +19,7 @@
   <h3 align="center">Vulnerability Modeller's ToolKit (OQ-VMTK)</h3>
 
   <p align="center">
-    An open-source Python toolkit for earthquake structural modelling, nonlinear analysis, and seismic vulnerability assessment — developed by the Global Earthquake Model (GEM) Foundation.
+    An open-source Python toolkit for regional earthquake vulnerability modelling — developed by the Global Earthquake Model (GEM) Foundation.
     <br /><br />
     <a href="https://gemsciencetools.github.io/oq-vmtk/"><strong>Documentation »</strong></a>
     &nbsp;·&nbsp;
@@ -35,7 +35,7 @@
 
 ## Overview
 
-OQ-VMTK is a Python library for regional seismic vulnerability and risk modelling. It provides a self-contained workflow — from ground motion processing and structural model compilation through nonlinear analysis to fragility and vulnerability function derivation, powered by [OpenSeesPy](https://openseespydoc.readthedocs.io).
+OQ-VMTK is a Python library for regional seismic vulnerability modelling. It provides a self-contained workflow — from compiling idealised structural models, running nonlinear analysis to fragility and vulnerability function derivation, powered by [OpenSeesPy](https://openseespydoc.readthedocs.io).
 
 The toolkit is designed for earthquake engineers and model developers, who need a reproducible and standardised library of functions to integrate to their structural assessment workflows. 
 
@@ -46,11 +46,11 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 | Module | Description |
 |--------|-------------|
 | `calibration` | Calibrates storey-based force–deformation relationships for MDOF stick-and-mass models from SDOF capacity curves. |
-| `modeller` | Compiles and runs SDOF and MDOF structural models in OpenSeesPy: modal analysis, gravity, static/cyclic pushover, and nonlinear time-history analysis (including incremental dynamic analyses). |
-| `imcalculator` | Reads ground motion record files and computes a wide range of intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias Intensity, CAV, D5–95, FIV3). |
+| `modeller` | Compiles and runs idealised stick-and-mass structural models (SDOFs and MDOFs) in OpenSeesPy: gravity, modal analysis, static/cyclic pushover, and nonlinear time-history analysis (including incremental dynamic analyses). |
+| `imcalculator` | Reads ground motion record files and computes a wide range of intensity measures (PGA, PGV, PGD, SA, AvgSA, Arias Intensity, CAV, D5–95, FIV3), including their RotD50/RotDxx versions from two horizontal components. |
 | `imselection` | Evaluates and ranks intensity measure candidates for seismic demand modelling using Efficiency, Proficiency, Practicality, and the Relative Sufficiency Measure (RSM). |
 | `postprocessor` | Derives probabilistic seismic demand models, fragility and vulnerability functions from nonlinear analysis results (Modified Cloud Analysis, Multiple Stripe Analysis, Incremental Dynamic Analysis). Supports lognormal CDFs, GLMs, ordinal CLMs, and MCMC methods. |
-| `slfgenerator` | Generates storey loss functions (SLFs) from damageable component inventory data (structural, nonstructural, and contents). |
+| `slfgenerator` | Generates storey loss functions (SLFs) from damageable component inventory data (structural, nonstructural, and contents) via Monte Carlo simulations. |
 | `plotter` | Produces publication-quality figures for all stages of the workflow: model geometry, seismic demand profiles, fragility functions, vulnerability curves, SLFs, and more. |
 | `utilities` | Helper functions for I/O, data format conversion, and interoperability with OpenQuake Engine outputs. |
 
@@ -60,24 +60,24 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 
 ### Structural Modelling
 - Compile idealised SDOF and MDOF stick-and-mass models directly in Python via OpenSeesPy.
-- Calibrate MDOF inter-storey force-deformation properties from SDOF capacity curves via a first-mode shape assumption (power-law for frame buildings, eigenvector-derived otherwise) and modal participation.
-- Run modal analysis, static/cyclic pushover, gravity analysis, and nonlinear time-history analysis within a unified API.
+- Calibrate MDOF inter-storey force-deformation properties from SDOF capacity curves via a first-mode shape assumption and modal participation.
+- Run gravity and modal analysis, static/cyclic pushover, and nonlinear time-history analysis.
 
 ### Ground Motion Processing
 - Batch-process ground motion record files to extract scalar and spectral intensity measures.
 - Compute response spectra and a full suite of IMs (SA, AvgSA, PGA, PGV, PGD, AI, CAV, D5–95, FIV3).
-- Rank and select optimal IMs for seismic demand modelling using the Relative Sufficiency Measure.
+- Rank and select optimal IMs for seismic demand modelling.
 
 ### Fragility Assessment
 - **Modified Cloud Analysis (MCA):** Fit probabilistic seismic demand models (log-linear regression) and derive fragility functions, with bootstrapped and Bayesian (MCMC) uncertainty quantification.
-- **Multiple Stripe Analysis (MSA):** Derive fragility functions from hazard-consistent ground motion suites via Maximum Likelihood Estimation.
 - **Incremental Dynamic Analysis (IDA):** Scale records to collapse using the Hunt, Trace and Fill algorithm and derive fragility functions by the Method of Moments.
 - Nine fragility fitting approaches including lognormal CDF variants, GLM (logit/probit), ordinal CLMs (constant and variable dispersion), and MCMC.
+- **Multiple Stripe Analysis (MSA):** Derive fragility functions from hazard-consistent ground motion suites via Maximum Likelihood Estimation.
 
 ### Vulnerability & Loss Assessment
-- Combine fragility functions with consequence models (damage-to-loss ratios) to derive mean vulnerability functions with explicit uncertainty treatment (Beta distribution, law-of-total-variance COV method).
-- Apply storey loss functions to derive component-level and system-level vulnerability models.
-- Compute Average Annual Damage Probability (AADP) and Average Annual Loss Ratio (AALR) via a single `calculate_risk` method, by integrating fragility or vulnerability curves with site hazard curves.
+- Combine fragility functions with consequence models (damage-to-loss ratios) to derive vulnerability functions with explicit uncertainty treatment (Beta distribution, law-of-total-variance COV method).
+- Apply SLFs to derive component-level and system-level vulnerability models.
+- Perform classical risk calculations to compute average annual damage probability (AADP) and average annual loss ratio (AALR) via a single `calculate_risk` method, by integrating fragility or vulnerability curves with site hazard curves to understand in a rapid manner the influence of fragility and vulnerability models on downstream analyses.
 
 ---
 
@@ -99,6 +99,7 @@ The `demos/` directory contains thirteen self-contained Jupyter notebooks coveri
 | `FragilityAnalysis` | Comparison of all supported fragility fitting methods |
 | `StoreyLossFunctionGeneration` | Generating storey loss functions from component inventory data |
 | `StoreyLossFunctionApplication` | Deriving system-level vulnerability models using storey loss functions |
+| `EQSpectraExample` | Illustrative case study accompanying the EQ Spectra paper (end-to-end workflow) |
 
 ---
 
@@ -146,6 +147,12 @@ To deactivate later: `deactivate`
    pip install -r requirements-py312-macos_arm64.txt  --timeout=100 
    ```
 
+   **Tip:** if you prefer the conventional installation via pip without passing `--timeout=100` each time, set the timeout globally once,
+   before installing:
+   ```bash
+   pip config set global.timeout 100
+   ```
+
    **Note:** to check your current python version, run the following command
    ```bash
    python --version
@@ -175,7 +182,7 @@ pip install -e .
 python -c "import openquake.vmtk; print(openquake.vmtk.__version__)"
 ```
 
-Expected output: `1.1.0`
+Expected output: `1.2.0`
 
 ---
 
@@ -216,7 +223,7 @@ If you use OQ-VMTK in academic or professional work, please cite both the softwa
 
 ### Software
 
-The v1.1.0 release is archived on Zenodo:
+The software is archived on Zenodo:
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17524871-1082c3)](https://doi.org/10.5281/zenodo.17524871)
 
@@ -224,8 +231,8 @@ The v1.1.0 release is archived on Zenodo:
 @software{oq_vmtk_2025,
   author    = {{GEM Foundation}},
   title     = {{OpenQuake Vulnerability Modeller's Toolkit (oq-vmtk)}},
-  version   = {1.1.0},
-  year      = {2025},
+  version   = {1.2.0},
+  year      = {2026},
   doi       = {10.5281/zenodo.17524871},
   url       = {https://github.com/GEMScienceTools/oq-vmtk}
 }
@@ -235,14 +242,14 @@ A `CITATION.cff` file is provided at the repository root; GitHub displays a **Ci
 
 ### Companion Paper
 
-> Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
+> Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modeller's Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
 
 ```bibtex
 @article{nafeh2026vmtk,
   author  = {Nafeh, Al Mouayed Bellah and Aljawhari, Karim and Ettorre, Antonio and Silva, Vitor and Crowley, Helen},
-  title   = {The {OpenQuake} {Vulnerability} {Modellers}' {Toolkit}: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications},
+  title   = {The {OpenQuake} {Vulnerability} {Modeller's} {Toolkit}: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications},
   journal = {(In Press)},
-  year    = {2026}
+  year    = {202x}
 }
 ```
 
@@ -250,7 +257,9 @@ A `CITATION.cff` file is provided at the repository root; GitHub displays a **Ci
 
 ## References
 
-- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modellers' Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
+- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modeller's Toolkit (OQ-VMTK)* (v1.2.0). Zenodo. DOI: [10.5281/zenodo.17524871](https://doi.org/10.5281/zenodo.17524871)
+
+- Nafeh, A.M.B., Aljawhari, K., Ettorre, A., Silva, V., and Crowley, H. (2026). *The OpenQuake Vulnerability Modeller's Toolkit: An Open-Source Toolkit for Earthquake Vulnerability Modelling Applications*. (In Press)
 
 ---
 
