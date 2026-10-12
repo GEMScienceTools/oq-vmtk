@@ -72,7 +72,7 @@ class postprocessor:
 
     calculate_risk(
         input_array, hazard_array, return_period=1,
-        max_return_period=5000)
+        max_return_period=5000, as_probability=None, *, curve_type)
         Calculate an average annual risk metric (Average Annual Damage
         Probability or Average Annual Loss Ratio) by integrating a
         fragility or vulnerability curve against a hazard curve.
@@ -2144,7 +2144,10 @@ class postprocessor:
                        input_array,
                        hazard_array,
                        return_period=1,
-                       max_return_period=5000):
+                       max_return_period=5000,
+                       as_probability=None,
+                       *,
+                       curve_type):
         """
         Calculate an average annual risk metric by integrating a
         fragility or vulnerability curve against a seismic hazard curve.
@@ -2156,12 +2159,18 @@ class postprocessor:
         interpretation of the result depends on what ``input_array``
         represents:
 
-        - If ``input_array`` is a fragility curve (intensity measure
-          level vs. probability of exceeding a damage state), the result
-          is the Average Annual Damage [State] Probability (AADP).
-        - If ``input_array`` is a vulnerability curve (intensity measure
-          level vs. expected loss ratio), the result is the Average
-          Annual Loss Ratio (AALR).
+        - If ``input_array`` is a fragility curve
+          (``curve_type='fragility'``; intensity measure level vs.
+          probability of exceeding a damage state), the integral is the
+          average annual damage *rate* (the mean annual rate of
+          exceeding the damage state, in events per year). By default it
+          is converted to the Average Annual Damage [State] Probability
+          (AADP) assuming a Poisson process: ``P = 1 - exp(-rate)``.
+        - If ``input_array`` is a vulnerability curve
+          (``curve_type='vulnerability'``; intensity measure level vs.
+          expected loss ratio), the result is the Average Annual Loss
+          Ratio (AALR). This is an expected value per year and is never
+          converted to a probability.
 
         The calculation integrates the product of ``input_array`` and the
         hazard curve over the specified range of intensity measure
@@ -2181,8 +2190,8 @@ class postprocessor:
         hazard_array : 2D array
             A 2D array where the first column contains intensity measure
             levels, and the second column contains the annual rates of
-            exceedance (i.e., the probability of exceedance per year)
-            for each intensity level.
+            exceedance (events per year, :math:`\\lambda`) for each
+            intensity level. These are rates, not probabilities.
 
         return_period : float, optional, default=1
             The return period used to scale the hazard rate. This is the
@@ -2196,16 +2205,53 @@ class postprocessor:
             only intensity levels with exceedance rates above this
             threshold.
 
+        as_probability : bool, optional
+            Only meaningful for ``curve_type='fragility'``. If True
+            (default for fragility curves), the integrated average annual
+            damage rate is converted to an annual probability assuming a
+            Poisson process, ``P = 1 - exp(-rate)`` (AADP). If False, the
+            average annual damage *rate* (events per year) is returned.
+            For ``curve_type='vulnerability'`` the value is never
+            converted; passing ``as_probability=True`` raises a
+            ``ValueError``.
+
+        curve_type : {'fragility', 'vulnerability'}
+            Keyword-only and required. States what ``input_array``
+            represents, which determines how the integral is
+            interpreted (see above).
+
         Returns
         -------
         average_annual_value : float
             The average annual value of ``input_array``, calculated by
             integrating the product of ``input_array`` and the hazard
-            curve over the given intensity measure levels. This is the
-            AADP when ``input_array`` is a fragility curve, or the AALR
-            when it is a vulnerability curve.
+            curve over the given intensity measure levels. For a
+            fragility curve this is the AADP (``as_probability=True``)
+            or the average annual damage rate (``as_probability=False``);
+            for a vulnerability curve it is the AALR.
+
+        Raises
+        ------
+        ValueError
+            If ``curve_type`` is not ``'fragility'`` or
+            ``'vulnerability'``, or if ``as_probability=True`` is passed
+            with ``curve_type='vulnerability'``.
 
         """
+        if curve_type not in ('fragility', 'vulnerability'):
+            raise ValueError(
+                "curve_type must be 'fragility' or 'vulnerability', "
+                f"got {curve_type!r}")
+        if curve_type == 'vulnerability':
+            if as_probability:
+                raise ValueError(
+                    "as_probability=True is not valid for a vulnerability "
+                    "curve: the AALR is an expected loss ratio, not an "
+                    "event rate")
+            as_probability = False
+        elif as_probability is None:
+            as_probability = True
+
         # Ensure arrays are sorted by Intensity Measure (IM)
         hazard_array = hazard_array[hazard_array[:, 0].argsort()]
         input_array = input_array[input_array[:, 0].argsort()]
@@ -2238,5 +2284,10 @@ class postprocessor:
 
         # Final Integration (Dot product of values and rates of occurrence)
         average_annual_value = np.dot(interpolated_values, rate_occ)
+
+        # The integral above is a rate (events/yr) for a fragility curve;
+        # convert to an annual probability assuming a Poisson process.
+        if as_probability:
+            average_annual_value = 1.0 - np.exp(-average_annual_value)
 
         return average_annual_value
