@@ -1391,7 +1391,9 @@ class plotter:
                              control_nodes,
                              title=None,
                              pFlag=True,
-                             export_path=None):
+                             export_path=None,
+                             drift_xlim=(0, 5.0),
+                             accel_xlim=(0, 5.0)):
         """
         Generate demand profile plots for peak storey drifts and peak floor accelerations.
 
@@ -1430,6 +1432,14 @@ class plotter:
 
         export_path : str, optional
             Full path including filename to save the plot. Creates directories if missing.
+
+        drift_xlim : tuple of float, optional, default=(0, 5.0)
+            (min, max) x-axis limits for the peak storey drift plot [%]. If None, matplotlib
+            autoscaling is used.
+
+        accel_xlim : tuple of float, optional, default=(0, 5.0)
+            (min, max) x-axis limits for the peak floor acceleration plot [g]. If None,
+            matplotlib autoscaling is used.
 
         Returns
         -------
@@ -1470,14 +1480,15 @@ class plotter:
                      alpha=0.7)
 
         # Axis Customization
-        for ax in [ax1, ax2]:
+        for ax, xlim in [(ax1, drift_xlim), (ax2, accel_xlim)]:
             ax.set_yticks(np.linspace(0, nst, nst + 1))
             ax.set_yticklabels([int(i) for i in np.linspace(0, nst, nst + 1)],
                                fontsize=self.font_sizes['ticks'], fontname=self.font_name)
 
             # Use smaller font for X-ticks as profiles can be dense
             ax.tick_params(axis='x', labelsize=self.font_sizes['ticks'] - 2)
-            ax.set_xlim([0, 5.0])
+            if xlim is not None:
+                ax.set_xlim(list(xlim))
 
         # Add title
         if title:
