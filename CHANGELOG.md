@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- `postprocessor.calculate_risk` now distinguishes rates from probabilities.
+  The integral of a fragility curve against the hazard curve is an average
+  annual damage *rate*; it is converted to the Average Annual Damage
+  Probability assuming a Poisson process, `P = 1 - exp(-rate)` (default;
+  `as_probability=False` returns the rate). A new required keyword-only
+  argument `curve_type` (`'fragility'` or `'vulnerability'`) states what the
+  input curve is; vulnerability curves (AALR) are never converted. Existing
+  calls must add `curve_type=...`.
+- `plotter.plot_demand_profiles`: new `drift_xlim` and `accel_xlim` arguments.
+- `plotter.plot_vulnerability_function`: fewer x-axis tick labels.
+
 ## v1.2.0 — 2026-10-09
 
 First stable release of OQ-VMTK. This version is the starting point of the

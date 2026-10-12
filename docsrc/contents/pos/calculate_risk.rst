@@ -11,11 +11,23 @@ Average Annual Risk Metrics
    interpretation changes:
 
    - Passing a **fragility curve** (probability of exceeding a damage state
-     vs. intensity) yields the Average Annual Damage Probability (AADP)
-     for that damage state (McGuire, 2004).
+     vs. intensity) yields the mean annual *rate* of exceeding that damage
+     state. Assuming a Poisson process, this is converted to the Average
+     Annual Damage Probability (AADP) as
+     :math:`P = 1 - e^{-\lambda_{DS}}` (McGuire, 2004). This conversion is
+     applied by default for ``curve_type='fragility'``; pass
+     ``as_probability=False`` to obtain the rate itself.
    - Passing a **vulnerability curve** (expected loss ratio vs. intensity)
      yields the Average Annual Loss Ratio (AALR) (Cornell & Krawinkler,
-     2000).
+     2000). This is an expected value per year, not a rate of events, so it is
+     never converted to a probability (``curve_type='vulnerability'``).
+
+   .. note::
+
+      The hazard curve gives annual *rates* of exceedance
+      :math:`\lambda(x)` (events per year), not probabilities. Rates and
+      probabilities are numerically close for small values
+      (:math:`1 - e^{-\lambda} \approx \lambda`) but differ at high rates.
 
    **Classical integral**
 
@@ -32,10 +44,9 @@ Average Annual Risk Metrics
      :math:`x` — either :math:`P(\text{DS} \geq ds \mid \text{IM} = x)` for
      a fragility curve, or :math:`E[L \mid \text{IM} = x]` for a
      vulnerability curve,
-   - :math:`\lambda(x) = P(\text{IM} > x)` is the mean annual rate of
-     exceedance from the hazard curve, and
-   - :math:`|d\lambda/dx|` is the probability density of IM occurrences
-     per year.
+   - :math:`\lambda(x)` is the mean annual rate of exceedance of intensity
+     :math:`x` from the hazard curve (events per year), and
+   - :math:`|d\lambda/dx|` is the annual rate density of IM occurrences.
 
    **Discrete approximation**
 
@@ -70,11 +81,21 @@ Average Annual Risk Metrics
       aalr = pp.calculate_risk(
           input_array=vulnerability_array,
           hazard_array=hazard_array,
+          curve_type='vulnerability',  # expected loss ratio, never a probability
       )
       print(f"AALR = {aalr:.4f}")
 
       aadp = pp.calculate_risk(
           input_array=fragility_array,
           hazard_array=hazard_array,
+          curve_type='fragility',
       )
-      print(f"AADP = {aadp:.4f}")
+      print(f"AADP = {aadp:.4f}")  # 1 - exp(-annual damage rate)
+
+      # Annual damage rate (events/yr), before the Poisson conversion
+      aadr = pp.calculate_risk(
+          input_array=fragility_array,
+          hazard_array=hazard_array,
+          curve_type='fragility',
+          as_probability=False,
+      )

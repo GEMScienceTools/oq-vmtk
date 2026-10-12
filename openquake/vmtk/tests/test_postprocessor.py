@@ -519,25 +519,50 @@ class TestAverageAnnualMetrics(unittest.TestCase):
 
     def test_aadp_returns_scalar(self):
         result = self.pp.calculate_risk(
-            self.fragility, self.hazard)
+            self.fragility, self.hazard, curve_type='fragility')
         self.assertIsInstance(float(result), float)
 
     def test_aadp_bounded(self):
         result = self.pp.calculate_risk(
-            self.fragility, self.hazard)
+            self.fragility, self.hazard, curve_type='fragility')
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
 
     def test_aal_returns_scalar(self):
         result = self.pp.calculate_risk(
-            self.vulnerability, self.hazard)
+            self.vulnerability, self.hazard, curve_type='vulnerability')
         self.assertIsInstance(float(result), float)
 
     def test_aal_bounded(self):
         result = self.pp.calculate_risk(
-            self.vulnerability, self.hazard)
+            self.vulnerability, self.hazard, curve_type='vulnerability')
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
+
+    def test_aadp_is_poisson_probability_of_rate(self):
+        """AADP = 1 - exp(-rate), where rate is the as_probability=False output."""
+        rate = self.pp.calculate_risk(
+            self.fragility, self.hazard, curve_type='fragility',
+            as_probability=False)
+        prob = self.pp.calculate_risk(
+            self.fragility, self.hazard, curve_type='fragility')
+        self.assertAlmostEqual(prob, 1.0 - np.exp(-rate), places=12)
+        self.assertLess(prob, rate)
+
+    def test_curve_type_is_required(self):
+        with self.assertRaises(TypeError):
+            self.pp.calculate_risk(self.fragility, self.hazard)
+
+    def test_invalid_curve_type_raises(self):
+        with self.assertRaises(ValueError):
+            self.pp.calculate_risk(
+                self.fragility, self.hazard, curve_type='loss')
+
+    def test_vulnerability_never_converted_to_probability(self):
+        with self.assertRaises(ValueError):
+            self.pp.calculate_risk(
+                self.vulnerability, self.hazard,
+                curve_type='vulnerability', as_probability=True)
 
     def test_aadp_zero_when_hazard_below_threshold(self):
         """All hazard rates below the filter → AADP = 0."""
@@ -546,7 +571,7 @@ class TestAverageAnnualMetrics(unittest.TestCase):
             [0.10, 0.00005]])
         result = self.pp.calculate_risk(
             self.fragility, low_hazard,
-            max_return_period=100)
+            max_return_period=100, curve_type='fragility')
         self.assertEqual(result, 0.0)
 
     def test_aal_zero_when_hazard_below_threshold(self):
@@ -556,7 +581,7 @@ class TestAverageAnnualMetrics(unittest.TestCase):
             [0.10, 0.00005]])
         result = self.pp.calculate_risk(
             self.vulnerability, low_hazard,
-            max_return_period=100)
+            max_return_period=100, curve_type='vulnerability')
         self.assertEqual(result, 0.0)
 
 

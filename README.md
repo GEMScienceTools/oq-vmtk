@@ -77,7 +77,7 @@ The toolkit is designed for earthquake engineers and model developers, who need 
 ### Vulnerability & Loss Assessment
 - Combine fragility functions with consequence models (damage-to-loss ratios) to derive vulnerability functions with explicit uncertainty treatment (Beta distribution, law-of-total-variance COV method).
 - Apply SLFs to derive component-level and system-level vulnerability models.
-- Perform classical risk calculations to compute average annual damage probability (AADP) and average annual loss ratio (AALR) via a single `calculate_risk` method, by integrating fragility or vulnerability curves with site hazard curves to understand in a rapid manner the influence of fragility and vulnerability models on downstream analyses.
+- Perform classical risk calculations to compute average annual damage probability (AADP, from the annual damage rate assuming a Poisson process) and average annual loss ratio (AALR) via a single `calculate_risk` method, by integrating fragility or vulnerability curves with site hazard curves to understand in a rapid manner the influence of fragility and vulnerability models on downstream analyses.
 
 ---
 
