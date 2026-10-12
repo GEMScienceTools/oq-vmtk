@@ -2767,10 +2767,18 @@ class plotter:
         ax2.yaxis.set_visible(False)
 
         # Sync x-axis ticks with intensity values
-        ax1.set_xticks(range(len(intensities)))
-        ax1.set_xticklabels([f'{x:.3f}' for x in intensities],
+        # Label only a subset of the positions (at most ~10 ticks) so the
+        # labels do not overlap when many intensity levels are plotted.
+        n_int = len(intensities)
+        tick_step = max(1, int(np.ceil(n_int / 10)))
+        tick_pos = list(range(0, n_int, tick_step))
+        if n_int > 1 and tick_pos[-1] != n_int - 1 \
+                and (n_int - 1 - tick_pos[-1]) >= tick_step / 2:
+            tick_pos.append(n_int - 1)
+        ax1.set_xticks(tick_pos)
+        ax1.set_xticklabels([f'{intensities[i]:.2f}' for i in tick_pos],
                             rotation=45, ha='right',
-                            fontsize=self.font_sizes['ticks'] - 6)
+                            fontsize=self.font_sizes['ticks'] - 4)
         # Single combined legend on ax1
         beta_patch = mpatches.Patch(color='skyblue',
                                     label='Beta Distribution (Uncertainty)')
