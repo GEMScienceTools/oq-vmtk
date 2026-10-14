@@ -73,8 +73,9 @@ database, so values can be copied from it.
        independently; ``Quantity`` must then count the units on the storey (it is
        split into ``ceil(Quantity)`` equal blocks).
    * - ``Replacement Cost``
-     - Optional cost of replacing one unit. Default: the largest expected repair
-       cost of any damage outcome of the component.
+     - Optional expected cost of replacing one unit. Default: the largest expected
+       repair cost of any damage outcome of the component. In each realisation it
+       follows the component's price level, and no unit is repaired for more.
 
 The damage states of a limit state share its fragility: the median and dispersion are
 given for its first damage state and may be left blank or repeated for the others.

@@ -58,14 +58,15 @@ Each record of ``slf`` holds:
    * - ``edp_range``
      - EDP values.
    * - ``slf``
-     - Expected storey loss ratio (exact): the Storey Loss Function.
+     - Mean storey loss ratio: the Storey Loss Function.
    * - ``slf_std``, ``slf_cov``
-     - Standard deviation of the loss ratio (Monte Carlo) and ``slf_std / slf``.
+     - Standard deviation of the loss ratio and ``slf_std / slf``.
    * - ``slf_16th``, ``slf_50th``, ``slf_84th``
      - Empirical percentiles of the loss ratio.
    * - ``replacement_cost``
-     - Cost the loss is divided by: by default the replacement cost of the group's
-       components, so that the loss ratio lies in [0, 1] on average.
+     - Expected replacement cost of the group's components (or the
+       ``replacement_cost`` argument). By default each realisation is divided by
+       the replacement cost at its own unit costs, so the loss ratio lies in [0, 1].
 
 To combine the drift- and acceleration-sensitive SLFs of a storey into one
 nonstructural loss ratio, weight each by its share of the replacement cost:
@@ -110,24 +111,9 @@ nonstructural loss ratio, weight each by its share of the replacement cost:
    for a normal cost with mean :math:`\mu` and coefficient of variation :math:`\nu`
    truncated at zero.
 
-   **Expected storey loss ratio (exact)**
-
-   For a performance group with components :math:`c` of quantity :math:`Q_c`:
-
-   .. math::
-
-      E[L \mid x] = \frac{1}{RC} \sum_c Q_c \sum_{k \geq 1}
-        P(LS_c = k \mid x) \, \bar c_{c,k},
-      \qquad P(LS_c = k \mid x) = P(LS_c \geq k \mid x) - P(LS_c \geq k+1 \mid x)
-
-   :math:`RC` is ``replacement_cost`` if given, otherwise
-   :math:`\sum_c Q_c \, RC_c` with :math:`RC_c` the unit replacement cost. This is
-   ``out[group]['slf']``; it carries no Monte Carlo noise.
-
    **Monte Carlo simulation**
 
-   The dispersion and percentiles come from ``realizations`` Monte Carlo
-   realisations. In each one:
+   The SLF is estimated from ``realizations`` Monte Carlo realisations. In each one:
 
    - every component draws one capacity (a uniform number :math:`u`) held over the
      whole EDP range, and is in limit state
@@ -137,20 +123,56 @@ nonstructural loss ratio, weight each by its share of the replacement cost:
      draws its own capacity;
    - the damage state within a mutually exclusive or simultaneous limit state is
      drawn once per unit and limit state;
-   - one unit repair cost is drawn per damage state of each component and shared by
-     its units, as in FEMA P-58; a simultaneous outcome costs the sum of its damage
-     states.
+   - the unit repair costs of a component are drawn at one probability level,
+     shared by its damage states and its units: one price level for repairing and
+     replacing the same item. A simultaneous outcome costs the sum of its damage
+     states;
+   - the unit replacement cost :math:`RC_c^{(n)}` of the realisation is the cost of
+     the replacement outcome (the damage outcome with the largest expected cost) at
+     that price level, scaled to ``Replacement Cost`` when given; no unit is
+     repaired for more than it.
 
-   The storey loss ratio of each realisation is the sum of the component costs
-   divided by :math:`RC`; its standard deviation (``slf_std``), coefficient of
-   variation ``slf_cov`` = ``slf_std`` / ``slf``, and empirical 16th/50th/84th
-   percentiles (``slf_16th``, ``slf_50th``, ``slf_84th``) are returned at each EDP.
-   ``cache[group]['simulated_mean']`` is the Monte Carlo mean, a check on ``slf``.
+   Each component draws from its own random stream, so with the same ``seed`` a
+   model with and without a correlation tree share their random numbers and the
+   effect of the tree can be compared realisation by realisation.
+
+   **Storey loss ratio**
+
+   The loss ratio of realisation :math:`n` is the repair cost of the group's
+   components divided by their replacement cost at the same unit costs:
+
+   .. math::
+
+      L^{(n)}(x) = \frac{C^{(n)}(x)}{\sum_c Q_c \, RC_c^{(n)}}
+
+   It lies in [0, 1], equals 1 when every unit is in its replacement outcome, and
+   does not change with the price level of a component, which scales its repair and
+   replacement alike. The SLF is its mean, ``slf``; ``slf_std``, ``slf_cov`` =
+   ``slf_std`` / ``slf`` and the empirical 16th/50th/84th percentiles (``slf_16th``,
+   ``slf_50th``, ``slf_84th``) complete it. Because every realisation lies in
+   [0, 1], the mean and standard deviation are always those of a distribution on
+   [0, 1] (e.g. a Beta can be fitted to them).
+
+   With ``replacement_cost`` given, every realisation is divided by that fixed cost
+   instead; the ratio then keeps the price-level uncertainty and is not bounded by 1.
+
+   **Exact expectations**
+
+   The probability of each limit state after correlation tree forcing and the
+   expected repair cost of each component are also computed exactly:
+
+   .. math::
+
+      E[C_c \mid x] = Q_c \sum_{k \geq 1} P(LS_c = k \mid x) \, \bar c_{c,k},
+      \qquad P(LS_c = k \mid x) = P(LS_c \geq k \mid x) - P(LS_c \geq k+1 \mid x)
+
+   (``cache[group]['limit_state_probabilities']`` and
+   ``['expected_component_loss']``). Their sum over the expected replacement cost,
+   ``cache[group]['ratio_of_expectations']``, is a check on ``slf``: the mean of a
+   ratio and the ratio of the means differ, by about 0.01 at most.
 
    Not modelled: economies of scale (unit costs do not depend on the number of
-   damaged units) and any cap of a single realisation at the replacement cost —
-   with uncertain unit costs, a realisation can exceed a loss ratio of 1 even though
-   the expected loss ratio does not.
+   damaged units).
 
    **Correlation trees**
 

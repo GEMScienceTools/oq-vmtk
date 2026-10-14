@@ -8,12 +8,13 @@ storey that are sensitive to one Engineering Demand Parameter (EDP: peak storey 
 or peak floor acceleration), the repair cost as a fraction of their replacement cost,
 as a function of that EDP.
 
-For every EDP value the generator returns the expected storey loss ratio, computed
-exactly from the fragility functions and the expected repair costs, and the standard
-deviation and 16th/50th/84th percentiles of the loss ratio, estimated by Monte Carlo
+For every EDP value the generator returns the mean, standard deviation and
+16th/50th/84th percentiles of the storey loss ratio, estimated by Monte Carlo
 simulation. The simulation follows FEMA P-58: every component (or, where its units are
 not correlated, every unit) has its own capacity; mutually exclusive and simultaneous
-damage states are sampled explicitly; one unit repair cost is drawn per damage state.
+damage states are sampled explicitly; unit repair costs are uncertain. Each realisation
+is divided by the replacement cost of the same components at the same unit costs, so
+the loss ratio lies in [0, 1] and reaches 1 when everything is replaced.
 An optional ``correlation_tree`` lets one component's damage force a minimum damage
 state on another (e.g. a partition wall and the door framed into it).
 

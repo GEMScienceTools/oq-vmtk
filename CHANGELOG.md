@@ -32,14 +32,26 @@
   - Correlation trees act on limit states, are applied unit by unit, may be
     chained, and are fully validated (cycles, forcing from DS0, decreasing or
     out-of-range forced states raise `ValueError`).
-  - `generate()` output: `slf` is now the expected loss ratio (exact, closed
-    form; was the Monte Carlo median), with new `slf_std`, `slf_cov`,
-    `slf_50th` and `replacement_cost`. `replacement_cost` defaults to `None`:
-    each group is divided by the replacement cost of its components.
-  - New `seed` argument; `realizations` defaults to 1000 (was 20).
+  - The storey loss ratio is bounded: each realisation is divided by the
+    replacement cost of the group's components at the same unit costs. A
+    component's unit costs share one price level per realisation (repair and
+    replacement of the same item), and no unit is repaired for more than its
+    replacement cost, so the ratio lies in [0, 1] and is 1 when everything is
+    replaced. Its mean and variance can therefore always be represented by a
+    Beta distribution.
+  - `generate()` output: `slf` is now the mean loss ratio (was the Monte
+    Carlo median), with new `slf_std`, `slf_cov`, `slf_50th` and
+    `replacement_cost`. `replacement_cost` defaults to `None` (the bounded
+    ratio above); a number divides every realisation by that fixed cost.
+    The cache adds `ratio_of_expectations` (exact expected repair cost over
+    expected replacement cost, a check on `slf`) and `replacement_value`.
+  - New `seed` argument; each component draws from its own random stream,
+    so models that differ only by their correlation tree share their random
+    numbers. `realizations` defaults to 1000 (was 20).
     `edp_range` may start at 0 and is no longer modified (its first value was
     overwritten with 1e-20).
-  - New methods `limit_state_probabilities`, `expected_component_loss`,
+  - New methods `limit_state_probabilities`, `expected_component_loss`
+    (exact),
     `apply_correlation_tree`; `fragility_function` returns only the fragility
     curves (keyed `LSk`). `do_monte_carlo_simulations`,
     `validate_ds_dependence` and `calculate_costs` are removed. The cache holds

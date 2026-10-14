@@ -140,12 +140,16 @@ def _two_group_inventory():
     ])
 
 
-def _z_scores(out, cache, n):
-    """(Monte Carlo mean - exact mean) / standard error, per EDP."""
+def _z_scores(cache, n):
+    """(Monte Carlo mean - exact expectation) / standard error of the storey
+    repair cost, per EDP (for inventories where no repair reaches the
+    replacement cost of its unit, so the cap does not bind)."""
     z = []
-    for key, rec in out.items():
-        se = np.asarray(rec["slf_std"]) / np.sqrt(n)
-        diff = cache[key]["simulated_mean"] - np.asarray(rec["slf"])
+    for rec in cache.values():
+        total = rec["total_loss_storey"]
+        exact = sum(rec["expected_component_loss"].values())
+        se = total.std(axis=0, ddof=1) / np.sqrt(n)
+        diff = total.mean(axis=0) - exact
         z.append(np.divide(diff, se, out=np.zeros_like(diff), where=se > 0))
     return np.concatenate(z)
 
@@ -329,13 +333,23 @@ class TestFragilityAndExpectation(unittest.TestCase):
         edp = np.linspace(0, 0.05, 11)
         inv = pd.DataFrame([_row(1, [0.01], [0.4], [100.0], [0.5], ["Lognormal"],
                                  quantity=3.0, replacement=500.0)])
-        out, _ = slfgenerator(inv, "PSD", edp_range=edp, realizations=50,
-                              seed=0).generate()
+        n = 20000
+        out, cache = slfgenerator(inv, "PSD", edp_range=edp, realizations=n,
+                                  seed=0).generate()
         poe = np.zeros_like(edp)
         poe[1:] = stats.norm.cdf(np.log(edp[1:] / 0.01) / 0.4)
-        expected = 3.0 * 100.0 * np.exp(0.5 * 0.5 ** 2) * poe / (3.0 * 500.0)
-        np.testing.assert_allclose(out["PSD, NS"]["slf"], expected, rtol=1e-12)
-        self.assertEqual(out["PSD, NS"]["replacement_cost"], 1500.0)
+        mean_cost = 100.0 * np.exp(0.5 * 0.5 ** 2)
+        rec, c = out["PSD, NS"], cache["PSD, NS"]
+        np.testing.assert_allclose(c["limit_state_probabilities"][1][1], poe, atol=1e-15)
+        np.testing.assert_allclose(c["ratio_of_expectations"], mean_cost * poe / 500.0,
+                                   rtol=1e-12)
+        self.assertEqual(rec["replacement_cost"], 1500.0)
+        # the unit repair and replacement costs share the price level, so a
+        # damaged unit always costs mean_cost / 500 of its replacement
+        damaged = mean_cost / 500.0
+        se = damaged * np.sqrt(poe * (1 - poe) / n)
+        self.assertTrue(np.all(np.abs(np.asarray(rec["slf"]) - damaged * poe)
+                               <= 4.5 * se + 1e-15))
 
     def test_truncated_normal_cost_mean(self):
         inv = pd.DataFrame([_row(1, [0.001], [0.1], [100.0], [0.8], ["Normal"])])
@@ -363,17 +377,18 @@ class TestFragilityAndExpectation(unittest.TestCase):
 
     def test_replacement_cost_argument_and_conversion(self):
         inv = _p58_inventory()
-        out1, _ = slfgenerator(inv, "PSD", realizations=50, seed=2).generate()
+        out1, cache1 = slfgenerator(inv, "PSD", realizations=50, seed=2).generate()
         out2, _ = slfgenerator(inv, "PSD", realizations=50, seed=2,
                                conversion=2.0).generate()
-        np.testing.assert_allclose(out1["PSD, NS"]["slf"], out2["PSD, NS"]["slf"])
+        np.testing.assert_allclose(out1["PSD, NS"]["slf"], out2["PSD, NS"]["slf"],
+                                   rtol=1e-12, atol=1e-15)
         self.assertAlmostEqual(out2["PSD, NS"]["replacement_cost"],
                                2 * out1["PSD, NS"]["replacement_cost"])
+        # a fixed replacement cost divides the repair cost as it is
         out3, _ = slfgenerator(inv, "PSD", realizations=50, seed=2,
                                replacement_cost=1.0).generate()
-        np.testing.assert_allclose(
-            out3["PSD, NS"]["slf"],
-            np.asarray(out1["PSD, NS"]["slf"]) * out1["PSD, NS"]["replacement_cost"])
+        np.testing.assert_allclose(out3["PSD, NS"]["slf"],
+                                   cache1["PSD, NS"]["total_loss_storey"].mean(axis=0))
 
     def test_limit_state_probabilities_sum_to_one(self):
         model = slfgenerator(_p58_inventory(), "PSD", correlation_tree=_p58_tree(),
@@ -389,7 +404,7 @@ class TestFragilityAndExpectation(unittest.TestCase):
 
 class TestMonteCarlo(unittest.TestCase):
 
-    def test_simulated_mean_matches_exact_mean(self):
+    def test_simulated_costs_match_the_exact_expectation(self):
         n = 4000
         for tree in (None, _p58_tree()):
             for flag in ("YES", "NO"):
@@ -397,8 +412,42 @@ class TestMonteCarlo(unittest.TestCase):
                     _p58_inventory(flag), "PSD", correlation_tree=tree,
                     edp_range=np.linspace(0, 0.05, 26), realizations=n,
                     seed=11).generate()
-                z = _z_scores(out, cache, n)
+                z = _z_scores(cache, n)
                 self.assertLess(np.abs(z).max(), 4.5, (flag, tree is not None))
+                gap = np.asarray(out["PSD, NS"]["slf"]) - cache["PSD, NS"]["ratio_of_expectations"]
+                self.assertLess(np.abs(gap).max(), 0.02)
+
+    def test_loss_ratio_is_bounded_and_one_at_full_damage(self):
+        inv = pd.DataFrame([
+            _row(1, [0.005, 0.01, 0.02], [0.5, 0.45, 0.4], [10.0, 30.0, 60.0],
+                 [0.6, 0.4, 0.5], ["Lognormal", "Normal", "Lognormal"],
+                 quantity=6.0, correlated="NO"),
+            _row(2, [0.004, 0.012], [0.6, 0.4], [5.0, 45.0], [0.8, 0.3],
+                 ["Normal", "Normal"], quantity=12.5, correlated="NO"),
+        ])
+        _, cache = slfgenerator(inv, "PSD", edp_range=[0.0, 0.01, 0.03, 5.0],
+                                realizations=3000, seed=4).generate()
+        ratio = cache["PSD, NS"]["total_loss_storey_ratio"]
+        self.assertTrue(np.all((ratio >= 0) & (ratio <= 1 + 1e-12)))
+        np.testing.assert_allclose(ratio[:, -1], 1.0, rtol=1e-12)
+        np.testing.assert_array_equal(ratio[:, 0], 0.0)
+
+    def test_no_unit_is_repaired_for_more_than_its_replacement(self):
+        inv = pd.DataFrame([_row(1, [0.01], [0.4], [100.0], [0.3], ["Lognormal"],
+                                 quantity=4.0, correlated="NO", replacement=50.0)])
+        _, cache = slfgenerator(inv, "PSD", edp_range=[0.0, 0.01, 1.0],
+                                realizations=2000, seed=5).generate()
+        ratio = cache["PSD, NS"]["total_loss_storey_ratio"]
+        self.assertTrue(np.all(np.isin(np.round(ratio * 4, 9), [0, 1, 2, 3, 4])))
+        np.testing.assert_allclose(ratio[:, -1], 1.0)
+
+    def test_fixed_replacement_cost_keeps_the_price_level(self):
+        inv = pd.DataFrame([_row(1, [0.01], [0.4], [100.0], [0.5], ["Lognormal"])])
+        out, cache = slfgenerator(inv, "PSD", edp_range=[0.0, 1.0], realizations=4000,
+                                  seed=6, replacement_cost=100.0 * np.exp(0.125)).generate()
+        ratio = cache["PSD, NS"]["total_loss_storey_ratio"][:, -1]
+        self.assertGreater(ratio.max(), 1.0)
+        self.assertAlmostEqual(out["PSD, NS"]["slf_cov"][-1], np.sqrt(np.expm1(0.25)), delta=0.03)
 
     def test_reproducible_with_seed(self):
         a, _ = _make_model(seed=5).generate()
@@ -406,7 +455,6 @@ class TestMonteCarlo(unittest.TestCase):
         c, _ = _make_model(seed=6).generate()
         self.assertEqual(a, b)
         self.assertNotEqual(a["PSD, S"]["slf_std"], c["PSD, S"]["slf_std"])
-        self.assertEqual(a["PSD, S"]["slf"], c["PSD, S"]["slf"])   # exact mean
 
     def test_realisation_losses_increase_with_edp(self):
         """Capacities are held over the EDP range, so with costs that grow
@@ -428,8 +476,9 @@ class TestMonteCarlo(unittest.TestCase):
                                   realizations=4000, seed=4).generate()
         out_no, _ = slfgenerator(rows("NO"), "PSD", edp_range=edp,
                                  realizations=4000, seed=4).generate()
-        np.testing.assert_allclose(out_yes["PSD, NS"]["slf"], out_no["PSD, NS"]["slf"])
         p = stats.norm.cdf(np.log(np.array(edp) / 0.01) / 0.5)
+        np.testing.assert_allclose(out_yes["PSD, NS"]["slf"], p, atol=0.03)
+        np.testing.assert_allclose(out_no["PSD, NS"]["slf"], p, atol=0.005)
         # one unit cost, no cost dispersion: binomial number of damaged units
         np.testing.assert_allclose(out_no["PSD, NS"]["slf_std"],
                                    np.sqrt(p * (1 - p) / 50), rtol=0.08)
@@ -439,8 +488,7 @@ class TestMonteCarlo(unittest.TestCase):
     def test_mutually_exclusive_outcome_frequencies(self):
         inv = pd.DataFrame([_row(1, [1e-4], [0.1], [1.0, 2.0, 4.0], [0, 0, 0],
                                  ["Normal"] * 3, hierarchy="MutEx(DS1,DS2,DS3)",
-                                 probabilities=[0.5, 0.3, 0.2],
-                                 replacement=1.0)])
+                                 probabilities=[0.5, 0.3, 0.2])])
         _, cache = slfgenerator(inv, "PSD", edp_range=[1.0], realizations=20000,
                                 seed=8).generate()
         values = cache["PSD, NS"]["total_loss_storey"][:, 0]
@@ -452,7 +500,7 @@ class TestMonteCarlo(unittest.TestCase):
         inv = pd.DataFrame([_row(1, [1e-4], [0.1], [1.0, 2.0, 4.0, 8.0],
                                  [0] * 4, ["Normal"] * 4,
                                  hierarchy="Simul(DS1,DS2,DS3,DS4)",
-                                 probabilities=list(p), replacement=1.0)])
+                                 probabilities=list(p))])
         _, cache = slfgenerator(inv, "PSD", edp_range=[1.0], realizations=40000,
                                 seed=9).generate()
         mask = cache["PSD, NS"]["total_loss_storey"][:, 0].astype(int)
@@ -487,10 +535,10 @@ class TestSLFGeneratorGenerate(unittest.TestCase):
     def test_cache_has_required_keys(self):
         for group_cache in self.cache.values():
             for key in ("component", "fragilities", "limit_state_probabilities",
-                        "expected_component_loss", "total_loss_storey",
-                        "total_loss_storey_ratio", "simulated_mean",
-                        "replacement_cost", "edp", "empirical_16th",
-                        "empirical_median", "empirical_84th"):
+                        "expected_component_loss", "ratio_of_expectations",
+                        "total_loss_storey", "total_loss_storey_ratio",
+                        "replacement_value", "replacement_cost", "edp",
+                        "empirical_16th", "empirical_median", "empirical_84th"):
                 self.assertIn(key, group_cache)
 
     def test_lengths_and_shapes(self):
@@ -519,11 +567,16 @@ class TestSLFGeneratorGenerate(unittest.TestCase):
                                        std[positive] / mean[positive])
             self.assertTrue(np.all(np.asarray(rec["slf_cov"])[~positive] == 0))
 
-    def test_mean_is_sum_of_component_expectations(self):
+    def test_mean_is_the_mean_of_the_realisations(self):
         for key, rec in self.out.items():
-            total = sum(self.cache[key]["expected_component_loss"].values())
+            c = self.cache[key]
+            np.testing.assert_allclose(rec["slf"], c["total_loss_storey_ratio"].mean(axis=0))
             np.testing.assert_allclose(
-                rec["slf"], total / self.cache[key]["replacement_cost"])
+                c["total_loss_storey_ratio"],
+                c["total_loss_storey"] / c["replacement_value"][:, None])
+            total = sum(c["expected_component_loss"].values())
+            np.testing.assert_allclose(c["ratio_of_expectations"],
+                                       total / c["replacement_cost"])
 
 
 # ---------------------------------------------------------------------------
@@ -571,16 +624,23 @@ class TestSLFGeneratorCorrelationTree(unittest.TestCase):
         final = model.apply_correlation_tree(states)[2][:, 0]
         np.testing.assert_array_equal(final, [2, 2, 2] + [0] * 8 + [0, 0])
 
-    def test_tree_raises_the_expected_loss(self):
+    def test_tree_raises_the_loss_of_every_realisation(self):
+        """With the same seed a model with and without a tree draw the same
+        random numbers (one stream per component), so the tree's effect is
+        seen realisation by realisation."""
         edp = np.linspace(0, 0.03, 16)
-        base, _ = slfgenerator(_p58_inventory(), "PSD", edp_range=edp,
-                               realizations=20).generate()
-        tied, _ = slfgenerator(_p58_inventory(), "PSD", edp_range=edp,
-                               correlation_tree=_p58_tree(),
-                               realizations=20).generate()
-        diff = np.asarray(tied["PSD, NS"]["slf"]) - np.asarray(base["PSD, NS"]["slf"])
-        self.assertTrue(np.all(diff >= -1e-15))
+        base, cb = slfgenerator(_p58_inventory(), "PSD", edp_range=edp,
+                                realizations=200, seed=3).generate()
+        tied, ct = slfgenerator(_p58_inventory(), "PSD", edp_range=edp,
+                                correlation_tree=_p58_tree(),
+                                realizations=200, seed=3).generate()
+        np.testing.assert_array_equal(ct["PSD, NS"]["replacement_value"],
+                                      cb["PSD, NS"]["replacement_value"])
+        diff = ct["PSD, NS"]["total_loss_storey_ratio"] - cb["PSD, NS"]["total_loss_storey_ratio"]
+        self.assertTrue(np.all(diff >= -1e-12))
         self.assertGreater(diff.max(), 0.0)
+        mean_diff = np.asarray(tied["PSD, NS"]["slf"]) - np.asarray(base["PSD, NS"]["slf"])
+        self.assertTrue(np.all(mean_diff >= -1e-12))
 
     def test_chained_dependencies(self):
         tree = _p58_tree()
@@ -590,7 +650,7 @@ class TestSLFGeneratorCorrelationTree(unittest.TestCase):
                              realizations=4000, seed=12)
         self.assertEqual(model.order, [1, 2, 3])
         out, cache = model.generate()
-        self.assertLess(np.abs(_z_scores(out, cache, 4000)).max(), 4.5)
+        self.assertLess(np.abs(_z_scores(cache, 4000)).max(), 4.5)
 
     def test_invalid_trees_raise(self):
         def tree_with(**cells):

@@ -8,9 +8,9 @@ as a function of that demand. ``slfgenerator`` builds it from a component
 inventory in the FEMA P-58 format: quantities, fragility functions, damage
 state hierarchies and repair-cost distributions.
 
-For every EDP value it returns the expected storey loss ratio (exact, in
-closed form) and the standard deviation and 16th/50th/84th percentiles of the
-loss ratio (Monte Carlo).
+For every EDP value it returns the mean, standard deviation and
+16th/50th/84th percentiles of the storey loss ratio, from Monte Carlo
+realisations in which the loss ratio stays within [0, 1].
 
 Inventory (one row per component)
 ---------------------------------
@@ -60,9 +60,9 @@ Optional columns:
     suits quantities expressed per unit floor area; ``NO`` requires
     ``Quantity`` to count the units on the storey.
 ``Replacement Cost``
-    Cost of replacing one unit. Default: the largest expected repair cost of
-    any damage outcome of the component (for a ``Simul`` limit state, all of
-    its damage states together).
+    Expected cost of replacing one unit. Default: the largest expected
+    repair cost of any damage outcome of the component (for a ``Simul``
+    limit state, all of its damage states together).
 
 Simulation
 ----------
@@ -73,23 +73,33 @@ In each realisation:
   component exceeded at that EDP;
 - the damage state reached within a ``MutEx`` or ``Simul`` limit state is
   drawn once per unit and limit state;
-- the unit repair cost of each damage state is drawn once per component and
-  shared by its units (FEMA P-58 samples one unit cost per damage state and
-  performance group);
+- the unit repair costs of a component are drawn at one probability level
+  per realisation, shared by its damage states and its units: one price
+  level for repairing and replacing the same item (FEMA P-58 samples one
+  unit cost per damage state and performance group). The cost of the
+  replacement outcome (the damage outcome with the largest expected cost)
+  at that level is the unit replacement cost of the realisation; no unit is
+  repaired for more than it;
 - a correlation tree forces a dependent component to at least a given limit
   state when its causation component reaches a given limit state. With
   per-unit sampling, dependent unit ``b`` of ``n_d`` is hosted by causation
   unit ``floor(b * n_c / n_d)`` of ``n_c``, so each causation unit carries an
   equal share of the dependent units.
 
-The expected loss is computed exactly from the fragility functions, the
-damage state probabilities and the expected unit costs, so it carries no
-Monte Carlo noise; the dispersion and the percentiles are estimated from the
-realisations.
+Each component draws from its own random stream, in inventory order, so
+models that differ only by their correlation tree share their random numbers
+and the effect of the tree shows realisation by realisation.
+
+The storey loss ratio of a realisation is its repair cost divided by the
+replacement cost of the same components at the same unit costs. It lies in
+[0, 1] and is 1 when every unit is in its replacement outcome; the price
+level of a component, which scales repair and replacement alike, does not
+change it. Its mean is the SLF; the exact ratio of the expected repair cost
+to the expected replacement cost is also returned, as a check (they differ
+by about 0.01 at most, the two being different statistics).
 
 Not modelled: economies of scale (the unit cost does not depend on the
-number of damaged units) and any cap of the storey loss at the replacement
-cost in a single realisation.
+number of damaged units).
 
 References
 ----------
@@ -222,15 +232,16 @@ class slf_model(BaseModel):
     edp_range : List[float]
         EDP values over which the SLF is defined.
     slf : List[float]
-        Expected storey loss ratio (exact): the Storey Loss Function.
+        Mean storey loss ratio: the Storey Loss Function.
     slf_std : List[float]
-        Standard deviation of the storey loss ratio (Monte Carlo).
+        Standard deviation of the storey loss ratio.
     slf_cov : List[float]
         ``slf_std / slf`` (0 where ``slf`` is 0).
     slf_16th, slf_50th, slf_84th : List[float]
         Empirical 16th/50th/84th percentiles of the storey loss ratio.
     replacement_cost : float
-        Cost the loss ratio is normalised by.
+        ``replacement_cost`` if given, otherwise the expected replacement
+        cost of the group's components.
     """
 
     directionality: Optional[int] = Field(alias="Directionality")
@@ -379,13 +390,12 @@ def _sample_unit_cost(theta0, theta1, family, u):
 class slfgenerator:
     """Storey Loss Function (SLF) generator for storey-based loss assessment.
 
-    Builds Storey Loss Functions from a FEMA P-58 style component inventory:
-    the expected storey loss ratio is computed in closed form, its
-    dispersion and percentiles by Monte Carlo simulation with independent
-    component (and, where not correlated, unit) capacities, explicit
-    mutually exclusive and simultaneous damage states and optional
-    correlation trees. See the module documentation for the inventory
-    format and the simulation.
+    Builds Storey Loss Functions from a FEMA P-58 style component inventory
+    by Monte Carlo simulation, with independent component (and, where not
+    correlated, unit) capacities, explicit mutually exclusive and
+    simultaneous damage states, optional correlation trees, and a storey
+    loss ratio in [0, 1] in every realisation. See the module documentation
+    for the inventory format and the simulation.
 
     References
     ----------
@@ -458,17 +468,21 @@ class slfgenerator:
         realizations : int, optional
             Number of Monte Carlo realisations. Default ``1000``.
         replacement_cost : float, optional
-            Cost the loss of every group is divided by, in converted units.
-            Default ``None``: each group is normalised by the replacement
-            cost of its own components (``Quantity`` times the unit
-            replacement cost, summed), so that the SLF is a loss ratio.
+            Fixed cost the loss of every group is divided by, in converted
+            units; the ratio is then not bounded by 1. Default ``None``: each
+            realisation of a group is divided by the replacement cost of its
+            own components at that realisation's unit costs (``Quantity``
+            times the unit replacement cost, summed), so that the SLF is a
+            loss ratio in [0, 1].
         storey : int or List[int], optional
             Storey level(s), copied to the output. Default ``None``.
         directionality : int, optional
             Directionality flag, copied to the output. Default ``None``.
         seed : int or numpy.random.Generator, optional
             Seed of the Monte Carlo simulation. The same seed and inputs give
-            the same realisations. Default ``None`` (unseeded).
+            the same realisations; with the same seed, adding or changing a
+            correlation tree leaves every component's random numbers
+            unchanged. Default ``None`` (unseeded).
 
         Raises
         ------
@@ -727,8 +741,15 @@ class slfgenerator:
                 f"got {medians}."
             )
 
-        # --- replacement cost per unit (converted)
-        top = max(float(ls["outcome_mean_cost"].max()) for ls in limit_states)
+        # --- replacement cost per unit (converted). The replacement outcome is
+        # the damage outcome with the largest expected cost (the most severe
+        # one among equals); its realised cost sets the component's price
+        # level in each realisation.
+        replacement_outcome, top = (0, 0), -1.0
+        for k, ls in enumerate(limit_states):
+            for o, cost in enumerate(ls["outcome_mean_cost"]):
+                if cost >= top:
+                    replacement_outcome, top = (k, o), float(cost)
         given = row.get("Replacement Cost")
         if _blank(given):
             replacement = top
@@ -749,6 +770,8 @@ class slfgenerator:
             "n_ls": len(limit_states), "cost_theta0": theta0,
             "cost_theta1": theta1, "cost_family": family,
             "mean_cost": mean_cost, "replacement": replacement,
+            "replacement_outcome": replacement_outcome,
+            "replacement_outcome_mean": top,
             "correlated": correlated, "blocks": blocks,
             "block_quantity": quantity / blocks,
         }
@@ -991,7 +1014,9 @@ class slfgenerator:
 
     def expected_component_loss(self) -> dict:
         """Expected repair cost of each component on the storey (exact,
-        converted units).
+        converted units), before the cap of a unit's repair cost at its
+        replacement cost (which binds only where a damage outcome can cost
+        more than replacing the unit).
 
         Returns
         -------
@@ -1007,8 +1032,9 @@ class slfgenerator:
         return out
 
     def group_replacement_cost(self, component_ids) -> float:
-        """Cost a group's loss is divided by: ``replacement_cost`` if given,
-        otherwise the replacement cost of the group's components."""
+        """``replacement_cost`` if given, otherwise the expected replacement
+        cost of the group's components (``Quantity`` times the unit
+        replacement cost, summed)."""
         if self.replacement_cost is not None:
             return float(self.replacement_cost)
         value = sum(self.components[cid]["quantity"]
@@ -1062,28 +1088,46 @@ class slfgenerator:
                 own[b] = np.maximum(own[b], lut[host])
         return final
 
-    def _simulate(self, rng) -> Dict[int, np.ndarray]:
-        """Repair cost of every component in every realisation and at every
-        EDP, ``{Component ID: (n_real, n_edp)}`` (converted units)."""
+    def _simulate(self, rng) -> tuple:
+        """Monte Carlo realisations, in converted units.
+
+        Returns
+        -------
+        costs : dict
+            ``{Component ID: (n_real, n_edp)}`` repair cost of the component
+            on the storey.
+        replacement : dict
+            ``{Component ID: (n_real,)}`` replacement cost of the component
+            on the storey at the realisation's unit costs.
+        """
         n_real, n_edp = self.realizations, self.edp_range.size
         causes = {cause for cause, _ in self.causation.values()}
-        stored, costs = {}, {}
+        stored, costs, replacement = {}, {}, {}
+        # one random stream per component, in inventory order: a component's
+        # realisations do not depend on the order components are processed in
+        # (a correlation tree changes it), so models that differ only by their
+        # tree share their random numbers
+        children = np.random.SeedSequence(int(rng.integers(2 ** 63))).spawn(len(self.components))
+        streams = {cid: np.random.default_rng(seq) for cid, seq in zip(self.components, children)}
         for cid in self.order:
             component = self.components[cid]
             n_b, n_ls = component["blocks"], component["n_ls"]
             poe = self._exceedance(component)
+            stream = streams[cid]
 
-            # unit cost of each damage state, one draw per realisation
-            z = rng.random((component["damage_states"], n_real))
+            # unit cost of each damage state: one probability level per
+            # realisation, shared by the damage states of the component (one
+            # price level for repairing and replacing the same item)
+            level_u = stream.random(n_real)
             unit_cost = np.array([
-                _sample_unit_cost(t0, t1, fam, z[d])
-                for d, (t0, t1, fam) in enumerate(zip(
+                _sample_unit_cost(t0, t1, fam, level_u)
+                for t0, t1, fam in zip(
                     component["cost_theta0"], component["cost_theta1"],
-                    component["cost_family"]))
+                    component["cost_family"])
             ])
-            capacity = rng.random((n_b, n_real))
+            capacity = stream.random((n_b, n_real))
             outcome_draws = {
-                k: rng.random((n_b, n_real))
+                k: stream.random((n_b, n_real))
                 for k, ls in enumerate(component["limit_states"])
                 if len(ls["outcomes"]) > 1
             }
@@ -1091,6 +1135,17 @@ class slfgenerator:
             tables = [np.array([unit_cost[list(o)].sum(axis=0)
                                 for o in ls["outcomes"]])
                       for ls in component["limit_states"]]
+            # unit replacement cost at the realisation's price level, which
+            # the cost of the replacement outcome sets; no unit is repaired
+            # for more than it costs to replace
+            k_rep, o_rep = component["replacement_outcome"]
+            mean_rep = component["replacement_outcome_mean"]
+            price = (tables[k_rep][o_rep] / mean_rep if mean_rep > 0
+                     else np.ones(n_real))
+            unit_replacement = component["replacement"] * price
+            tables = [np.minimum(table, unit_replacement[None, :])
+                      for table in tables]
+            replacement[cid] = component["quantity"] * unit_replacement
 
             def step_costs(block):
                 """Cost increment of each limit state over the previous one,
@@ -1146,7 +1201,7 @@ class slfgenerator:
             costs[cid] = total * component["block_quantity"]
             if keep is not None:
                 stored[cid] = keep
-        return costs
+        return costs, replacement
 
     # -----------------------------------------------------------------------
     # Output
@@ -1165,13 +1220,14 @@ class slfgenerator:
         Parameters
         ----------
         mean : np.ndarray
-            Expected storey loss ratio at every EDP (exact).
+            Mean storey loss ratio at every EDP.
         std : np.ndarray
-            Standard deviation of the storey loss ratio (Monte Carlo).
+            Standard deviation of the storey loss ratio.
         slf_16th, slf_50th, slf_84th : np.ndarray
             Empirical 16th/50th/84th percentiles of the storey loss ratio.
         replacement_cost : float
-            Cost the loss ratio is normalised by.
+            ``replacement_cost`` if given, otherwise the expected replacement
+            cost of the group's components.
         typology : str, optional
             Component type label (e.g. ``'ns'``). Default ``None``.
 
@@ -1179,7 +1235,7 @@ class slfgenerator:
         -------
         dict
             Keys ``'Directionality'``, ``'Component-type'``, ``'Storey'``,
-            ``'edp'``, ``'edp_range'``, ``'slf'`` (expected loss ratio: the
+            ``'edp'``, ``'edp_range'``, ``'slf'`` (mean loss ratio: the
             Storey Loss Function), ``'slf_std'``, ``'slf_cov'``,
             ``'slf_16th'``, ``'slf_50th'``, ``'slf_84th'`` and
             ``'replacement_cost'``.
@@ -1206,30 +1262,36 @@ class slfgenerator:
         """Generate the Storey Loss Functions of all performance groups.
 
         1. Fragility of each limit state of each component; probability of
-           each limit state after correlation tree forcing.
-        2. Expected storey loss ratio, exactly: quantities times the
-           probability of each limit state times its expected repair cost,
-           divided by the group's replacement cost.
-        3. Monte Carlo realisations of the storey repair cost (independent
+           each limit state after correlation tree forcing (exact).
+        2. Monte Carlo realisations of the storey repair cost: independent
            capacities per component, or per unit where not correlated;
            explicit mutually exclusive and simultaneous damage states;
-           correlation tree applied unit by unit), from which the standard
-           deviation and the 16th/50th/84th percentiles of the loss ratio
-           are taken.
+           correlation tree applied unit by unit; one unit-cost level per
+           component and realisation, no unit repaired for more than its
+           replacement cost.
+        3. Storey loss ratio of each realisation: the repair cost divided by
+           the replacement cost of the group's components at the same
+           realisation's unit costs (or by ``replacement_cost`` if given).
+           It lies in [0, 1], and is 1 when every unit is in its
+           replacement outcome. Its mean, standard deviation and
+           16th/50th/84th percentiles are the SLF.
 
         Returns
         -------
         out : dict
             ``{group_label: record}``, one SLF record per performance group
-            (see :meth:`transform_output`). ``'slf'`` is the expected storey
+            (see :meth:`transform_output`). ``'slf'`` is the mean storey
             loss ratio, the curve to use in loss assessment.
         cache : dict
             Per group: ``'component'`` (inventory rows), ``'fragilities'``,
             ``'limit_state_probabilities'``, ``'expected_component_loss'``
-            (converted units), ``'total_loss_storey'`` and
-            ``'total_loss_storey_ratio'`` (``(realizations, n_edp)``
-            arrays), ``'simulated_mean'`` (Monte Carlo mean of the ratio, a
-            check on ``'slf'``), ``'replacement_cost'``, ``'edp'`` and
+            (exact, converted units), ``'ratio_of_expectations'`` (expected
+            repair cost over expected replacement cost, exact: a check on
+            ``'slf'``, which it matches to within about 0.01),
+            ``'total_loss_storey'`` and ``'total_loss_storey_ratio'``
+            (``(realizations, n_edp)`` arrays), ``'replacement_value'``
+            (``(realizations,)``: what each realisation is divided by),
+            ``'replacement_cost'``, ``'edp'`` and
             ``'empirical_16th'``/``'empirical_median'``/``'empirical_84th'``
             (the same arrays as in ``out``).
         """
@@ -1237,7 +1299,7 @@ class slfgenerator:
         fragilities = self.fragility_function()
         probabilities = self.limit_state_probabilities()
         expected = self.expected_component_loss()
-        simulated = self._simulate(rng)
+        simulated, replaced = self._simulate(rng)
 
         out, cache = {}, {}
         for group, component_data_group in self.component_groups.items():
@@ -1254,8 +1316,13 @@ class slfgenerator:
             item_ids = [int(c) for c in component_data_group["Component ID"]]
             replacement_cost = self.group_replacement_cost(item_ids)
             total = sum(simulated[cid] for cid in item_ids)
-            ratio = total / replacement_cost
-            mean = sum(expected[cid] for cid in item_ids) / replacement_cost
+            if self.replacement_cost is None:
+                value = sum(replaced[cid] for cid in item_ids)
+            else:
+                value = np.full(self.realizations, float(self.replacement_cost))
+            ratio = np.divide(total, value[:, None], out=np.zeros_like(total),
+                              where=value[:, None] > 0)
+            mean = ratio.mean(axis=0)
             std = ratio.std(axis=0, ddof=1)
             slf_16th, slf_50th, slf_84th = np.percentile(ratio, [16, 50, 84], axis=0)
 
@@ -1272,9 +1339,11 @@ class slfgenerator:
                 },
                 "limit_state_probabilities": {cid: probabilities[cid] for cid in item_ids},
                 "expected_component_loss":   {cid: expected[cid] for cid in item_ids},
+                "ratio_of_expectations":     (sum(expected[cid] for cid in item_ids)
+                                              / replacement_cost),
                 "total_loss_storey":         total,
                 "total_loss_storey_ratio":   ratio,
-                "simulated_mean":            ratio.mean(axis=0),
+                "replacement_value":         value,
                 "replacement_cost":          replacement_cost,
                 "edp":                       self.edp,
                 "empirical_16th":            slf_16th,

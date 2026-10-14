@@ -3,8 +3,8 @@ Storey Loss Function Generation
 
 Demonstrates how to generate Storey Loss Functions (SLFs) using the
 ``slfgenerator`` class. Covers the FEMA P-58 component inventory (sequential,
-mutually exclusive and simultaneous damage states), the exact expected storey loss
-ratio, its Monte Carlo dispersion and 16th/50th/84th percentiles, and optional
+mutually exclusive and simultaneous damage states), the Monte Carlo mean,
+dispersion and 16th/50th/84th percentiles of the storey loss ratio, and optional
 correlation trees between dependent components.
 
 The full notebook is at
@@ -34,9 +34,9 @@ repository root after ``pip install .``.
    inventory_psd = pd.read_csv(os.path.join(inventory_dir, "inventory_psd.csv"))
    inventory_pfa = pd.read_csv(os.path.join(inventory_dir, "inventory_pfa.csv"))
 
-   # 2. Common generator settings. Each group's loss is divided by the
-   #    replacement cost of its own components (the default), so "slf" is the
-   #    expected storey loss ratio.
+   # 2. Common generator settings. Each realisation is divided by the
+   #    replacement cost of the group's own components (the default), so "slf"
+   #    is the mean storey loss ratio, in [0, 1].
    common = dict(
        grouping_flag=True,
        conversion=1.0,
