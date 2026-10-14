@@ -20,4 +20,5 @@ Storey Loss Functions
           xlims=[0, 0.05],
           ylims=[0, 1],
           export_path="slf_model.png",
+          max_realizations=200,
       )

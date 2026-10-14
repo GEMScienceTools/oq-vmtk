@@ -13,6 +13,44 @@
   calls must add `curve_type=...`.
 - `plotter.plot_demand_profiles`: new `drift_xlim` and `accel_xlim` arguments.
 - `plotter.plot_vulnerability_function`: fewer x-axis tick labels.
+- `slfgenerator` follows FEMA P-58 and returns the expected loss. Results
+  differ from v1.2.0; there is no switch back to the previous behaviour.
+  - Fragility columns are the lognormal median and dispersion (`DSk, Median`,
+    `DSk, Total Dispersion`); they were read as a mean and coefficient of
+    variation.
+  - Every component has its own capacity, held over the EDP range; one random
+    number per realisation and EDP was shared by all components, which made
+    them perfectly correlated and left the correlation tree without effect.
+  - Unit costs follow the FEMA P-58 conventions: `Lognormal` = median and
+    dispersion (was mean and CoV), `Normal` = mean and CoV, truncated at zero.
+    Costs are no longer truncated to integers.
+  - New optional inventory columns: `DS Hierarchy` (e.g.
+    `Seq(DS1,MutEx(DS2,DS3))`, `Simul(DS1,DS2,DS3,DS4)`) and
+    `DSk, Probability` for mutually exclusive and simultaneous damage states,
+    sampled explicitly; `Correlated` (FEMA P-58 flag; `NO` damages every unit
+    independently, default `YES`); `Replacement Cost` per unit.
+  - Correlation trees act on limit states, are applied unit by unit, may be
+    chained, and are fully validated (cycles, forcing from DS0, decreasing or
+    out-of-range forced states raise `ValueError`).
+  - `generate()` output: `slf` is now the expected loss ratio (exact, closed
+    form; was the Monte Carlo median), with new `slf_std`, `slf_cov`,
+    `slf_50th` and `replacement_cost`. `replacement_cost` defaults to `None`:
+    each group is divided by the replacement cost of its components.
+  - New `seed` argument; `realizations` defaults to 1000 (was 20).
+    `edp_range` may start at 0 and is no longer modified (its first value was
+    overwritten with 1e-20).
+  - New methods `limit_state_probabilities`, `expected_component_loss`,
+    `apply_correlation_tree`; `fragility_function` returns only the fragility
+    curves (keyed `LSk`). `do_monte_carlo_simulations`,
+    `validate_ds_dependence` and `calculate_costs` are removed. The cache holds
+    `(realizations, n_edp)` arrays instead of per-realisation dicts.
+  - `grouping_flag=False` works (it raised `AttributeError`), and importing
+    the module no longer silences all Python warnings.
+  - Demo inventories gain examples of each damage state hierarchy; the
+    elevators are simultaneous, as in FEMA P-58.
+- `plotter.plot_slf_model` draws the expected loss (`slf`) and the median
+  (`slf_50th`), and a sample of `max_realizations` realisations (default 200)
+  as points.
 
 ## v1.2.0 — 2026-10-09
 

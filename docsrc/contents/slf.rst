@@ -1,14 +1,21 @@
 Storey Loss Function Generation
 ################################
 
-The ``slf_generator`` class generates Storey Loss Functions (SLFs) from fragility,
-consequence, and quantity data. SLFs link expected repair loss at a storey to the
-Engineering Demand Parameter (EDP). A Monte Carlo approach is used to sample damage
-states and associated repair costs across a user-defined inventory of damageable
-components; the SLF itself is the empirical 16th/50th/84th-percentile storey loss
-ratio across those realisations — no parametric curve is fitted. An optional
-``correlation_tree`` lets one component's damage state force a minimum damage state
-on another (e.g. a partition wall and the door framed into it).
+The ``slfgenerator`` class generates Storey Loss Functions (SLFs) from a component
+inventory in the FEMA P-58 format: quantities, fragility functions, damage state
+hierarchies and repair-cost distributions. An SLF gives, for the components of one
+storey that are sensitive to one Engineering Demand Parameter (EDP: peak storey drift
+or peak floor acceleration), the repair cost as a fraction of their replacement cost,
+as a function of that EDP.
+
+For every EDP value the generator returns the expected storey loss ratio, computed
+exactly from the fragility functions and the expected repair costs, and the standard
+deviation and 16th/50th/84th percentiles of the loss ratio, estimated by Monte Carlo
+simulation. The simulation follows FEMA P-58: every component (or, where its units are
+not correlated, every unit) has its own capacity; mutually exclusive and simultaneous
+damage states are sampled explicitly; one unit repair cost is drawn per damage state.
+An optional ``correlation_tree`` lets one component's damage force a minimum damage
+state on another (e.g. a partition wall and the door framed into it).
 
 .. toctree::
 
@@ -21,10 +28,16 @@ References
 1. Ramirez, C. and Miranda, E., (2009) "Building-specific loss estimation methods and tools for simplified
    performance-based earthquake engineering", John A. Blume Earthquake Engineering Center, Stanford University.
 
-2. Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Story loss functions for seismic design and assessment:
+2. FEMA (2018) "Seismic Performance Assessment of Buildings, Volume 1 – Methodology", FEMA P-58-1,
+   2nd edition, Federal Emergency Management Agency, Washington, D.C.
+
+3. Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Story loss functions for seismic design and assessment:
    Development of tools and application," Earthquake Spectra 2021; 37(4): 2813-2839.
    DOI: 10.1177/87552930211023523.
 
-3. Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Development of a Python-Based Storey Loss Function
+4. Shahnazaryan, D., O'Reilly, G.J., Monteiro R. "Development of a Python-Based Storey Loss Function
    Generator," COMPDYN 2021 - 8th International Conference on Computational Methods in Structural Dynamics
    and Earthquake Engineering, 2021. DOI: 10.7712/120121.8659.18567.
+
+5. Papadopoulos, A.N., Vamvatsikos, D., Kazantzi, A.K. "Development and Application of FEMA P-58
+   Compatible Story Loss Functions," Earthquake Spectra 2019; 35(1): 95-112. DOI: 10.1193/102417EQS222M.

@@ -26,15 +26,18 @@ notebook.
    model = slfgenerator(
        component_data=inventory,
        edp="PSD",
-       edp_range=np.linspace(0.001, 0.10, 100),
+       edp_range=np.linspace(0.0, 0.10, 101),
        grouping_flag=True,
        conversion=1.0,
-       realizations=500,
-       replacement_cost=1.0,
+       realizations=2000,
+       seed=2026,
    )
 
    # 3. Generate and plot the SLF
    slf, cache = model.generate()
+   group = slf["PSD, NS"]
+   print(group["replacement_cost"], group["slf"][50], group["slf_cov"][50])
+
    plotter().plot_slf_model(
        slf, cache,
        edp_label="Interstorey Drift Ratio [-]",
@@ -44,88 +47,147 @@ notebook.
        title="Drift-Sensitive SLF",
    )
 
+Each record of ``slf`` holds:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Key
+     - Content
+   * - ``edp_range``
+     - EDP values.
+   * - ``slf``
+     - Expected storey loss ratio (exact): the Storey Loss Function.
+   * - ``slf_std``, ``slf_cov``
+     - Standard deviation of the loss ratio (Monte Carlo) and ``slf_std / slf``.
+   * - ``slf_16th``, ``slf_50th``, ``slf_84th``
+     - Empirical percentiles of the loss ratio.
+   * - ``replacement_cost``
+     - Cost the loss is divided by: by default the replacement cost of the group's
+       components, so that the loss ratio lies in [0, 1] on average.
+
+To combine the drift- and acceleration-sensitive SLFs of a storey into one
+nonstructural loss ratio, weight each by its share of the replacement cost:
+:math:`L = w_d L_d + w_a L_a` with :math:`w_d = RC_d / (RC_d + RC_a)`.
+
 .. admonition:: Theoretical Background
 
-   A Storey Loss Function (SLF) links the expected repair loss at a given storey to the
-   Engineering Demand Parameter (EDP) at that storey (Ramirez & Miranda, 2009;
-   Shahnazaryan et al., 2021).
+   A Storey Loss Function (SLF) links the expected repair loss of the components of a
+   storey to the Engineering Demand Parameter (EDP) :math:`x` at that storey (Ramirez &
+   Miranda, 2009; Papadopoulos et al., 2019; Shahnazaryan et al., 2021). The component
+   model is that of FEMA P-58.
 
-   **Component loss model**
+   **Fragility of a limit state**
 
-   For each damageable component :math:`c` in performance group :math:`g`, the repair
-   cost :math:`\ell_c` is a random variable that depends on the damage state
-   :math:`DS_c`. Given the EDP level :math:`x`, the expected cost contribution is:
-
-   .. math::
-
-      E[\ell_c \mid x] = \sum_{i=1}^{n_{DS}}
-        \mu_{c,i} \cdot P(DS_c = i \mid x)
-
-   where :math:`\mu_{c,i}` is the mean repair cost for damage state :math:`i` and
-   :math:`P(DS_c = i \mid x)` is derived from the component fragility functions via:
+   Each component has one or more limit states, in sequence; limit state :math:`k` has
+   a lognormal fragility with median :math:`\theta_k` and dispersion :math:`\beta_k`:
 
    .. math::
 
-      P(DS_c = i \mid x) =
-        P(DS_c \geq i \mid x) - P(DS_c \geq i+1 \mid x)
+      P(LS \geq k \mid x) = \Phi\left(\frac{\ln(x / \theta_k)}{\beta_k}\right)
 
-   **Monte Carlo sampling**
+   with the curves kept from crossing, :math:`P(LS \geq k+1 \mid x) \leq P(LS \geq k
+   \mid x)`, and zero at :math:`x = 0`.
 
-   Damage states are sampled via Monte Carlo simulation across a user-defined EDP range.
-   For :math:`N` realisations, each realisation draws a damage state for every component
-   at every EDP level. Component costs are summed within each performance group to obtain
-   the total group loss ratio per realisation (loss normalised by ``replacement_cost``).
+   **Damage states of a limit state**
 
-   **Empirical SLF percentiles**
-
-   No parametric curve is fitted to the Monte Carlo loss cloud. Instead, at each EDP
-   level the storey loss RATIO is summarised directly from the ``realizations`` Monte
-   Carlo draws via its empirical 16th, 50th (median), and 84th percentiles:
+   A limit state holds one damage state, or several that are either *mutually
+   exclusive* (exactly one occurs, damage state :math:`i` with probability
+   :math:`w_i`, :math:`\sum w_i = 1`) or *simultaneous* (each occurs independently
+   with probability :math:`p_i`, conditioned on at least one occurring). The expected
+   unit repair cost given limit state :math:`k` is
 
    .. math::
 
-      \hat{\ell}_g^{(p)}(x) = \text{Percentile}_p\left(\{\ell_g^{(n)}(x)\}_{n=1}^{N}\right),
-      \quad p \in \{16, 50, 84\}
+      \bar c_k = \bar c_i \quad \text{(single)}, \qquad
+      \bar c_k = \sum_i w_i \, \bar c_i \quad \text{(MutEx)}, \qquad
+      \bar c_k = \frac{\sum_i p_i \, \bar c_i}{1 - \prod_i (1 - p_i)} \quad \text{(Simul)}
 
-   where :math:`\ell_g^{(n)}(x)` is the simulated storey loss ratio for performance
-   group :math:`g` at EDP level :math:`x` in realisation :math:`n`, and :math:`N` is
-   ``realizations``. The median curve (:math:`p=50`) is the primary Storey Loss
-   Function, returned as ``out[group]['slf']``; the 16th and 84th percentiles
-   (``out[group]['slf_16th']`` / ``out[group]['slf_84th']``) bound the Monte Carlo
-   scatter and are typically shown as a shaded band around the median curve (see
-   :meth:`openquake.vmtk.plotter.plotter.plot_slf_model`).
+   where :math:`\bar c_i` is the mean unit cost of damage state :math:`i`:
+   :math:`\theta_c \exp(\beta_c^2 / 2)` for a lognormal cost with median
+   :math:`\theta_c`, and :math:`\mu \left[1 + \nu \, \varphi(1/\nu) / \Phi(1/\nu)\right]`
+   for a normal cost with mean :math:`\mu` and coefficient of variation :math:`\nu`
+   truncated at zero.
 
-   Because no functional form is imposed, the curves are exactly as smooth (or as
-   noisy) as the underlying Monte Carlo sample — increasing ``realizations`` reduces
-   sampling noise in the percentile curves without introducing any fitting bias.
+   **Expected storey loss ratio (exact)**
+
+   For a performance group with components :math:`c` of quantity :math:`Q_c`:
+
+   .. math::
+
+      E[L \mid x] = \frac{1}{RC} \sum_c Q_c \sum_{k \geq 1}
+        P(LS_c = k \mid x) \, \bar c_{c,k},
+      \qquad P(LS_c = k \mid x) = P(LS_c \geq k \mid x) - P(LS_c \geq k+1 \mid x)
+
+   :math:`RC` is ``replacement_cost`` if given, otherwise
+   :math:`\sum_c Q_c \, RC_c` with :math:`RC_c` the unit replacement cost. This is
+   ``out[group]['slf']``; it carries no Monte Carlo noise.
+
+   **Monte Carlo simulation**
+
+   The dispersion and percentiles come from ``realizations`` Monte Carlo
+   realisations. In each one:
+
+   - every component draws one capacity (a uniform number :math:`u`) held over the
+     whole EDP range, and is in limit state
+     :math:`\#\{k : u < P(LS \geq k \mid x)\}` at EDP :math:`x`; components are
+     independent of one another unless a correlation tree links them. Where the
+     units of a component are not correlated (``Correlated`` = ``NO``), each unit
+     draws its own capacity;
+   - the damage state within a mutually exclusive or simultaneous limit state is
+     drawn once per unit and limit state;
+   - one unit repair cost is drawn per damage state of each component and shared by
+     its units, as in FEMA P-58; a simultaneous outcome costs the sum of its damage
+     states.
+
+   The storey loss ratio of each realisation is the sum of the component costs
+   divided by :math:`RC`; its standard deviation (``slf_std``), coefficient of
+   variation ``slf_cov`` = ``slf_std`` / ``slf``, and empirical 16th/50th/84th
+   percentiles (``slf_16th``, ``slf_50th``, ``slf_84th``) are returned at each EDP.
+   ``cache[group]['simulated_mean']`` is the Monte Carlo mean, a check on ``slf``.
+
+   Not modelled: economies of scale (unit costs do not depend on the number of
+   damaged units) and any cap of a single realisation at the replacement cost —
+   with uncertain unit costs, a realisation can exceed a loss ratio of 1 even though
+   the expected loss ratio does not.
 
    **Correlation trees**
 
    Components sharing a common support are rarely damaged independently of one
-   another. A ``correlation_tree`` lets one component's damage state force a
-   *minimum* damage state on another: whenever the *causation* component reaches (or
-   exceeds) a specified damage state, the *dependent* component's simulated damage
-   state is raised to at least a specified floor, before repair costs are computed.
+   another. A ``correlation_tree`` lets one component's damage force a *minimum*
+   limit state on another: whenever the *causation* component is in limit state
+   :math:`k`, the *dependent* component is raised to at least limit state
+   :math:`f(k)`. Its own capacity still governs above that floor:
 
-   The tree is a ``pandas.DataFrame`` with one row per component and the following
-   columns:
+   .. math::
+
+      P(LS_d \geq j \mid x) = 1 - \big[1 - P_{own}(LS_d \geq j \mid x)\big]
+        \big[1 - P(LS_c \geq t_j \mid x)\big], \qquad t_j = \min\{k : f(k) \geq j\}
+
+   Where units are sampled individually, dependent unit :math:`b` of :math:`n_d` is
+   hosted by causation unit :math:`\lfloor b \, n_c / n_d \rfloor` of :math:`n_c`, so
+   that each causation unit carries an equal share of the dependent units (e.g. the
+   light fixtures of a ceiling panel fall with that panel).
+
+   The tree is a ``pandas.DataFrame`` with one row per component and the columns:
 
    - ``ID``: the component's own ``Component ID``. Every ``Component ID`` in
-     ``component_data`` must have a matching row in the tree — the two are joined by
-     ID, not by row order, so the tree may list components in any order.
-   - ``DEPENDENT ON ITEM``: ``'Independent'`` for components with no forced
-     dependency, or the causation component's ``Component ID`` (as a string)
-     otherwise.
-   - ``DS0``, ``DS1``, ..., ``DS{n}`` (one column per possible damage state of the
-     causation component, including ``DS0`` = undamaged): for a dependent row,
-     ``'Independent'`` below the triggering damage state and ``'DSk'`` (the forced
-     floor) at and above it; for an independent row, ``'Independent'`` in every
-     column.
+     ``component_data`` must have a matching row — the two are joined by ID, not by
+     row order.
+   - ``DEPENDENT ON ITEM``: ``'Independent'``, or the causation component's
+     ``Component ID``.
+   - ``DS0``, ``DS1``, ..., ``DS{n}``: for a dependent row, column ``DSk`` gives the
+     limit state (``'DSj'``) forced on the dependent when the causation component is
+     in limit state ``k`` (``DS0`` = undamaged), or ``'Independent'``. For
+     components whose damage states are all sequential (the default) limit state
+     ``k`` is damage state ``k``. Columns beyond the causation component's limit
+     states are ignored.
 
-   For example, interior door assemblies are typically framed into a partition
-   wall's studs — once the partition passes cosmetic cracking (DS2), the door frame
-   racks along with it. If component 5 (the partition, 4 damage states) causes
-   component 3 (the door) to be forced to at least DS1:
+   For example, interior door assemblies are framed into a partition wall's studs —
+   once the partition passes cosmetic cracking (DS2), the door frame racks along with
+   it. If component 5 (the partition, 4 damage states) forces component 3 (the door)
+   to at least DS1:
 
    .. code-block:: python
 
@@ -150,15 +212,14 @@ notebook.
           component_data=inventory,
           edp="PSD",
           correlation_tree=correlation_tree,
-          grouping_flag=True,
-          realizations=500,
+          realizations=2000,
+          seed=2026,
       )
 
-   ``slfgenerator`` validates the tree at construction time: every ``Component ID``
-   in the inventory must have a matching row in the tree, and no forced damage state
-   may exceed the number of damage states defined for that component. Both
-   ``component_data['Component ID']`` and ``correlation_tree['ID']`` must be unique
-   positive integers — the class indexes fragilities, damage states, and repair costs
-   internally by ``Component ID``, so duplicate IDs raise a ``ValueError`` at
-   construction time rather than silently mismatching components.
-
+   ``slfgenerator`` validates the tree at construction time. It raises a
+   ``ValueError`` if a ``Component ID`` has no row, an ID is duplicated, a causation
+   component does not exist or is the component itself, the dependencies form a
+   cycle, a forced limit state exceeds the dependent's limit states, an undamaged
+   causation component (``DS0``) forces damage, or the forced limit state decreases
+   as the causation component gets more damaged. Chains (a dependent that is itself
+   a causation component) are allowed.
