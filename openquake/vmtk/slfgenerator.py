@@ -1,12 +1,117 @@
+"""
+Storey Loss Function (SLF) generator.
+
+A Storey Loss Function gives, for the components of one storey that are
+sensitive to one engineering demand parameter (EDP: peak storey drift or peak
+floor acceleration), the repair cost as a fraction of their replacement cost,
+as a function of that demand. ``slfgenerator`` builds it from a component
+inventory in the FEMA P-58 format: quantities, fragility functions, damage
+state hierarchies and repair-cost distributions.
+
+For every EDP value it returns the expected storey loss ratio (exact, in
+closed form) and the standard deviation and 16th/50th/84th percentiles of the
+loss ratio (Monte Carlo).
+
+Inventory (one row per component)
+---------------------------------
+Required columns:
+
+``Component ID``
+    Unique positive integer (blank IDs are numbered 1..n).
+``EDP``, ``Typology``
+    Demand parameter (``PSD``/``IDR`` or ``PFA``) and component type (``S``
+    structural, ``NS`` nonstructural); together they form the default
+    performance groups.
+``Quantity``
+    Number of costing units on the storey.
+``Damage States``
+    Number of damage states ``n`` of the component.
+``DSk, Median``, ``DSk, Total Dispersion``
+    Median (in EDP units) and logarithmic standard deviation of the lognormal
+    fragility of the limit state that damage state ``k`` belongs to.
+``DSk, Cost``, ``DSk, Cost Dispersion``, ``DSk, Best Fit``
+    Repair cost per unit in damage state ``k``. ``Lognormal``: median and
+    logarithmic standard deviation. ``Normal`` (the default when blank): mean
+    and coefficient of variation; the distribution is truncated at zero.
+    These are the FEMA P-58 conventions.
+
+Optional columns:
+
+``Description``, ``Performance Group``
+    As before; explicit performance groups override the ``(EDP, Typology)``
+    grouping when more than one is given.
+``DS Hierarchy``
+    FEMA P-58 damage state hierarchy, e.g. ``Seq(DS1,DS2)``,
+    ``Seq(DS1,MutEx(DS2,DS3))`` or ``Simul(DS1,DS2,DS3,DS4)``. Each item of
+    the sequence is one limit state, with one fragility; a ``MutEx`` group
+    is a limit state whose damage states are mutually exclusive, a ``Simul``
+    group one whose damage states can occur together. Default: all damage
+    states sequential, ``Seq(DS1,...,DSn)``.
+``DSk, Probability``
+    Probability of damage state ``k`` within its limit state: for ``MutEx``
+    the probability that it is the one that occurs (they sum to one); for
+    ``Simul`` the probability that it occurs, independently of the others,
+    given at least one does. Ignored for a limit state with one damage state.
+``Correlated``
+    FEMA P-58 "Correlated?" flag. ``YES`` (default): all units of the
+    component on the storey are in the same damage state. ``NO``: every unit
+    is damaged independently; the quantity is split into ``ceil(Quantity)``
+    equal blocks, each with its own capacity and damage state. The default
+    suits quantities expressed per unit floor area; ``NO`` requires
+    ``Quantity`` to count the units on the storey.
+``Replacement Cost``
+    Cost of replacing one unit. Default: the largest expected repair cost of
+    any damage outcome of the component (for a ``Simul`` limit state, all of
+    its damage states together).
+
+Simulation
+----------
+In each realisation:
+
+- every unit (or block of units) draws one capacity, held over the whole EDP
+  range: its limit state at an EDP is the number of fragility curves of the
+  component exceeded at that EDP;
+- the damage state reached within a ``MutEx`` or ``Simul`` limit state is
+  drawn once per unit and limit state;
+- the unit repair cost of each damage state is drawn once per component and
+  shared by its units (FEMA P-58 samples one unit cost per damage state and
+  performance group);
+- a correlation tree forces a dependent component to at least a given limit
+  state when its causation component reaches a given limit state. With
+  per-unit sampling, dependent unit ``b`` of ``n_d`` is hosted by causation
+  unit ``floor(b * n_c / n_d)`` of ``n_c``, so each causation unit carries an
+  equal share of the dependent units.
+
+The expected loss is computed exactly from the fragility functions, the
+damage state probabilities and the expected unit costs, so it carries no
+Monte Carlo noise; the dispersion and the percentiles are estimated from the
+realisations.
+
+Not modelled: economies of scale (the unit cost does not depend on the
+number of damaged units) and any cap of the storey loss at the replacement
+cost in a single realisation.
+
+References
+----------
+1. Ramirez and Miranda (2009). Building-Specific Loss Estimation Methods &
+   Tools for Simplified PBEE. John A. Blume EEC, Stanford University.
+2. FEMA (2018). Seismic Performance Assessment of Buildings, FEMA P-58,
+   2nd edition, Volume 1: Methodology. Federal Emergency Management Agency.
+3. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Story loss functions for
+   seismic design and assessment. Earthquake Spectra, 37(4): 2813-2839.
+   https://doi.org/10.1177/87552930211023523
+4. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Development of a
+   Python-Based Storey Loss Function Generator. COMPDYN 2021.
+   https://doi.org/10.7712/120121.8659.18567
+"""
 import math
-import warnings
+import re
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from scipy import stats
-from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field, field_validator
-
-warnings.filterwarnings("ignore")
+from scipy import special
 
 
 # ---------------------------------------------------------------------------
@@ -49,7 +154,22 @@ class component_data_model(BaseModel):
             raise ValueError("Component ID must be a positive integer")
         return v
 
-    @field_validator("Performance_Group", "Component_ID", mode="before")
+    @field_validator("Quantity")
+    @classmethod
+    def validate_quantity(cls, v):
+        if not np.isfinite(v) or v < 0:
+            raise ValueError("Quantity must be a non-negative number")
+        return v
+
+    @field_validator("Damage_States")
+    @classmethod
+    def validate_damage_states(cls, v):
+        if v < 1:
+            raise ValueError("Damage States must be at least 1")
+        return v
+
+    @field_validator("Performance_Group", "Component_ID", "Description",
+                     mode="before")
     @classmethod
     def allow_none(cls, v):
         if v is None or (isinstance(v, float) and np.isnan(v)):
@@ -65,7 +185,7 @@ class correlation_tree_model(BaseModel):
     ID : int
         Unique identifier for the correlation entry (must be positive).
     dependent_on_item : str
-        Name of the item this component depends on.
+        ``'Independent'`` or the ``Component ID`` of the causation component.
     """
 
     ID: int
@@ -78,144 +198,178 @@ class correlation_tree_model(BaseModel):
             raise ValueError("Component ID must be a positive integer")
         return vid
 
-
-class item_base(BaseModel):
-    """Stores a dictionary of arrays for a single item.
-
-    Attributes
-    ----------
-    RootModel : Dict[str, np.ndarray]
-        Mapping of label → array.
-    """
-
-    RootModel: Dict[str, np.ndarray]
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class items_model(BaseModel):
-    """Collection of items keyed by integer ID.
-
-    Attributes
-    ----------
-    RootModel : Dict[int, item_base]
-        Mapping of item ID → :class:`item_base`.
-    """
-
-    RootModel: Dict[int, item_base]
-
-
-class fragility_model(BaseModel):
-    """Holds EDP values and the associated item fragility data.
-
-    Attributes
-    ----------
-    EDP : np.ndarray
-        Engineering Demand Parameter values.
-    ITEMs : items_model
-        Fragility data for all items.
-    """
-
-    EDP: np.ndarray
-    ITEMs: items_model
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class ds_model(BaseModel):
-    """Damage-state arrays nested by item ID and simulation index.
-
-    Attributes
-    ----------
-    RootModel : Dict[int, Dict[int, np.ndarray]]
-        ``{item_id: {simulation_index: damage_state_array}}``.
-    """
-
-    RootModel: Dict[int, Dict[int, np.ndarray]]
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class cost_model(BaseModel):
-    """Cost arrays keyed by component ID.
-
-    Attributes
-    ----------
-    RootModel : Dict[int, np.ndarray]
-        Mapping of component ID → cost array.
-    """
-
-    RootModel: Dict[int, np.ndarray]
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class simulation_model(BaseModel):
-    """Per-simulation repair costs keyed by component ID.
-
-    Attributes
-    ----------
-    RootModel : Dict[int, cost_model]
-        Mapping of component ID → :class:`cost_model`.
-    """
-
-    RootModel: Dict[int, cost_model]
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class loss_model(BaseModel):
-    """Absolute and normalised loss results per component.
-
-    Attributes
-    ----------
-    loss : Dict[int, Dict[Union[int, str], float]]
-        Absolute loss values keyed by component ID and damage state.
-    loss_ratio : Dict[int, Dict[Union[int, str], float]]
-        Normalised loss ratios keyed by component ID and damage state.
-    """
-
-    loss: Dict[int, Dict[Union[int, str], float]]
-    loss_ratio: Dict[int, Dict[Union[int, str], float]]
+    @field_validator("dependent_on_item", mode="before")
+    @classmethod
+    def as_text(cls, v):
+        if isinstance(v, float) and v.is_integer():
+            return str(int(v))
+        return str(v)
 
 
 class slf_model(BaseModel):
-    """Storey Loss Function output record.
+    """Storey Loss Function output record of one performance group.
 
     Attributes
     ----------
     directionality : Optional[int]
         Analysis directionality flag.
-    component_type : str
-        Component type label (e.g., ``'PSD, NS'``).
+    component_type : Optional[str]
+        Component type label (e.g., ``'ns'``).
     storey : Optional[Union[int, List[int]]]
         Storey level(s) covered by this SLF.
     edp : str
         Engineering Demand Parameter label.
     edp_range : List[float]
         EDP values over which the SLF is defined.
-    slf_16th : List[float]
-        Empirical 16th-percentile Storey Loss Function values (loss ratio).
     slf : List[float]
-        Empirical median (50th-percentile) Storey Loss Function values
-        (loss ratio) -- the primary SLF curve.
-    slf_84th : List[float]
-        Empirical 84th-percentile Storey Loss Function values (loss ratio).
+        Expected storey loss ratio (exact): the Storey Loss Function.
+    slf_std : List[float]
+        Standard deviation of the storey loss ratio (Monte Carlo).
+    slf_cov : List[float]
+        ``slf_std / slf`` (0 where ``slf`` is 0).
+    slf_16th, slf_50th, slf_84th : List[float]
+        Empirical 16th/50th/84th percentiles of the storey loss ratio.
+    replacement_cost : float
+        Cost the loss ratio is normalised by.
     """
 
-    directionality: Optional[int]  = Field(alias="Directionality")
-    component_type: str             = Field(alias="Component-type")
+    directionality: Optional[int] = Field(alias="Directionality")
+    component_type: Optional[str] = Field(alias="Component-type")
     storey: Optional[Union[int, List[int]]] = Field(alias="Storey")
     edp: str
     edp_range: List[float]
-    slf_16th: List[float]
     slf: List[float]
+    slf_std: List[float]
+    slf_cov: List[float]
+    slf_16th: List[float]
+    slf_50th: List[float]
     slf_84th: List[float]
+    replacement_cost: float
+
+
+# ---------------------------------------------------------------------------
+# Inventory parsing helpers
+# ---------------------------------------------------------------------------
+
+_DS_FIELDS = ("Median", "Total Dispersion", "Cost", "Cost Dispersion",
+              "Best Fit")
+_YES = {"yes", "y", "true", "1", "1.0"}
+_NO = {"no", "n", "false", "0", "0.0"}
+_UNSET = {"", "nan", "none", "independent", "undamaged"}
+
+
+def _blank(value) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and math.isnan(value):
+        return True
+    return isinstance(value, str) and not value.strip()
+
+
+def _split_top_level(text: str) -> List[str]:
+    """Split ``text`` at the commas that are not inside parentheses."""
+    items, depth, current = [], 0, ""
+    for ch in text:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            items.append(current)
+            current = ""
+        else:
+            current += ch
+    items.append(current)
+    return items
+
+
+def _parse_hierarchy(text, n_ds: int, cid: int) -> List[tuple]:
+    """Limit states of a FEMA P-58 damage state hierarchy.
+
+    Returns ``[(kind, [damage states]), ...]`` in sequence order, with
+    ``kind`` one of ``'single'``, ``'mutex'``, ``'simul'`` and damage states
+    numbered from 1.
+    """
+    if _blank(text):
+        return [("single", [k]) for k in range(1, n_ds + 1)]
+    s = re.sub(r"\s+", "", str(text)).lower()
+    m = re.fullmatch(r"seq\((.*)\)", s)
+    body = m.group(1) if m else s
+    limit_states = []
+    for item in _split_top_level(body):
+        single = re.fullmatch(r"ds(\d+)", item)
+        group = re.fullmatch(r"(mutex|simul)\(((?:ds\d+,)*ds\d+)\)", item)
+        if single:
+            limit_states.append(("single", [int(single.group(1))]))
+        elif group:
+            ds = [int(d[2:]) for d in group.group(2).split(",")]
+            kind = group.group(1) if len(ds) > 1 else "single"
+            limit_states.append((kind, ds))
+        else:
+            raise ValueError(
+                f"Component {cid}: cannot read DS Hierarchy {text!r} "
+                "(expected e.g. 'Seq(DS1,MutEx(DS2,DS3))')."
+            )
+    listed = [d for _, ds in limit_states for d in ds]
+    if listed != list(range(1, n_ds + 1)):
+        raise ValueError(
+            f"Component {cid}: DS Hierarchy {text!r} must list DS1..DS{n_ds} "
+            "once each, in order."
+        )
+    return limit_states
+
+
+def _flag(value, cid: int) -> bool:
+    """``Correlated`` column value as a boolean (blank means correlated)."""
+    if _blank(value):
+        return True
+    text = str(value).strip().lower()
+    if text in _YES:
+        return True
+    if text in _NO:
+        return False
+    raise ValueError(
+        f"Component {cid}: Correlated must be YES or NO, got {value!r}."
+    )
+
+
+def _state_index(value, cid: int, column: str) -> int:
+    """Limit state named in a correlation tree cell (0 when unset)."""
+    if _blank(value) or str(value).strip().lower() in _UNSET:
+        return 0
+    m = re.fullmatch(r"(?:ds|ls)(\d+)", str(value).strip().lower())
+    if not m:
+        raise ValueError(
+            f"Correlation tree row {cid}, column {column}: expected "
+            f"'Independent' or 'DSk', got {value!r}."
+        )
+    return int(m.group(1))
+
+
+def _mean_unit_cost(theta0, theta1, family):
+    """Mean of a unit repair cost: lognormal (median, beta) or normal
+    (mean, CoV) truncated at zero."""
+    if theta0 <= 0:
+        return 0.0
+    if family == "lognormal":
+        return theta0 * math.exp(0.5 * theta1 ** 2)
+    if theta1 <= 0:
+        return theta0
+    a = -1.0 / theta1
+    hazard = math.exp(-0.5 * a * a) / math.sqrt(2 * math.pi) / special.ndtr(-a)
+    return theta0 * (1.0 + theta1 * hazard)
+
+
+def _sample_unit_cost(theta0, theta1, family, u):
+    """Unit repair costs at probability levels ``u`` (inverse transform)."""
+    if theta0 <= 0:
+        return np.zeros_like(u)
+    if family == "lognormal":
+        return theta0 * np.exp(theta1 * special.ndtri(u))
+    if theta1 <= 0:
+        return np.full_like(u, theta0)
+    p0 = special.ndtr(-1.0 / theta1)
+    return theta0 * (1.0 + theta1 * special.ndtri(p0 + u * (1.0 - p0)))
 
 
 # ---------------------------------------------------------------------------
@@ -225,17 +379,24 @@ class slf_model(BaseModel):
 class slfgenerator:
     """Storey Loss Function (SLF) generator for storey-based loss assessment.
 
-    Automates the generation of Storey Loss Functions using fragility,
-    consequence, and quantity data via a probabilistic Monte-Carlo approach.
+    Builds Storey Loss Functions from a FEMA P-58 style component inventory:
+    the expected storey loss ratio is computed in closed form, its
+    dispersion and percentiles by Monte Carlo simulation with independent
+    component (and, where not correlated, unit) capacities, explicit
+    mutually exclusive and simultaneous damage states and optional
+    correlation trees. See the module documentation for the inventory
+    format and the simulation.
 
     References
     ----------
     1. Ramirez and Miranda (2009). *Building-Specific Loss Estimation Methods
        & Tools for Simplified PBEE*. John A. Blume EEC, Stanford University.
-    2. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Story loss functions
+    2. FEMA (2018). *Seismic Performance Assessment of Buildings*, FEMA P-58,
+       2nd edition.
+    3. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Story loss functions
        for seismic design and assessment. *Earthquake Spectra*, 37(4):
        2813–2839. https://doi.org/10.1177/87552930211023523
-    3. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Development of a
+    4. Shahnazaryan D, O'Reilly GJ, Monteiro R. (2021). Development of a
        Python-Based Storey Loss Function Generator. *COMPDYN 2021*.
        https://doi.org/10.7712/120121.8659.18567
 
@@ -246,166 +407,201 @@ class slfgenerator:
     """
 
     def __init__(self,
-                 component_data: component_data_model,
+                 component_data: pd.DataFrame,
                  edp: str,
-                 correlation_tree: correlation_tree_model = None,
-                 typology: List[str] = None,
+                 correlation_tree: pd.DataFrame = None,
+                 typology: Union[List[str], Dict[str, str]] = None,
                  edp_range: Union[List[float], np.ndarray] = None,
                  edp_bin: float = None,
                  grouping_flag: bool = True,
                  conversion: float = 1.0,
-                 realizations: int = 20,
-                 replacement_cost: float = 1.0,
+                 realizations: int = 1000,
+                 replacement_cost: float = None,
                  storey: Union[int, List[int]] = None,
-                 directionality: int = None):
+                 directionality: int = None,
+                 seed: Union[int, np.random.Generator] = None):
         """Initialise the SLF generator.
 
         Parameters
         ----------
         component_data : pandas.DataFrame
-            Inventory of component data (loaded from CSV).
+            Component inventory (see the module documentation for the
+            columns). Not modified.
         edp : str
-            Engineering Demand Parameter; ``'PSD'`` (Peak Storey Drift) or
-            ``'PFA'`` (Peak Floor Acceleration).
+            Engineering Demand Parameter; ``'PSD'`` or ``'IDR'`` (peak storey
+            drift) or ``'PFA'`` (peak floor acceleration).
         correlation_tree : pandas.DataFrame, optional
-            Correlation tree defining component dependencies. Default ``None``.
-        typology : List[str], optional
-            Component typologies to include (``'ns'`` or ``'s'``).
-            Default ``None``.
+            Correlation tree: columns ``ID``, ``DEPENDENT ON ITEM`` and
+            ``DS0``..``DSn``. For a dependent component, column ``DSk`` gives
+            the limit state (``'DSj'``) the component is forced to at least
+            when its causation component is in limit state ``k``
+            (``'Independent'``: no forcing). For components whose damage
+            states are all sequential (the default) limit state ``k`` is
+            damage state ``k``. Default ``None`` (independent components).
+        typology : list of str or dict, optional
+            Component-type label written to the output records. Default
+            ``None``.
         edp_range : array-like, optional
-            Custom EDP value range. If ``None``, defaults are used.
+            EDP values at which the SLF is evaluated (non-negative; zero is
+            allowed). Default: 0 to 0.5 by ``edp_bin`` for drift, 0 to 5 g by
+            ``edp_bin`` for acceleration. The array passed is not modified.
         edp_bin : float, optional
-            EDP bin size. If ``None``, a type-specific default is used.
+            Step of the default EDP range. Default 0.001 (drift) or 0.05 g
+            (acceleration).
         grouping_flag : bool, optional
-            Whether to group components by performance group. Default ``True``.
+            Whether to group components by ``(EDP, Typology)`` or by explicit
+            ``Performance Group``. If ``False`` all components form one group.
+            Default ``True``.
         conversion : float, optional
-            Cost conversion factor. Default ``1.0``.
+            Factor applied to all repair and replacement costs of the
+            inventory (e.g. a currency conversion). Default ``1.0``.
         realizations : int, optional
-            Number of Monte Carlo realizations. Default ``20``.
+            Number of Monte Carlo realisations. Default ``1000``.
         replacement_cost : float, optional
-            Normalising replacement cost. Default ``1.0``.
+            Cost the loss of every group is divided by, in converted units.
+            Default ``None``: each group is normalised by the replacement
+            cost of its own components (``Quantity`` times the unit
+            replacement cost, summed), so that the SLF is a loss ratio.
         storey : int or List[int], optional
-            Storey level(s) to include. Default ``None``.
+            Storey level(s), copied to the output. Default ``None``.
         directionality : int, optional
-            Analysis directionality flag. Default ``None``.
+            Directionality flag, copied to the output. Default ``None``.
+        seed : int or numpy.random.Generator, optional
+            Seed of the Monte Carlo simulation. The same seed and inputs give
+            the same realisations. Default ``None`` (unseeded).
+
+        Raises
+        ------
+        ValueError
+            On an invalid EDP, EDP range, inventory, correlation tree or
+            setting.
         """
         self.edp = edp.lower()
         self.typology = typology
         self.edp_bin = edp_bin
-        self.edp_range = edp_range
         self.grouping_flag = grouping_flag
-        self.conversion = conversion
-        self.realizations = realizations
+        self.conversion = float(conversion)
+        self.realizations = int(realizations)
         self.replacement_cost = replacement_cost
         self.storey = storey
         self.directionality = directionality
-        self.correlation_tree = correlation_tree
+        self.seed = seed
 
-        # Normalise all string entries to lowercase
-        self.component_data = component_data.map(
-            lambda s: s.lower() if isinstance(s, str) else s
-        )
+        if self.realizations < 2:
+            raise ValueError("realizations must be at least 2.")
+        if not (np.isfinite(self.conversion) and self.conversion > 0):
+            raise ValueError("conversion must be a positive number.")
+        if replacement_cost is not None and not (
+                np.isfinite(replacement_cost) and replacement_cost > 0):
+            raise ValueError(
+                "replacement_cost must be a positive number or None."
+            )
 
-        # Set up EDP range and parse component inventory
-        self._define_edp_range()
+        self.component_data = component_data.copy()
+        for column in ("EDP", "Typology"):
+            if column in self.component_data:
+                self.component_data[column] = self.component_data[column].map(
+                    lambda s: s.lower() if isinstance(s, str) else s
+                )
+
+        self.edp_range = self._define_edp_range(edp_range)
         self._get_component_data()
 
-        # Process optional correlation tree
-        if self.correlation_tree is not None:
-            self.correlation_tree = self.correlation_tree.map(
-                lambda s: s.lower() if isinstance(s, str) else s
-            )
-            self._get_correlation_tree()
+        self.correlation_tree = correlation_tree
+        self.matrix = None
+        self.correlation_item_ids = None
+        self.causation = {}
+        self._get_correlation_tree()
 
-        # Group components by performance group if requested
-        if self.grouping_flag:
-            self._group_components()
+        self._group_components()
 
     # -----------------------------------------------------------------------
-    # Private helpers
+    # Private helpers: inputs
     # -----------------------------------------------------------------------
 
-    def _define_edp_range(self):
-        """Set up the EDP discretisation range.
+    def _define_edp_range(self, edp_range) -> np.ndarray:
+        """EDP values at which the SLF is evaluated.
 
         Raises
         ------
         ValueError
-            If ``edp`` is not ``'psd'``, ``'idr'``, or ``'pfa'``.
+            If ``edp`` is not ``'psd'``, ``'idr'`` or ``'pfa'``, or the range
+            is empty, not one-dimensional, negative or not finite.
         """
         edp_defaults = {
-            "idr": (0.1 / 100, 0, 0.5),
-            "psd": (0.1 / 100, 0, 0.5),
-            "pfa": (0.05,      0, 5.0),
+            "idr": (0.1 / 100, 0.5),
+            "psd": (0.1 / 100, 0.5),
+            "pfa": (0.05, 5.0),
         }
-
         if self.edp not in edp_defaults:
             raise ValueError(
                 "Incorrect EDP provided — must be 'psd', 'idr', or 'pfa'."
             )
-
-        default_bin, range_start, range_end = edp_defaults[self.edp]
+        default_bin, range_end = edp_defaults[self.edp]
         if self.edp_bin is None:
             self.edp_bin = default_bin
+        if edp_range is None:
+            n_bins = int(round(range_end / self.edp_bin))
+            return np.linspace(0.0, n_bins * self.edp_bin, n_bins + 1)
 
-        if self.edp_range is None:
-            self.edp_range = np.arange(
-                range_start, range_end + self.edp_bin, self.edp_bin
+        values = np.array(edp_range, dtype=float)       # a copy
+        if values.ndim != 1 or values.size == 0:
+            raise ValueError("edp_range must be a non-empty 1-D array.")
+        if not np.all(np.isfinite(values)) or np.any(values < 0):
+            raise ValueError("edp_range must be finite and non-negative.")
+        return values
+
+    def _ds_columns(self) -> int:
+        """Number of ``DSk`` column sets, checking that each is complete."""
+        columns = set(self.component_data.columns)
+        ks = sorted(int(m.group(1)) for c in columns
+                    if (m := re.fullmatch(r"DS(\d+), Median", c)))
+        if not ks or ks != list(range(1, len(ks) + 1)):
+            raise ValueError(
+                "The inventory needs 'DS1, Median', 'DS2, Median', ... "
+                "columns numbered from 1."
             )
-
-        self.edp_range = np.asarray(self.edp_range, dtype=float)
-        self.edp_range[0] = 1e-20
+        for k in ks:
+            missing = [f"DS{k}, {f}" for f in _DS_FIELDS
+                       if f"DS{k}, {f}" not in columns]
+            if missing:
+                raise ValueError(
+                    "Column counts must be equal for 'Median', "
+                    "'Total Dispersion', 'Cost', 'Cost Dispersion', and "
+                    f"'Best Fit': missing {missing}."
+                )
+        return len(ks)
 
     def _get_component_data(self):
-        """Parse and validate the component inventory DataFrame.
+        """Parse and validate the component inventory.
 
-        Missing ``Component ID`` values are filled with sequential integers;
-        missing ``Description`` values default to ``'B'``; missing values in
-        all other columns (except ``Performance Group`` and ``Typology``) are
-        set to ``0``.
-
-        Builds ``self.id_to_pos``, the sole mapping from a component's real
-        ``Component ID`` to its row position in ``self.component_data``.
-        Every other method identifies components by their actual ID (not
-        row position) and consults this map only where it needs to index
-        into a positional array or ``.iloc``.
+        Missing ``Component ID`` values are filled with ``1..n`` by row
+        position. Builds ``self.id_to_pos`` (``Component ID`` -> row
+        position) and ``self.components`` (``Component ID`` -> parsed
+        component), which hold, per component, its limit states (fragility
+        median and dispersion, damage state outcomes and their
+        probabilities), unit repair-cost distributions, unit replacement
+        cost and blocks of units sampled independently.
 
         Raises
         ------
         ValueError
-            If, after auto-assigning missing IDs, ``Component ID`` contains
-            duplicate values.
+            On duplicate IDs, missing columns or invalid values.
         """
-        self._validate_component_data_schema()
+        df = self.component_data
+        n_cols = self._ds_columns()
 
-        # Fill missing 'Best Fit' columns with 'normal'
-        best_fit_cols = [
-            col for col in self.component_data if col.endswith("Best Fit")
-        ]
-        self.component_data[best_fit_cols] = (
-            self.component_data[best_fit_cols].fillna("normal")
-        )
+        id_set = set()
+        for row in df.to_dict(orient="records"):
+            model = component_data_model.model_validate(row)
+            if model.Component_ID is not None and model.Component_ID in id_set:
+                raise ValueError(f"Duplicate Component ID: {model.Component_ID}")
+            id_set.add(model.Component_ID)
 
-        # Auto-assign missing component IDs
-        self.component_data["Component ID"] = (
-            self.component_data["Component ID"].fillna(
-                pd.Series(
-                    np.arange(1, len(self.component_data) + 1), dtype="int"
-                )
-            )
+        df["Component ID"] = df["Component ID"].fillna(
+            pd.Series(np.arange(1, len(df) + 1), index=df.index)
         )
-        self.component_data["Description"] = (
-            self.component_data["Description"].fillna("B")
-        )
-
-        # Fill remaining columns (excluding categorical ones) with 0
-        exclude_cols = ["Performance Group", "Typology"]
-        cols_to_fill = self.component_data.columns.difference(exclude_cols)
-        self.component_data[cols_to_fill] = (
-            self.component_data[cols_to_fill].fillna(0)
-        )
-
-        ids = self.component_data["Component ID"].astype(int).tolist()
+        ids = df["Component ID"].astype(int).tolist()
         if len(set(ids)) != len(ids):
             dupes = sorted({cid for cid in ids if ids.count(cid) > 1})
             raise ValueError(
@@ -414,180 +610,190 @@ class slfgenerator:
                 "ID values for every row, or leave them all blank to have "
                 "1..n auto-assigned."
             )
+        df["Component ID"] = ids
         self.id_to_pos = {cid: pos for pos, cid in enumerate(ids)}
 
-    def _group_components(self):
-        """Partition components into performance groups.
-
-        Groups are formed by ``(EDP, Typology)`` pairs, giving three standard
-        buckets: ``'PSD, S'``, ``'PSD, NS'``, and ``'PFA, NS'``.  If explicit
-        ``Performance Group`` values are present they override this default
-        grouping.
-        """
-        self.component_data["Performance Group"] = self.component_data["Performance Group"].fillna(-1)
-        self.component_data["Typology"] = self.component_data["Typology"].fillna("-1")
-
-        if not self.grouping_flag:
-            key = self.component_data["EDP"].iloc[0]
-            self.component_groups = {key: self.component_data}
-            return
-
-        edp_groups = self.component_data.groupby(["EDP", "Typology"])
-
-        psd_s = (
-            edp_groups.get_group(("psd", "s"))
-            if ("psd", "s") in edp_groups.groups else None
-        )
-        psd_ns = (
-            edp_groups.get_group(("psd", "ns"))
-            if ("psd", "ns") in edp_groups.groups else None
-        )
-        pfa_ns = (
-            edp_groups.get_group(("pfa", "ns"))
-            if ("pfa", "ns") in edp_groups.groups else None
-        )
-
-        self.component_groups = {
-            k: v for k, v in {
-                "PSD, S":  psd_s,
-                "PSD, NS": psd_ns,
-                "PFA, NS": pfa_ns,
-            }.items() if v is not None
-        }
-
-        # Override with explicit performance groups if more than one exists
-        if self.component_data["Performance Group"].nunique() > 1:
-            self.component_groups = {
-                group: df
-                for group, df in self.component_data.groupby("Performance Group")
-            }
-
-    def _get_correlation_tree(self):
-        """Build the internal correlation matrix from the correlation tree.
-
-        The tree is joined to ``component_data`` by ``Component ID`` (not
-        row order), via ``correlation_tree.set_index('ID').loc[component_ids]``
-        -- so the two DataFrames may list components in different orders.
-
-        The matrix has shape
-        ``(n_components, n_damage_states + 1)`` where the first column stores
-        the causation component ID and the remaining columns store the minimum
-        damage state required on the causation component before the dependent
-        component sustains damage. Row ``i`` of the matrix corresponds to
-        the component whose ID is ``self.correlation_item_ids[i]``, which is
-        also persisted for use by :meth:`validate_ds_dependence`.
-
-        Notes
-        -----
-        Both the component inventory and the correlation tree are matched by
-        ``Component ID``/``ID`` -- every ``Component ID`` in the inventory
-        must have a matching row in the tree (enforced by
-        :meth:`_validate_correlation_tree_schema`, which also checks that no
-        minimum DS assigned in the tree exceeds the DS range actually
-        defined for that component).
-        """
-        damage_states = list(self.component_data["Damage States"])
-        component_ids = self.component_data["Component ID"].astype(int).tolist()
-
-        self._validate_correlation_tree_schema(damage_states, component_ids)
-
-        tree_by_id = self.correlation_tree.set_index("ID")
-        correlation_data = tree_by_id.loc[component_ids].reset_index().values
-        # Row i now corresponds to component_data row i by Component ID,
-        # regardless of the correlation tree's own row order.
-
-        item_ids = correlation_data[:, 0]
-        self.correlation_item_ids = item_ids.astype(int)
-        correlation_values = np.delete(correlation_data, 0, axis=1)
-        self.matrix = np.full(correlation_values.shape, np.nan, dtype=float)
-
-        for i, row in enumerate(correlation_values):
-            for j, value in enumerate(row):
-                if j == 0:
-                    if isinstance(value, str) and value.lower() == "independent":
-                        self.matrix[i, j] = item_ids[i]
-                    elif not item_ids[i] or math.isnan(item_ids[i]):
-                        self.matrix[i, j] = np.nan
-                    else:
-                        self.matrix[i, j] = value
-                else:
-                    if math.isnan(self.matrix[i, j - 1]):
-                        self.matrix[i, j] = np.nan
-                    elif isinstance(value, str) and value.lower() in {
-                        "independent", "undamaged"
-                    }:
-                        self.matrix[i, j] = 0
-                    else:
-                        self.matrix[i, j] = int(value[-1])
-
-    def _validate_component_data_schema(self):
-        """Validate required columns and their counts in the component data.
-
-        Raises
-        ------
-        ValueError
-            If duplicate ``Component ID`` values are found, or if the counts of
-            ``Median``, ``Total Dispersion``, ``Cost``, ``Cost Dispersion``,
-            and ``Best Fit`` columns are not equal.
-        """
-        columns = list(self.component_data.columns)
-        component_data = self.component_data.to_dict(orient="records")
-
-        id_set = set()
-        for row in component_data:
-            model = component_data_model.model_validate(row)
-            if model.Component_ID is not None and model.Component_ID in id_set:
-                raise ValueError(f"Duplicate Component ID: {model.Component_ID}")
-            id_set.add(model.Component_ID)
-
-        counts = {
-            "Median": 0,
-            "Total Dispersion": 0,
-            "Cost": 0,
-            "Cost Dispersion": 0,
-            "Best Fit": 0,
-        }
-        for col in columns:
-            for key in counts:
-                if col.endswith(key):
-                    counts[key] += 1
-
-        expected = counts["Median"]
-        for key, count in counts.items():
-            if count != expected:
+        self.components = {}
+        for pos, (_, row) in enumerate(df.iterrows()):
+            cid = ids[pos]
+            n_ds = int(row["Damage States"])
+            if n_ds > n_cols:
                 raise ValueError(
-                    "Column counts must be equal for 'Median', "
-                    "'Total Dispersion', 'Cost', 'Cost Dispersion', "
-                    "and 'Best Fit'."
+                    f"Component {cid}: {n_ds} damage states but only "
+                    f"{n_cols} 'DSk' column sets."
+                )
+            self.components[cid] = self._parse_component(cid, pos, row, n_ds)
+
+    def _parse_component(self, cid, pos, row, n_ds) -> dict:
+        """Limit states, costs, replacement cost and blocks of one row."""
+        def value(k, field):
+            return row.get(f"DS{k}, {field}")
+
+        def number(k, field, default=None):
+            v = value(k, field)
+            if _blank(v):
+                return default
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                raise ValueError(
+                    f"Component {cid}: 'DS{k}, {field}' is not a number: {v!r}."
+                ) from None
+
+        # --- unit repair costs, per damage state
+        theta0, theta1, family, mean_cost = [], [], [], []
+        for k in range(1, n_ds + 1):
+            t0, t1 = number(k, "Cost", 0.0), number(k, "Cost Dispersion", 0.0)
+            fit = value(k, "Best Fit")
+            fit = "normal" if _blank(fit) else str(fit).strip().lower()
+            if fit not in ("normal", "lognormal"):
+                raise ValueError(
+                    f"Component {cid}: 'DS{k}, Best Fit' must be Normal or "
+                    f"Lognormal, got {value(k, 'Best Fit')!r}."
+                )
+            if not (np.isfinite(t0) and t0 >= 0 and np.isfinite(t1) and t1 >= 0):
+                raise ValueError(
+                    f"Component {cid}: DS{k} cost {t0} and cost dispersion "
+                    f"{t1} must be finite and non-negative."
+                )
+            t0 *= self.conversion
+            theta0.append(t0)
+            theta1.append(t1)
+            family.append(fit)
+            mean_cost.append(_mean_unit_cost(t0, t1, fit))
+        mean_cost = np.array(mean_cost)
+
+        # --- limit states: fragility and damage state outcomes
+        limit_states = []
+        hierarchy = row.get("DS Hierarchy")
+        for kind, ds in _parse_hierarchy(hierarchy, n_ds, cid):
+            first = ds[0]
+            median, beta = number(first, "Median"), number(first, "Total Dispersion")
+            if not (median and median > 0 and np.isfinite(median)
+                    and beta and beta > 0 and np.isfinite(beta)):
+                raise ValueError(
+                    f"Component {cid}: DS{first} needs a positive median and "
+                    f"total dispersion, got {median} and {beta}."
+                )
+            for d in ds[1:]:
+                for field, ref in (("Median", median), ("Total Dispersion", beta)):
+                    other = number(d, field)
+                    if other is not None and not np.isclose(other, ref, rtol=1e-6):
+                        raise ValueError(
+                            f"Component {cid}: DS{d} shares the limit state of "
+                            f"DS{first} but has a different {field.lower()} "
+                            f"({other} vs {ref})."
+                        )
+            idx = [d - 1 for d in ds]
+            if kind == "single":
+                outcomes, p_outcome = [tuple(idx)], np.ones(1)
+            else:
+                p = np.array([number(d, "Probability", np.nan) for d in ds])
+                if kind == "mutex":
+                    if (not np.all(np.isfinite(p)) or np.any(p < 0)
+                            or not np.isclose(p.sum(), 1.0, atol=1e-3)):
+                        raise ValueError(
+                            f"Component {cid}: the probabilities of mutually "
+                            f"exclusive DS{ds} must be non-negative and sum to "
+                            f"1, got {p.tolist()}."
+                        )
+                    outcomes, p_outcome = [(i,) for i in idx], p / p.sum()
+                else:
+                    if not np.all(np.isfinite(p)) or np.any(p <= 0) or np.any(p > 1):
+                        raise ValueError(
+                            f"Component {cid}: the probabilities of "
+                            f"simultaneous DS{ds} must be in (0, 1], got "
+                            f"{p.tolist()}."
+                        )
+                    outcomes, weights = [], []
+                    for mask in range(1, 2 ** len(ds)):
+                        bits = [(mask >> j) & 1 for j in range(len(ds))]
+                        outcomes.append(tuple(i for i, b in zip(idx, bits) if b))
+                        weights.append(np.prod([pj if b else 1.0 - pj
+                                                for pj, b in zip(p, bits)]))
+                    p_outcome = np.array(weights) / (1.0 - np.prod(1.0 - p))
+            outcome_cost = np.array([mean_cost[list(o)].sum() for o in outcomes])
+            limit_states.append({
+                "kind": kind, "damage_states": ds, "median": median,
+                "beta": beta, "outcomes": outcomes, "p_outcome": p_outcome,
+                "cum_p": np.cumsum(p_outcome)[:-1],
+                "outcome_mean_cost": outcome_cost,
+                "mean_cost": float(p_outcome @ outcome_cost),
+            })
+        medians = [ls["median"] for ls in limit_states]
+        if np.any(np.diff(medians) < 0):
+            raise ValueError(
+                f"Component {cid}: limit state medians must not decrease, "
+                f"got {medians}."
+            )
+
+        # --- replacement cost per unit (converted)
+        top = max(float(ls["outcome_mean_cost"].max()) for ls in limit_states)
+        given = row.get("Replacement Cost")
+        if _blank(given):
+            replacement = top
+        else:
+            replacement = float(given) * self.conversion
+            if not (np.isfinite(replacement) and replacement >= 0):
+                raise ValueError(
+                    f"Component {cid}: Replacement Cost must be non-negative."
                 )
 
-    def _validate_correlation_tree_schema(self, damage_states, component_ids):
-        """Validate the correlation tree against the component inventory.
+        # --- blocks of units sampled independently
+        quantity = float(row["Quantity"])
+        correlated = _flag(row.get("Correlated"), cid)
+        blocks = 1 if correlated else max(1, int(math.ceil(quantity - 1e-9)))
+        return {
+            "id": cid, "position": pos, "quantity": quantity,
+            "damage_states": n_ds, "limit_states": limit_states,
+            "n_ls": len(limit_states), "cost_theta0": theta0,
+            "cost_theta1": theta1, "cost_family": family,
+            "mean_cost": mean_cost, "replacement": replacement,
+            "correlated": correlated, "blocks": blocks,
+            "block_quantity": quantity / blocks,
+        }
 
-        Parameters
-        ----------
-        damage_states : list of int
-            Number of damage states for each component, in the same row
-            order as ``component_ids``.
-        component_ids : list of int
-            ``component_data['Component ID']`` values, in row order.
+    def _get_correlation_tree(self):
+        """Read and validate the correlation tree.
+
+        The tree is joined to the inventory by ``Component ID``, so the two
+        may list components in different orders. Sets:
+
+        - ``self.causation``: dependent ID -> (causation ID, ``lut``), where
+          ``lut[k]`` is the limit state the dependent is forced to at least
+          when the causation component is in limit state ``k``;
+        - ``self.matrix``: one row per component in inventory order; column
+          0 is the causation ID (the component's own ID if independent),
+          column ``k + 1`` the forced limit state for causation limit state
+          ``k``;
+        - ``self.correlation_item_ids``: the IDs of the matrix rows;
+        - ``self.order``: component IDs with every causation component
+          before its dependents.
 
         Raises
         ------
         ValueError
-            On duplicate IDs, insufficient columns, DS range violations, or
-            a component inventory ID missing from the correlation tree.
+            On duplicate or missing IDs, unknown causation components,
+            cycles, a forced limit state beyond the dependent's limit
+            states, a forcing from an undamaged causation component, or a
+            forcing that decreases as the causation component gets more
+            damaged. Columns beyond the causation component's limit states
+            are ignored.
         """
-        corr_dict = self.correlation_tree.to_dict(orient="records")
+        ids = list(self.components)
+        self.order = ids
+        if self.correlation_tree is None:
+            return
+        tree = self.correlation_tree.copy()
+        tree.columns = [str(c).strip() for c in tree.columns]
 
         id_set = set()
-        for row in corr_dict:
+        for row in tree.to_dict(orient="records"):
             model = correlation_tree_model.model_validate(row)
             if model.ID in id_set:
                 raise ValueError(f"Duplicate ITEM: {model.ID}")
             id_set.add(model.ID)
-
-        missing = [cid for cid in component_ids if cid not in id_set]
+        missing = [cid for cid in ids if cid not in id_set]
         if missing:
             raise ValueError(
                 "The correlation tree is missing a row for Component "
@@ -596,340 +802,448 @@ class slfgenerator:
                 "'Independent' if it has no forced dependency)."
             )
 
-        if len(self.correlation_tree.keys()) < max(damage_states) + 3:
+        ds_cols = sorted((int(m.group(1)), c) for c in tree.columns
+                         if (m := re.fullmatch(r"DS(\d+)", c, flags=re.I)))
+        n_cols = len(ds_cols)
+        if [k for k, _ in ds_cols] != list(range(n_cols)):
+            raise ValueError(
+                "The correlation tree needs columns DS0, DS1, ... numbered "
+                "from 0."
+            )
+        max_ls = max(c["n_ls"] for c in self.components.values())
+        if n_cols < max_ls + 1:
             raise ValueError(
                 "Unexpected (fewer) number of features in the correlations "
-                "DataFrame."
+                f"DataFrame: DS0..DS{max_ls} are needed."
             )
 
-        tree_by_id = self.correlation_tree.set_index("ID")
-        for cid, n_ds in zip(component_ids, damage_states):
+        tree["ID"] = tree["ID"].astype(int)
+        tree_by_id = tree.set_index("ID")
+        self.matrix = np.zeros((len(ids), n_cols + 1))
+        self.correlation_item_ids = np.array(ids, dtype=int)
+        for i, cid in enumerate(ids):
             row = tree_by_id.loc[cid]
-            for feature in tree_by_id.columns:
-                if str(row[feature]) == f"DS{n_ds + 1}":
+            dep = str(row["DEPENDENT ON ITEM"]).strip()
+            if dep.lower() in _UNSET:
+                self.matrix[i, 0] = cid
+                for k, column in ds_cols:
+                    if _state_index(row[column], cid, column):
+                        raise ValueError(
+                            f"Component {cid} is independent but its "
+                            f"correlation tree column {column} forces a "
+                            "damage state."
+                        )
+                continue
+            try:
+                cause = int(float(dep))
+            except ValueError:
+                raise ValueError(
+                    f"Component {cid}: DEPENDENT ON ITEM must be "
+                    f"'Independent' or a Component ID, got {dep!r}."
+                ) from None
+            if cause not in self.components or cause == cid:
+                raise ValueError(
+                    f"Component {cid}: causation component {cause} is not "
+                    "another component of the inventory."
+                )
+            n_cause = self.components[cause]["n_ls"]
+            n_own = self.components[cid]["n_ls"]
+            lut = np.zeros(n_cause + 1, dtype=np.int8)
+            for k, column in ds_cols:
+                forced = _state_index(row[column], cid, column)
+                if forced > n_own:
                     raise ValueError(
                         "MIN DS in the correlation tree must not exceed the "
-                        "possible DS defined for the element."
+                        f"possible DS defined for the element: component "
+                        f"{cid} has {n_own} limit states, column {column} "
+                        f"forces DS{forced}."
                     )
+                if k > n_cause:
+                    continue        # a state the causation never reaches
+                lut[k] = forced
+            if lut[0] != 0:
+                raise ValueError(
+                    f"Component {cid}: an undamaged causation component "
+                    "(DS0) cannot force damage."
+                )
+            if np.any(np.diff(lut) < 0):
+                raise ValueError(
+                    f"Component {cid}: the forced damage state must not "
+                    "decrease as the causation component gets more damaged."
+                )
+            self.causation[cid] = (cause, lut)
+            self.matrix[i, 0] = cause
+            self.matrix[i, 1:n_cause + 2] = lut
 
-    # -----------------------------------------------------------------------
-    # Public methods
-    # -----------------------------------------------------------------------
+        # causation components before their dependents; cycles are invalid
+        order, placed = [], set()
+        while len(order) < len(ids):
+            ready = [cid for cid in ids if cid not in placed and (
+                cid not in self.causation or self.causation[cid][0] in placed)]
+            if not ready:
+                cycle = sorted(set(ids) - placed)
+                raise ValueError(
+                    f"The correlation tree has a cycle among components {cycle}."
+                )
+            order.extend(ready)
+            placed.update(ready)
+        self.order = order
 
-    def fragility_function(self) -> tuple:
-        """Derive lognormal fragility functions for all components.
+    def _group_components(self):
+        """Partition components into performance groups.
 
-        Returns
-        -------
-        fragilities : dict
-            Keys ``'EDP'`` (np.ndarray) and ``'IDs'`` (nested dict mapping
-            Component ID → DS label → exceedance probability array).
-        means_cost : np.ndarray
-            Shape ``(n_components, n_ds)`` — mean repair costs per DS.
-        covs_cost : np.ndarray
-            Shape ``(n_components, n_ds)`` — cost CoV per DS.
+        Groups are formed by ``(EDP, Typology)`` pairs, giving up to three
+        buckets: ``'PSD, S'``, ``'PSD, NS'`` and ``'PFA, NS'``. If explicit
+        ``Performance Group`` values are present (more than one) they
+        override this grouping. With ``grouping_flag=False`` all components
+        form one group, keyed by the EDP of the first row.
         """
-        n_ds = self.component_data.columns.str.endswith("Median").sum()
+        data = self.component_data
+        if "Performance Group" not in data:
+            data["Performance Group"] = -1
+        data["Performance Group"] = data["Performance Group"].fillna(-1)
+        data["Typology"] = data["Typology"].fillna("-1")
 
-        data = self.component_data.select_dtypes(exclude=["object"]).drop(
-            labels=["Component ID", "Performance Group", "Quantity",
-                    "Damage States"],
-            axis=1,
-        ).values
-        component_ids = self.component_data["Component ID"].astype(int).to_numpy()
+        if not self.grouping_flag:
+            self.component_groups = {data["EDP"].iloc[0]: data}
+            return
 
-        num_components = len(data)
-        means_fr  = data[:, :n_ds]
-        covs_fr   = data[:, n_ds:2 * n_ds]
-        means_cost = data[:, 2 * n_ds:3 * n_ds] * self.conversion
-        covs_cost  = data[:, 3 * n_ds:4 * n_ds]
-
-        fragilities = {"EDP": self.edp_range, "IDs": {}}
-
-        for pos in range(num_components):
-            cid = int(component_ids[pos])
-            fragilities["IDs"][cid] = {}
-            for ds in range(n_ds):
-                mean_val = means_fr[pos, ds]
-                cov_val  = covs_fr[pos, ds]
-
-                if mean_val == 0:
-                    fragilities["IDs"][cid][f"DS{ds + 1}"] = np.zeros(
-                        len(self.edp_range)
-                    )
-                else:
-                    log_std  = np.sqrt(np.log(cov_val ** 2 + 1))
-                    log_mean = np.exp(np.log(mean_val) - 0.5 * log_std ** 2)
-                    curve = stats.norm.cdf(
-                        np.log(self.edp_range / log_mean) / log_std
-                    )
-                    fragilities["IDs"][cid][f"DS{ds + 1}"] = (
-                        np.nan_to_num(curve)
-                    )
-
-        return fragilities, means_cost, covs_cost
-
-    def do_monte_carlo_simulations(self, fragilities: dict) -> dict:
-        """Sample damage states via Monte Carlo for each EDP level.
-
-        Parameters
-        ----------
-        fragilities : dict
-            Fragility functions as returned by :meth:`fragility_function`.
-
-        Returns
-        -------
-        dict
-            ``{item_id: {realization_index: damage_state_array}}``.
-        """
-        n_ds = len(next(iter(fragilities["IDs"].values())))
-        ds_range = np.arange(0, n_ds + 1)
-
-        # Pre-generate all random numbers at once
-        random_arrays = np.random.rand(self.realizations, len(self.edp_range))
-
-        damage_state = {}
-        for item, frag in fragilities["IDs"].items():
-            damage_state[item] = {}
-            for n in range(self.realizations):
-                rnd = random_arrays[n]
-                damage = np.zeros(len(self.edp_range), dtype=int)
-
-                for ds in range(n_ds, 0, -1):
-                    y1 = frag[f"DS{ds}"]
-                    if ds == n_ds:
-                        damage = np.where(rnd <= y1, ds_range[ds], damage)
-                    else:
-                        y2 = frag[f"DS{ds + 1}"]
-                        damage = np.where(
-                            (rnd >= y2) & (rnd < y1), ds_range[ds], damage
-                        )
-
-                damage_state[item][n] = damage
-
-        return damage_state
-
-    def validate_ds_dependence(self, damage_state: dict) -> dict:
-        """Enforce correlated damage states for dependent components.
-
-        If no ``correlation_tree`` was provided the damage states are returned
-        unchanged.
-
-        Parameters
-        ----------
-        damage_state : dict
-            Sampled damage states as returned by
-            :meth:`do_monte_carlo_simulations`.
-
-        Returns
-        -------
-        dict
-            Updated damage states with dependency constraints applied.
-        """
-        if self.correlation_tree is None:
-            return damage_state
-
-        for i in range(self.matrix.shape[0]):
-            own_id = int(self.correlation_item_ids[i])
-            if own_id == int(self.matrix[i][0]):
-                continue  # Independent component — skip
-
-            m = int(self.matrix[i][0])   # causation component ID
-            j = own_id                    # dependent component ID (from the tree)
-            for n in range(self.realizations):
-                causation_ds  = damage_state[m][n]
-                correlated_ds = damage_state[j][n]
-
-                temp = np.zeros(causation_ds.shape)
-                for ds in range(1, self.matrix.shape[1]):
-                    temp[causation_ds == ds - 1] = self.matrix[i][ds]
-
-                damage_state[j][n] = np.maximum(correlated_ds, temp)
-
-        return damage_state
-
-    def calculate_costs(self,
-                        damage_state: dict,
-                        means_cost: np.ndarray,
-                        covs_cost: np.ndarray) -> tuple:
-        """Evaluate repair costs for each component at every EDP level.
-
-        Parameters
-        ----------
-        damage_state : dict
-            Sampled damage states from :meth:`do_monte_carlo_simulations`.
-        means_cost : np.ndarray
-            Shape ``(n_components, n_ds)`` — mean cost per DS.
-        covs_cost : np.ndarray
-            Shape ``(n_components, n_ds)`` — cost CoV per DS.
-
-        Returns
-        -------
-        total_loss_storey : dict
-            ``{realization: loss_array}`` — absolute storey loss.
-        total_loss_storey_ratio : dict
-            ``{realization: loss_ratio_array}`` — storey loss normalised by
-            replacement cost.
-        repair_cost : dict
-            ``{item_id: {realization: cost_array}}`` — per-component costs.
-
-        Raises
-        ------
-        ValueError
-            If ``replacement_cost`` is zero or ``None``.
-        """
-        num_ds = means_cost.shape[1]
-        quantities = self.component_data["Quantity"]
-
-        repair_cost = {}
-        for item in damage_state:
-            pos = self.id_to_pos[item]
-            repair_cost[item] = {}
-            for n in range(self.realizations):
-                for ds in range(num_ds + 1):
-                    if ds == 0:
-                        repair_cost[item][n] = np.where(
-                            damage_state[item][n] == 0, 0, -1
-                        )
-                    else:
-                        best_fit = (
-                            self.component_data.iloc[pos][
-                                f"DS{ds}, Best Fit"
-                            ].lower()
-                        )
-                        mu  = means_cost[pos][ds - 1]
-                        cov = covs_cost[pos][ds - 1]
-                        idx_list = np.where(damage_state[item][n] == ds)[0]
-                        n_repair = len(idx_list)
-
-                        if n_repair:
-                            if best_fit == "lognormal":
-                                # Lognormal is always positive — sample directly,
-                                # no rejection loop needed.
-                                std_log = np.sqrt(np.log(1.0 + cov ** 2))
-                                m_log   = np.log(mu) - 0.5 * std_log ** 2
-                                a_vals = np.random.lognormal(
-                                    m_log, std_log, size=n_repair
-                                )
-                            elif cov > 0:
-                                # Normal truncated at 0 -- same distribution as
-                                # "resample until positive", but no unbounded
-                                # rejection loop (which could hang if cov == 0
-                                # and mu <= 0, since every draw would then be
-                                # the same non-positive value). Drawn in one
-                                # batched call per (component, realization, DS)
-                                # rather than one at a time -- scipy's rv_continuous
-                                # machinery has substantial per-call overhead.
-                                a_std = cov * mu
-                                a_vals = stats.truncnorm.rvs(
-                                    (0 - mu) / a_std, np.inf,
-                                    loc=mu, scale=a_std, size=n_repair,
-                                )
-                            else:
-                                a_vals = np.full(n_repair, mu)
-
-                            repair_cost[item][n][idx_list] = a_vals
-
-        # Aggregate to storey-level totals
-        total_repair_cost = {
-            item: {
-                n: repair_cost[item][n] * quantities.iloc[self.id_to_pos[item]]
-                for n in range(self.realizations)
+        edp_groups = data.groupby(["EDP", "Typology"])
+        buckets = {"PSD, S": ("psd", "s"), "PSD, NS": ("psd", "ns"),
+                   "PFA, NS": ("pfa", "ns")}
+        self.component_groups = {
+            label: edp_groups.get_group(key)
+            for label, key in buckets.items() if key in edp_groups.groups
+        }
+        if data["Performance Group"].nunique() > 1:
+            self.component_groups = {
+                group: df for group, df in data.groupby("Performance Group")
             }
-            for item in damage_state
-        }
 
-        total_loss_storey = {}
-        for n in range(self.realizations):
-            total_loss_storey[n] = sum(
-                total_repair_cost[item][n] for item in damage_state
+    # -----------------------------------------------------------------------
+    # Fragility and closed-form expectation
+    # -----------------------------------------------------------------------
+
+    def _exceedance(self, component) -> np.ndarray:
+        """P(limit state >= k | EDP) of a component's own capacity, shape
+        ``(n_ls, n_edp)``. Curves are kept from crossing (a higher limit
+        state is never more likely than a lower one); zero at EDP = 0."""
+        edp = self.edp_range
+        positive = edp > 0
+        poe = np.zeros((component["n_ls"], edp.size))
+        for k, ls in enumerate(component["limit_states"]):
+            poe[k, positive] = special.ndtr(
+                np.log(edp[positive] / ls["median"]) / ls["beta"]
             )
+        return np.minimum.accumulate(poe, axis=0)
 
-        if not self.replacement_cost:
+    def fragility_function(self) -> dict:
+        """Fragility functions of all components.
+
+        Returns
+        -------
+        dict
+            ``{'EDP': edp_range, 'IDs': {Component ID: {'LS1': array, ...}}}``
+            where ``'LSk'`` is the probability that the component's capacity
+            reaches limit state ``k`` at each EDP (before any correlation
+            tree forcing). For components whose damage states are all
+            sequential, limit state ``k`` is damage state ``k``.
+        """
+        fragilities = {"EDP": self.edp_range, "IDs": {}}
+        for cid, component in self.components.items():
+            poe = self._exceedance(component)
+            fragilities["IDs"][cid] = {
+                f"LS{k + 1}": poe[k] for k in range(component["n_ls"])
+            }
+        return fragilities
+
+    def limit_state_probabilities(self) -> dict:
+        """Probability of each limit state of each unit, after correlation
+        tree forcing (exact).
+
+        Returns
+        -------
+        dict
+            ``{Component ID: array of shape (n_ls + 1, n_edp)}``; row ``k``
+            is P(limit state = k | EDP), row 0 being undamaged.
+        """
+        exceed = {}
+        for cid in self.order:
+            component = self.components[cid]
+            n_ls = component["n_ls"]
+            own = self._exceedance(component)
+            at_least = np.vstack([np.ones((1, own.shape[1])), own])
+            if cid in self.causation:
+                cause, lut = self.causation[cid]
+                cause_at_least = exceed[cause]
+                for k in range(1, n_ls + 1):
+                    trigger = np.nonzero(lut >= k)[0]
+                    if trigger.size:
+                        forced = cause_at_least[trigger[0]]
+                        at_least[k] = 1.0 - (1.0 - at_least[k]) * (1.0 - forced)
+            exceed[cid] = at_least
+        out = {}
+        for cid in self.components:
+            at_least = np.vstack([exceed[cid],
+                                  np.zeros((1, self.edp_range.size))])
+            out[cid] = at_least[:-1] - at_least[1:]
+        return out
+
+    def expected_component_loss(self) -> dict:
+        """Expected repair cost of each component on the storey (exact,
+        converted units).
+
+        Returns
+        -------
+        dict
+            ``{Component ID: array of shape (n_edp,)}``.
+        """
+        probabilities = self.limit_state_probabilities()
+        out = {}
+        for cid, component in self.components.items():
+            ls_cost = np.array([0.0] + [ls["mean_cost"]
+                                        for ls in component["limit_states"]])
+            out[cid] = component["quantity"] * (ls_cost @ probabilities[cid])
+        return out
+
+    def group_replacement_cost(self, component_ids) -> float:
+        """Cost a group's loss is divided by: ``replacement_cost`` if given,
+        otherwise the replacement cost of the group's components."""
+        if self.replacement_cost is not None:
+            return float(self.replacement_cost)
+        value = sum(self.components[cid]["quantity"]
+                    * self.components[cid]["replacement"]
+                    for cid in component_ids)
+        if not value > 0:
             raise ValueError(
-                "replacement_cost must be a non-zero positive value."
+                "The replacement cost of the group is zero: give "
+                "'Replacement Cost' values or the replacement_cost argument."
             )
+        return float(value)
 
-        total_loss_storey_ratio = {
-            n: total_loss_storey[n] / self.replacement_cost
-            for n in range(self.realizations)
-        }
+    # -----------------------------------------------------------------------
+    # Monte Carlo simulation
+    # -----------------------------------------------------------------------
 
-        return total_loss_storey, total_loss_storey_ratio, repair_cost
+    @staticmethod
+    def host_block(block: int, n_dependent: int, n_causation: int) -> int:
+        """Causation block hosting dependent block ``block``."""
+        return (block * n_causation) // n_dependent
+
+    def apply_correlation_tree(self, states: dict) -> dict:
+        """Apply the correlation tree to sampled limit states.
+
+        Parameters
+        ----------
+        states : dict
+            ``{Component ID: int array of shape (n_blocks, ...)}``: the limit
+            state of each block of units of the component from its own
+            capacity, with ``n_blocks`` the component's number of blocks
+            (1 when its units are correlated).
+
+        Returns
+        -------
+        dict
+            The same layout with every dependent block raised to at least
+            the limit state its hosting causation block forces. The input is
+            not modified; without a correlation tree it is returned as is.
+        """
+        if not self.causation:
+            return states
+        final = {cid: np.array(s) for cid, s in states.items()}
+        for cid in self.order:
+            if cid not in self.causation:
+                continue
+            cause, lut = self.causation[cid]
+            own, cause_states = final[cid], final[cause]
+            n_d, n_c = own.shape[0], cause_states.shape[0]
+            for b in range(n_d):
+                host = cause_states[self.host_block(b, n_d, n_c)]
+                own[b] = np.maximum(own[b], lut[host])
+        return final
+
+    def _simulate(self, rng) -> Dict[int, np.ndarray]:
+        """Repair cost of every component in every realisation and at every
+        EDP, ``{Component ID: (n_real, n_edp)}`` (converted units)."""
+        n_real, n_edp = self.realizations, self.edp_range.size
+        causes = {cause for cause, _ in self.causation.values()}
+        stored, costs = {}, {}
+        for cid in self.order:
+            component = self.components[cid]
+            n_b, n_ls = component["blocks"], component["n_ls"]
+            poe = self._exceedance(component)
+
+            # unit cost of each damage state, one draw per realisation
+            z = rng.random((component["damage_states"], n_real))
+            unit_cost = np.array([
+                _sample_unit_cost(t0, t1, fam, z[d])
+                for d, (t0, t1, fam) in enumerate(zip(
+                    component["cost_theta0"], component["cost_theta1"],
+                    component["cost_family"]))
+            ])
+            capacity = rng.random((n_b, n_real))
+            outcome_draws = {
+                k: rng.random((n_b, n_real))
+                for k, ls in enumerate(component["limit_states"])
+                if len(ls["outcomes"]) > 1
+            }
+            # outcome costs per limit state, (n_outcomes, n_real)
+            tables = [np.array([unit_cost[list(o)].sum(axis=0)
+                                for o in ls["outcomes"]])
+                      for ls in component["limit_states"]]
+
+            def step_costs(block):
+                """Cost increment of each limit state over the previous one,
+                (n_ls, n_real), for one block."""
+                level = np.zeros((n_ls + 1, n_real))
+                for k, table in enumerate(tables):
+                    if k in outcome_draws:
+                        choice = np.searchsorted(
+                            component["limit_states"][k]["cum_p"],
+                            outcome_draws[k][block], side="right")
+                        level[k + 1] = table[choice, np.arange(n_real)]
+                    else:
+                        level[k + 1] = table[0]
+                return np.diff(level, axis=0)
+
+            forcing = self.causation.get(cid)
+            if forcing is not None:
+                cause, lut = forcing
+                cause_states = stored[cause]
+                thresholds = [np.nonzero(lut >= k)[0] for k in range(1, n_ls + 1)]
+            # with one outcome per limit state every block has the same cost
+            # steps, so counting the blocks in each limit state is enough
+            varying = bool(outcome_draws)
+            shared_steps = None if varying else step_costs(0)
+            reached = None if varying else np.zeros((n_ls, n_real, n_edp), dtype=np.int32)
+            total = np.zeros((n_real, n_edp))
+            keep = np.empty((n_b, n_real, n_edp), dtype=np.int8) if cid in causes else None
+            host_cache = (None, None)
+            for b in range(n_b):
+                at_least = [capacity[b][:, None] < poe[k][None, :]
+                            for k in range(n_ls)]
+                if forcing is not None:
+                    host = self.host_block(b, n_b, cause_states.shape[0])
+                    if host_cache[0] != host:
+                        host_state = cause_states[host]
+                        host_cache = (host, [host_state >= t[0] if t.size else None
+                                             for t in thresholds])
+                    for k, forced in enumerate(host_cache[1]):
+                        if forced is not None:
+                            at_least[k] |= forced
+                if keep is not None:
+                    keep[b] = np.sum(at_least, axis=0, dtype=np.int8)
+                if varying:
+                    steps = step_costs(b)
+                    for k in range(n_ls):
+                        total += at_least[k] * steps[k][:, None]
+                else:
+                    for k in range(n_ls):
+                        reached[k] += at_least[k]
+            if not varying:
+                for k in range(n_ls):
+                    total += reached[k] * shared_steps[k][:, None]
+            costs[cid] = total * component["block_quantity"]
+            if keep is not None:
+                stored[cid] = keep
+        return costs
+
+    # -----------------------------------------------------------------------
+    # Output
+    # -----------------------------------------------------------------------
 
     def transform_output(self,
+                         mean: np.ndarray,
+                         std: np.ndarray,
                          slf_16th: np.ndarray,
-                         slf_median: np.ndarray,
+                         slf_50th: np.ndarray,
                          slf_84th: np.ndarray,
+                         replacement_cost: float,
                          typology: str = None) -> dict:
-        """Build the SLF output record for a performance group.
+        """Build the SLF output record of a performance group.
 
         Parameters
         ----------
-        slf_16th, slf_median, slf_84th : np.ndarray
-            Empirical 16th/50th/84th percentile of the storey loss RATIO,
-            evaluated at every point in ``self.edp_range``.
+        mean : np.ndarray
+            Expected storey loss ratio at every EDP (exact).
+        std : np.ndarray
+            Standard deviation of the storey loss ratio (Monte Carlo).
+        slf_16th, slf_50th, slf_84th : np.ndarray
+            Empirical 16th/50th/84th percentiles of the storey loss ratio.
+        replacement_cost : float
+            Cost the loss ratio is normalised by.
         typology : str, optional
-            Component type label (e.g. ``'PSD, NS'``). Default ``None``.
+            Component type label (e.g. ``'ns'``). Default ``None``.
 
         Returns
         -------
         dict
-            SLF record with keys ``'Directionality'``, ``'Component-type'``,
-            ``'Storey'``, ``'edp'``, ``'edp_range'``, ``'slf_16th'``,
-            ``'slf'`` (the empirical median -- the primary SLF curve), and
-            ``'slf_84th'``.
+            Keys ``'Directionality'``, ``'Component-type'``, ``'Storey'``,
+            ``'edp'``, ``'edp_range'``, ``'slf'`` (expected loss ratio: the
+            Storey Loss Function), ``'slf_std'``, ``'slf_cov'``,
+            ``'slf_16th'``, ``'slf_50th'``, ``'slf_84th'`` and
+            ``'replacement_cost'``.
         """
+        mean = np.asarray(mean, dtype=float)
+        std = np.asarray(std, dtype=float)
+        cov = np.divide(std, mean, out=np.zeros_like(std), where=mean > 0)
         return {
-            "Directionality": self.directionality,
-            "Component-type": typology,
-            "Storey":         self.storey,
-            "edp":            self.edp,
-            "edp_range":      list(self.edp_range),
-            "slf_16th":       list(slf_16th),
-            "slf":            list(slf_median),
-            "slf_84th":       list(slf_84th),
+            "Directionality":   self.directionality,
+            "Component-type":   typology,
+            "Storey":           self.storey,
+            "edp":              self.edp,
+            "edp_range":        list(self.edp_range),
+            "slf":              list(mean),
+            "slf_std":          list(std),
+            "slf_cov":          list(cov),
+            "slf_16th":         list(slf_16th),
+            "slf_50th":         list(slf_50th),
+            "slf_84th":         list(slf_84th),
+            "replacement_cost": float(replacement_cost),
         }
 
     def generate(self) -> tuple:
-        """Generate Storey Loss Functions for all performance groups.
+        """Generate the Storey Loss Functions of all performance groups.
 
-        Orchestrates the full SLF pipeline:
-
-        1. Compute component fragility and consequence functions.
-        2. Sample damage states via Monte Carlo simulation.
-        3. Enforce correlated damage state constraints.
-        4. Calculate repair costs per group.
-        5. Compute the empirical 16th/50th/84th percentile of the storey
-           loss ratio across all Monte Carlo realizations -- this IS the
-           Storey Loss Function. No parametric curve is fitted to it.
+        1. Fragility of each limit state of each component; probability of
+           each limit state after correlation tree forcing.
+        2. Expected storey loss ratio, exactly: quantities times the
+           probability of each limit state times its expected repair cost,
+           divided by the group's replacement cost.
+        3. Monte Carlo realisations of the storey repair cost (independent
+           capacities per component, or per unit where not correlated;
+           explicit mutually exclusive and simultaneous damage states;
+           correlation tree applied unit by unit), from which the standard
+           deviation and the 16th/50th/84th percentiles of the loss ratio
+           are taken.
 
         Returns
         -------
         out : dict
-            ``{group_label: slf_dict}`` -- one SLF record per performance
-            group, with ``'slf_16th'``, ``'slf'`` (median), and
-            ``'slf_84th'`` giving the empirical percentiles of the storey
-            loss ratio vs. ``'edp_range'``.
+            ``{group_label: record}``, one SLF record per performance group
+            (see :meth:`transform_output`). ``'slf'`` is the expected storey
+            loss ratio, the curve to use in loss assessment.
         cache : dict
-            Intermediate data for each group: fragilities, raw
-            per-realization losses (both absolute ``'total_loss_storey'``
-            and ratio ``'total_loss_storey_ratio'`` units), repair costs,
-            the group-sliced damage states, and the same empirical
-            percentiles as ``out`` (mirrored here as
-            ``'empirical_16th'``/``'empirical_median'``/``'empirical_84th'``).
+            Per group: ``'component'`` (inventory rows), ``'fragilities'``,
+            ``'limit_state_probabilities'``, ``'expected_component_loss'``
+            (converted units), ``'total_loss_storey'`` and
+            ``'total_loss_storey_ratio'`` (``(realizations, n_edp)``
+            arrays), ``'simulated_mean'`` (Monte Carlo mean of the ratio, a
+            check on ``'slf'``), ``'replacement_cost'``, ``'edp'`` and
+            ``'empirical_16th'``/``'empirical_median'``/``'empirical_84th'``
+            (the same arrays as in ``out``).
         """
+        rng = np.random.default_rng(self.seed)
+        fragilities = self.fragility_function()
+        probabilities = self.limit_state_probabilities()
+        expected = self.expected_component_loss()
+        simulated = self._simulate(rng)
+
         out, cache = {}, {}
-
-        fragilities, means_cost, covs_cost = self.fragility_function()
-        damage_state = self.do_monte_carlo_simulations(fragilities)
-        damage_state = self.validate_ds_dependence(damage_state)
-
         for group, component_data_group in self.component_groups.items():
             if component_data_group.empty:
                 continue
 
-            # Resolve typology label
             if isinstance(self.typology, dict):
                 typology = self.typology[group].lower()
             elif isinstance(self.typology, list) and self.typology:
@@ -937,44 +1251,35 @@ class slfgenerator:
             else:
                 typology = None
 
-            # Extract group-level subsets
-            item_ids = list(component_data_group["Component ID"])
-            ds_group = {key: damage_state[key] for key in item_ids}
-            fragilities_group = {
-                "IDs": {key: fragilities["IDs"][key] for key in item_ids},
-                "EDP": fragilities["EDP"],
-            }
-
-            # Run the SLF pipeline for this group
-            total, ratio, repair_cost = self.calculate_costs(
-                ds_group, means_cost, covs_cost
-            )
-
-            # Empirical percentiles of the storey loss RATIO -- the
-            # canonical (dimensionless) Storey Loss Function. Computed
-            # once and reused for both 'out' and 'cache' so they never
-            # diverge.
-            ratio_matrix = np.array([ratio[i] for i in range(len(ratio))])
-            slf_16th   = np.percentile(ratio_matrix, 16, axis=0)
-            slf_median = np.median(ratio_matrix, axis=0)
-            slf_84th   = np.percentile(ratio_matrix, 84, axis=0)
+            item_ids = [int(c) for c in component_data_group["Component ID"]]
+            replacement_cost = self.group_replacement_cost(item_ids)
+            total = sum(simulated[cid] for cid in item_ids)
+            ratio = total / replacement_cost
+            mean = sum(expected[cid] for cid in item_ids) / replacement_cost
+            std = ratio.std(axis=0, ddof=1)
+            slf_16th, slf_50th, slf_84th = np.percentile(ratio, [16, 50, 84], axis=0)
 
             group_str = str(group)
             out[group_str] = self.transform_output(
-                slf_16th, slf_median, slf_84th, typology
+                mean, std, slf_16th, slf_50th, slf_84th, replacement_cost,
+                typology,
             )
-
             cache[group_str] = {
-                "component":               component_data_group,
-                "fragilities":             fragilities_group,
-                "total_loss_storey":       total,
-                "total_loss_storey_ratio": ratio,
-                "repair_cost":             repair_cost,
-                "damage_states":           ds_group,
-                "edp":                     self.edp,
-                "empirical_16th":          slf_16th,
-                "empirical_median":        slf_median,
-                "empirical_84th":          slf_84th,
+                "component":                 component_data_group,
+                "fragilities": {
+                    "EDP": fragilities["EDP"],
+                    "IDs": {cid: fragilities["IDs"][cid] for cid in item_ids},
+                },
+                "limit_state_probabilities": {cid: probabilities[cid] for cid in item_ids},
+                "expected_component_loss":   {cid: expected[cid] for cid in item_ids},
+                "total_loss_storey":         total,
+                "total_loss_storey_ratio":   ratio,
+                "simulated_mean":            ratio.mean(axis=0),
+                "replacement_cost":          replacement_cost,
+                "edp":                       self.edp,
+                "empirical_16th":            slf_16th,
+                "empirical_median":          slf_50th,
+                "empirical_84th":            slf_84th,
             }
 
         self.cache = cache

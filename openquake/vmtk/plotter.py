@@ -2494,7 +2494,8 @@ class plotter:
                        ylims,
                        title=None,
                        pFlag=True,
-                       export_path=None):
+                       export_path=None,
+                       max_realizations=200):
         """
         Generate a plot to visualize the Storey Loss Function (SLF) model output.
 
@@ -2502,18 +2503,18 @@ class plotter:
         ``cache`` (overlaid on the same axes if more than one key is
         present -- e.g. to compare two ``slfgenerator`` runs side by side):
 
-        1. A scatter cloud of the per-realization storey loss RATIO
-           (``cache[key]['total_loss_storey_ratio']``) vs. EDP.
+        1. The storey loss ratio of a sample of Monte Carlo realisations
+           (``cache[key]['total_loss_storey_ratio']``) at every EDP, as
+           unconnected points.
         2. A shaded band spanning the empirical 16th-84th percentile of the
            loss ratio (``out[key]['slf_16th']`` / ``out[key]['slf_84th']``).
-        3. The empirical median loss-ratio curve (``out[key]['slf']``) --
-           this IS the Storey Loss Function; no fitted/regression curve is
-           plotted, since :meth:`slfgenerator.generate` no longer fits one.
+        3. The empirical median loss ratio (``out[key]['slf_50th']``,
+           dashed).
+        4. The expected loss ratio (``out[key]['slf']``, solid) -- the
+           Storey Loss Function used in loss assessment.
 
-        All three are expressed as loss RATIO (loss / replacement cost),
-        the conventional, dimensionless definition of a Storey Loss
-        Function, so the scatter, band, and median line share consistent
-        units on a single set of axes.
+        All are expressed as loss RATIO (loss / replacement cost), the
+        conventional, dimensionless definition of a Storey Loss Function.
 
         The figure uses ``self.figsize`` with fixed axes margins and is
         saved without ``bbox_inches='tight'`` so that every output image has
@@ -2524,17 +2525,17 @@ class plotter:
         out : dict
             ``{group_key: slf_dict}`` as returned by
             :meth:`openquake.vmtk.slfgenerator.slfgenerator.generate`. Each
-            ``slf_dict`` must provide ``'edp_range'``, ``'slf_16th'``,
-            ``'slf'`` (median), and ``'slf_84th'`` (all loss-ratio values).
-            Pass a dict with more than one key (e.g.
-            ``{'Example A': out_a[...], 'Example B': out_b[...]}``) to
-            overlay several SLF results on one figure.
+            ``slf_dict`` must provide ``'edp_range'``, ``'slf'`` (expected
+            loss ratio), ``'slf_16th'`` and ``'slf_84th'``; ``'slf_50th'``
+            (median) is drawn when present. Pass a dict with more than one
+            key (e.g. ``{'Example A': out_a[...], 'Example B': out_b[...]}``)
+            to overlay several SLF results on one figure.
 
         cache : dict
             ``{group_key: cache_dict}`` as returned by
             :meth:`openquake.vmtk.slfgenerator.slfgenerator.generate`. Each
-            ``cache_dict`` must provide ``'total_loss_storey_ratio'``
-            (``{realization: array}``).
+            ``cache_dict`` must provide ``'total_loss_storey_ratio'``, an
+            array of shape ``(realizations, n_edp)``.
 
         edp_label : str
             Label for the x-axis (Engineering Demand Parameter).
@@ -2558,6 +2559,10 @@ class plotter:
             Full path including filename to save the plot. Directories are created
             if missing.
 
+        max_realizations : int, optional
+            Largest number of realisations drawn per key (a random sample,
+            the same at every call). Default is 200.
+
         Returns
         -------
         None
@@ -2575,33 +2580,45 @@ class plotter:
 
         for k, current_key in enumerate(keys_list):
             color = palette[k % len(palette)]
-            edp_range = out[current_key]['edp_range']
+            record = out[current_key]
+            edp_range = np.asarray(record['edp_range'])
 
-            ratio_dict = cache[current_key]['total_loss_storey_ratio']
-            rlz = len(ratio_dict)
-            ratio_array = np.array([ratio_dict[i] for i in range(rlz)])
-
-            for i in range(rlz):
-                ax.scatter(edp_range,
-                          ratio_array[i, :],
-                          color=color,
-                          s=self.marker_sizes['small'],
-                          alpha=0.3)
+            ratio_array = np.asarray(cache[current_key]['total_loss_storey_ratio'])
+            rng = np.random.default_rng(0)
+            shown = ratio_array[rng.choice(
+                len(ratio_array), size=min(max_realizations, len(ratio_array)),
+                replace=False)]
 
             suffix = f' — {current_key}' if len(keys_list) > 1 else ''
+            # realisations are independent at each EDP: points, not lines
+            ax.scatter(np.tile(edp_range, len(shown)),
+                       shown.ravel(),
+                       color=color,
+                       s=self.marker_sizes['small'],
+                       alpha=0.3,
+                       linewidths=0,
+                       label=f'Realisations{suffix}')
             ax.fill_between(
                 edp_range,
-                out[current_key]['slf_16th'],
-                out[current_key]['slf_84th'],
+                record['slf_16th'],
+                record['slf_84th'],
                 color=color,
                 alpha=0.2,
                 label=fr'16$^{{\text{{th}}}}$-84$^{{\text{{th}}}}$ Percentile{suffix}')
+            if 'slf_50th' in record:
+                ax.plot(
+                    edp_range,
+                    record['slf_50th'],
+                    lw=self.line_widths['medium'],
+                    ls='--',
+                    color=color,
+                    label=f'Median{suffix}')
             ax.plot(
                 edp_range,
-                out[current_key]['slf'],
+                record['slf'],
                 lw=self.line_widths['medium'],
                 color=color,
-                label=f'SLF - Median{suffix}')
+                label=f'SLF - Mean{suffix}')
 
         self._set_plot_style(ax,
                              title=title,

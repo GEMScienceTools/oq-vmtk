@@ -211,8 +211,8 @@ def _slf_out_cache():
 
     plot_slf_model iterates over cache.keys() and accesses
     cache[key]['total_loss_storey_ratio'] (shape: n_real x n_edp), and
-    out[key]['edp_range']/['slf_16th']/['slf']/['slf_84th'] (all
-    loss-ratio values).
+    out[key]['edp_range']/['slf_16th']/['slf_50th']/['slf']/['slf_84th']
+    (all loss-ratio values).
     """
     rng = np.random.default_rng(3)
     edp_range = np.linspace(0.0, 0.1, 50)
@@ -222,6 +222,7 @@ def _slf_out_cache():
         group_key: {
             'edp_range': edp_range,
             'slf_16th':  rng.uniform(0.0, 0.15, len(edp_range)),
+            'slf_50th':  rng.uniform(0.05, 0.18, len(edp_range)),
             'slf':       rng.uniform(0.07, 0.2, len(edp_range)),
             'slf_84th':  rng.uniform(0.15, 0.3, len(edp_range)),
         }
@@ -671,7 +672,20 @@ class TestPlotSLFModel(unittest.TestCase):
         )
         self.assertEqual(len(plt.get_fignums()), 1)
         self.assertEqual(len(plt.gcf().axes), 1)
-        self.assertEqual(len(plt.gcf().axes[0].lines), 2)
+        # mean and median of each key
+        self.assertEqual(len(plt.gcf().axes[0].lines), 4)
+        # one scatter of realisations per key
+        self.assertEqual(len(plt.gcf().axes[0].collections), 4)
+
+    def test_realisations_are_subsampled(self):
+        self.pl.plot_slf_model(
+            self.out, self.cache,
+            edp_label='PSD [-]', loss_label='Loss Ratio',
+            xlims=(0.0, 0.1), ylims=(0.0, 1.0),
+            pFlag=True, max_realizations=5,
+        )
+        scatter = plt.gcf().axes[0].collections[0]
+        self.assertEqual(len(scatter.get_offsets()), 5 * 50)
 
 
 # ---------------------------------------------------------------------------
