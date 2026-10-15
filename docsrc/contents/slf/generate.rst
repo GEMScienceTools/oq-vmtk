@@ -169,7 +169,8 @@ nonstructural loss ratio, weight each by its share of the replacement cost:
    (``cache[group]['limit_state_probabilities']`` and
    ``['expected_component_loss']``). Their sum over the expected replacement cost,
    ``cache[group]['ratio_of_expectations']``, is a check on ``slf``: the mean of a
-   ratio and the ratio of the means differ, by about 0.01 at most.
+   ratio and the ratio of the means differ, by a few hundredths of the loss ratio at
+   most.
 
    Not modelled: economies of scale (unit costs do not depend on the number of
    damaged units).

@@ -96,7 +96,8 @@ replacement cost of the same components at the same unit costs. It lies in
 level of a component, which scales repair and replacement alike, does not
 change it. Its mean is the SLF; the exact ratio of the expected repair cost
 to the expected replacement cost is also returned, as a check (they differ
-by about 0.01 at most, the two being different statistics).
+by a few hundredths of the loss ratio at most, the two being different
+statistics).
 
 Not modelled: economies of scale (the unit cost does not depend on the
 number of damaged units).
@@ -1287,7 +1288,7 @@ class slfgenerator:
             ``'limit_state_probabilities'``, ``'expected_component_loss'``
             (exact, converted units), ``'ratio_of_expectations'`` (expected
             repair cost over expected replacement cost, exact: a check on
-            ``'slf'``, which it matches to within about 0.01),
+            ``'slf'``, which it matches to within a few hundredths),
             ``'total_loss_storey'`` and ``'total_loss_storey_ratio'``
             (``(realizations, n_edp)`` arrays), ``'replacement_value'``
             (``(realizations,)``: what each realisation is divided by),
