@@ -1,0 +1,255 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.10. Incremental Dynamic Analysis &mdash; OpenQuake Vulnerability Modeller&#39;s Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="7. Postprocessing" href="../pos.html" />
+    <link rel="prev" title="6.9. Nonlinear Time-History Analysis of Record Sequences" href="do_nrha_analysis_sequences.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modeller's Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="init.html">6.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_model.html">6.2. Model Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_model.html">6.3. Model Visualisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_gravity_analysis.html">6.4. Gravity Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_modal_analysis.html">6.5. Modal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_spo_analysis.html">6.6. Static Pushover Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_cpo_analysis.html">6.7. Cyclic Pushover Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_nrha_analysis.html">6.8. Nonlinear Time-History Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_nrha_analysis_sequences.html">6.9. Nonlinear Time-History Analysis of Record Sequences</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">6.10. Incremental Dynamic Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.modeller.modeller.do_ida_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_ida_analysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#references">6.10.1. References</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../mod.html#references">6.11. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modeller's Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../mod.html"><span class="section-number">6. </span>Model Building and Analysis</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">6.10. </span>Incremental Dynamic Analysis</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/mod/do_ida_analysis.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="incremental-dynamic-analysis">
+<h1><span class="section-number">6.10. </span>Incremental Dynamic Analysis<a class="headerlink" href="#incremental-dynamic-analysis" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.modeller.modeller.do_ida_analysis">
+<span class="sig-prename descclassname"><span class="pre">modeller.</span></span><span class="sig-name descname"><span class="pre">do_ida_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fnames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_gm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_ansys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_drift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_sf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hunt_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_fill_gap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capping_drift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pFlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/modeller.html#modeller.do_ida_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.modeller.modeller.do_ida_analysis" title="Link to this definition"></a></dt>
+<dd><p>Performs Incremental Dynamic Analysis (IDA) using the ‘Hunt,
+Trace and Fill’ algorithm as per Vamvatsikos and Cornell
+(2002, 2004).</p>
+<p>The algorithm first ‘hunts’ for the collapse capacity by
+increasing the scale factor (SF) geometrically. Once collapse
+or the target drift is reached, it ‘traces’ back with smaller
+steps for the scaling factor and ‘fills’ the gaps between
+successful runs to refine the IDA curve.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fnames</strong> (<em>list</em>) – List of file paths to the ground motion records for each direction.</p></li>
+<li><p><strong>dt_gm</strong> (<em>float</em>) – Time-step of the ground motion records.</p></li>
+<li><p><strong>t_max</strong> (<em>float</em>) – The maximum time duration for each individual analysis run.</p></li>
+<li><p><strong>dt_ansys</strong> (<em>float</em>) – The integration time-step at which the structural
+analysis will be conducted.</p></li>
+<li><p><strong>target_drift</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.05</em>) – The drift ratio threshold considered as structural
+collapse (e.g., 5%).</p></li>
+<li><p><strong>initial_sf</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.1</em>) – The starting scale factor for the first simulation run.</p></li>
+<li><p><strong>hunt_step</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=2.0</em>) – The geometric multiplier used to increase the scale
+factor during the ‘Hunt’ phase.</p></li>
+<li><p><strong>max_fill_gap</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.2</em>) – The maximum allowable gap between scale factors. If a
+gap is larger, the ‘Fill’ phase will bisect it.</p></li>
+<li><p><strong>max_runs</strong> (<em>int</em><em>, </em><em>optional</em><em>, </em><em>default=15</em>) – Maximum total number of nonlinear time-history
+simulations allowed.</p></li>
+<li><p><strong>capping_drift</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.10</em>) – The drift value assigned to failed or collapsed runs
+for visualization (flatlining).</p></li>
+<li><p><strong>xi</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.05</em>) – The damping ratio used in the analysis (default is 5%).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ida_data</strong> (<em>dict</em>) – A dictionary where keys are scale factors and values
+are dictionaries containing results (peak drift,
+acceleration, convergence state, etc.) for that run.</p></li>
+<li><p><strong>ordered_sfs</strong> (<em>list</em>) – A list of all scale factors tested, in the order they
+were executed.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The current method assumes the acceleration time-history is
+in m/s2. Therefore, the acceleration values are multiplied
+by a factor of g.</p>
+</div>
+<p class="rubric">References</p>
+<dl class="simple">
+<dt>[1] Vamvatsikos, D. and Cornell, C.A. (2002), Incremental</dt><dd><p>dynamic analysis. Earthquake Engng. Struct. Dyn.,
+31: 491-514. <a class="reference external" href="https://doi.org/10.1002/eqe.141">https://doi.org/10.1002/eqe.141</a></p>
+</dd>
+<dt>[2] Vamvatsikos D, Cornell CA. Applied Incremental Dynamic</dt><dd><p>Analysis. Earthquake Spectra. 2004;20(2):523-553.
+doi:10.1193/1.1737737</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition-theoretical-background admonition">
+<p class="admonition-title">Theoretical Background</p>
+<p>Incremental dynamic analysis (IDA) repeats the nonlinear time-history
+analysis of one ground-motion record at increasing scale factors (SF) to
+trace the IM–EDP curve up to collapse (Vamvatsikos and Cornell, 2002). To
+limit the number of runs, the method uses the <em>Hunt, Trace and Fill</em>
+algorithm (Vamvatsikos and Cornell, 2004):</p>
+<ol class="arabic simple">
+<li><p><strong>Hunt</strong>: starting from <code class="docutils literal notranslate"><span class="pre">initial_sf</span></code>, the SF is multiplied by
+<code class="docutils literal notranslate"><span class="pre">hunt_step</span></code> until the peak drift reaches <code class="docutils literal notranslate"><span class="pre">target_drift</span></code> or the run
+collapses.</p></li>
+<li><p><strong>Trace</strong>: the SF is then reduced in smaller steps, back towards the last
+non-collapsing level, to locate the collapse capacity.</p></li>
+<li><p><strong>Fill</strong>: gaps between successful runs larger than <code class="docutils literal notranslate"><span class="pre">max_fill_gap</span></code> are
+bisected until the curve is resolved or <code class="docutils literal notranslate"><span class="pre">max_runs</span></code> is reached.</p></li>
+</ol>
+<p>Runs that fail to converge or collapse are assigned <code class="docutils literal notranslate"><span class="pre">capping_drift</span></code> so the
+IDA curve flatlines for visualisation. The method returns one result
+dictionary per scale factor (keys such as <code class="docutils literal notranslate"><span class="pre">'peak_drift'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'peak_accel'</span></code> and <code class="docutils literal notranslate"><span class="pre">'conv_index'</span></code>) and the list of scale factors in the
+order they were run; these are the inputs to
+<code class="docutils literal notranslate"><span class="pre">postprocessor.process_ida_results</span></code>.</p>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">compile_model</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">do_gravity_analysis</span><span class="p">()</span>
+<span class="n">record_ida_results</span><span class="p">,</span> <span class="n">ordered_sfs</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">do_ida_analysis</span><span class="p">(</span>
+    <span class="n">fnames</span><span class="o">=</span><span class="p">[</span><span class="s2">"openquake/vmtk/tests/test_data/acceleration.txt"</span><span class="p">],</span>
+    <span class="n">dt_gm</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+    <span class="n">t_max</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
+    <span class="n">dt_ansys</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+    <span class="n">target_drift</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">initial_sf</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">hunt_step</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">max_fill_gap</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">max_runs</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">xi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">sf</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">record_ida_results</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sf</span><span class="p">,</span> <span class="n">record_ida_results</span><span class="p">[</span><span class="n">sf</span><span class="p">][</span><span class="s2">"conv_index"</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<section id="references">
+<h2><span class="section-number">6.10.1. </span>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Vamvatsikos, D. and Cornell, C.A. (2002). “Incremental dynamic analysis”,
+<em>Earthquake Engineering &amp; Structural Dynamics</em>, 31(3), 491–514.
+<a class="reference external" href="https://doi.org/10.1002/eqe.141">https://doi.org/10.1002/eqe.141</a></p></li>
+<li><p>Vamvatsikos, D. and Cornell, C.A. (2004). “Applied incremental dynamic
+analysis”, <em>Earthquake Spectra</em>, 20(2), 523–553.
+<a class="reference external" href="https://doi.org/10.1193/1.1737737">https://doi.org/10.1193/1.1737737</a></p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="do_nrha_analysis_sequences.html" class="btn btn-neutral float-left" title="6.9. Nonlinear Time-History Analysis of Record Sequences" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pos.html" class="btn btn-neutral float-right" title="7. Postprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

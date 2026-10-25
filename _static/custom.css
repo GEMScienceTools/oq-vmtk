@@ -1,0 +1,41 @@
+/* Style .. admonition:: Theoretical Background in blue */
+div.admonition-theoretical-background {
+    background-color: #e7f2fa;
+    border-left: 4px solid #6ab0de;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+div.admonition-theoretical-background > p.admonition-title {
+    background-color: #6ab0de;
+    color: #fff;
+    font-weight: bold;
+    margin: -12px -12px 12px -12px;
+    padding: 6px 12px;
+}
+
+/* Style napoleon Notes sections identically to .. note:: (RTD blue) */
+div.admonition-notes {
+    background-color: #e7f2fa;
+    border-left: 4px solid #6ab0de;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+div.admonition-notes > p.admonition-title {
+    background-color: #6ab0de;
+    color: #fff;
+    font-weight: bold;
+    margin: -12px -12px 12px -12px;
+    padding: 6px 12px;
+}
+
+/* The RTD theme applies margin-left: 24px to dl dd, which makes any
+   admonition rendered inside an autodoc method description (dd) appear
+   narrower than a page-level admonition such as Theoretical Background.
+   The negative margin below counteracts that indent so Notes boxes and
+   Theoretical Background boxes span the same column width. */
+.rst-content dl dd > div.admonition {
+    margin-left: -24px;
+    width: calc(100% + 24px);
+}
