@@ -444,6 +444,32 @@ class TestMultipleStripeAnalysis(unittest.TestCase):
         self.assertEqual(len(fracs), len(self.thresholds))
         self.assertEqual(len(fracs[0]), self.imls.shape[1])
 
+    def test_mle_reaches_optimum_far_above_stripe_median(self):
+        # One record per stripe, median far above the stripe median: the
+        # fit in IM units stopped short of the optimum (3.27 vs 3.07).
+        from scipy import optimize, stats
+        rng = np.random.default_rng(14)
+        x = np.exp(rng.normal(np.log(0.35), 1.0, 300))
+        y = (rng.uniform(size=300)
+             < stats.norm.cdf(np.log(x / 5.0) / 0.9)).astype(float)
+
+        def nll(p):
+            pr = np.clip(stats.norm.cdf((np.log(x) - p[0]) / p[1]),
+                         1e-15, 1 - 1e-15)
+            return -np.sum(y * np.log(pr) + (1 - y) * np.log1p(-pr))
+
+        ref = optimize.minimize(
+            nll, [np.log(np.median(x)), 0.4], method='Nelder-Mead',
+            options={'xatol': 1e-8, 'fatol': 1e-10, 'maxiter': 4000})
+        frag = self.pp.process_msa_results(
+            x, y.reshape(1, -1), [0.5], sigma_build2build=0.0,
+            sigma_ds=0.0)['fragility']
+        fitted = [np.log(frag['medians'][0]),
+                  frag['sigma_record2record'][0]]
+        self.assertLessEqual(nll(fitted), ref.fun + 1e-3)
+        self.assertAlmostEqual(frag['medians'][0] / np.exp(ref.x[0]), 1.0,
+                               delta=1e-2)
+
 
 # ---------------------------------------------------------------------------
 # calculate_vulnerability_function

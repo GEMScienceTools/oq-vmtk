@@ -1499,11 +1499,11 @@ class postprocessor:
             Negative Log-Likelihood for Binomial Distribution.
             Fits the aleatory (record-to-record) parameters to the data.
             """
-            theta, beta_r2r = params
+            ln_theta, beta_r2r = params
 
             # Probability of exceedance based on lognormal CDF
             # We use the standard normal CDF on the log-transformed data
-            p = stats.norm.cdf(np.log(x / theta) / beta_r2r)
+            p = stats.norm.cdf((np.log(x) - ln_theta) / beta_r2r)
 
             # Numerical stability: clip p to avoid log(0) in binomial logpmf
             p = np.clip(p, 1e-15, 1 - 1e-15)
@@ -1523,12 +1523,15 @@ class postprocessor:
             num_exc = np.array([np.sum(edps[:, i] >= threshold)
                                for i in range(num_stripes)])
 
+            # The median is optimised as ln(theta): in IM units the problem
+            # is badly scaled, and L-BFGS-B stopped short of the optimum
+            # for medians far above the stripe median (e.g. 4.3 g vs 0.35 g).
             # Initial guess: theta = median of stripes, beta = 0.4
-            initial_guess = [np.median(stripe_imls), 0.4]
+            initial_guess = [np.log(np.median(stripe_imls)), 0.4]
 
             # Bounds: prevent median=0 and keep beta in physical range
-            bounds = optimize.Bounds([0.001 * np.min(stripe_imls), 0.05],
-                                     [10.0 * np.max(stripe_imls), 1.5])
+            bounds = optimize.Bounds([np.log(0.001 * np.min(stripe_imls)), 0.05],
+                                     [np.log(10.0 * np.max(stripe_imls)), 1.5])
 
             # Optimize the aleatory fit
             sol = optimize.minimize(
@@ -1539,7 +1542,7 @@ class postprocessor:
                 method='L-BFGS-B'
             )
 
-            t_val = sol.x[0]  # Fitted Median
+            t_val = np.exp(sol.x[0])  # Fitted Median
             s_val = sol.x[1]  # Fitted Beta (Record-to-Record)
 
             # Combine uncertainties AFTER fitting using SRSS

@@ -64,6 +64,13 @@
   (`slf_50th`), and a sample of `max_realizations` realisations (default 200)
   as points.
 
+### Fixed
+- `postprocessor.process_msa_results` optimises the log of the median. In IM
+  units the MLE was badly scaled and could stop short of the optimum when
+  the median lay far above the stripe median (e.g. 4.3 g instead of 3.7 g),
+  which could invert consecutive damage-state medians. Results change only
+  where the old fit had not converged.
+
 ## v1.2.0 — 2026-10-09
 
 First stable release of OQ-VMTK. This version is the starting point of the
