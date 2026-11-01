@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.7. Cyclic Pushover Analysis &mdash; OpenQuake Vulnerability Modeller&#39;s Toolkit Suite  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=749cc255" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="6.8. Nonlinear Time-History Analysis" href="do_nrha_analysis.html" />
+    <link rel="prev" title="6.6. Static Pushover Analysis" href="do_spo_analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OpenQuake Vulnerability Modeller's Toolkit Suite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">2. Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imc.html">3. Intensity Measure Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ims.html">4. Intensity Measure Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cal.html">5. Model Calibration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../mod.html">6. Model Building and Analysis</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="init.html">6.1. Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_model.html">6.2. Model Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_model.html">6.3. Model Visualisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_gravity_analysis.html">6.4. Gravity Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_modal_analysis.html">6.5. Modal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_spo_analysis.html">6.6. Static Pushover Analysis</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">6.7. Cyclic Pushover Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openquake.vmtk.modeller.modeller.do_cpo_analysis"><code class="docutils literal notranslate"><span class="pre">modeller.do_cpo_analysis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="do_nrha_analysis.html">6.8. Nonlinear Time-History Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_nrha_analysis_sequences.html">6.9. Nonlinear Time-History Analysis of Record Sequences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="do_ida_analysis.html">6.10. Incremental Dynamic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mod.html#references">6.11. References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pos.html">7. Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slf.html">8. Storey Loss Function Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plo.html">9. Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">10. Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">11. Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenQuake Vulnerability Modeller's Toolkit Suite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../mod.html"><span class="section-number">6. </span>Model Building and Analysis</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">6.7. </span>Cyclic Pushover Analysis</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/contents/mod/do_cpo_analysis.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cyclic-pushover-analysis">
+<h1><span class="section-number">6.7. </span>Cyclic Pushover Analysis<a class="headerlink" href="#cyclic-pushover-analysis" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="openquake.vmtk.modeller.modeller.do_cpo_analysis">
+<span class="sig-prename descclassname"><span class="pre">modeller.</span></span><span class="sig-name descname"><span class="pre">do_cpo_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_disp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu_levels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispIncr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pFlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ansys_soe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BandGeneral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Transformation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numberer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RCM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NormDispIncr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0e-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'KrylovNewton'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_animation_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/openquake/vmtk/modeller.html#modeller.do_cpo_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openquake.vmtk.modeller.modeller.do_cpo_analysis" title="Link to this definition"></a></dt>
+<dd><p>Perform cyclic pushover analysis (CPO) on a stick model.
+This method simulates a cyclic pushover analysis where a lateral
+load pattern is incrementally applied to the structure. This
+procedure simulates a cyclic lateral loading protocol in which
+the stick model is subjected to alternating displacement-controlled
+loading cycles at the control node. This approach allows the
+evaluation of strength degradation, stiffness deterioration, pinching
+effects, and energy dissipation capacity under repeated lateral
+loading, providing a more realistic representation of structural
+behaviour under seismic cyclic demands compared to a monotonic
+pushover analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref_disp</strong> (<em>float</em>) – Reference displacement (e.g., yield displacement) for scaling
+the cycles.</p></li>
+<li><p><strong>mu_levels</strong> (<em>list</em>) – Target ductility factors (mu) for each cycle level.</p></li>
+<li><p><strong>push_dir</strong> (<em>int</em>) – Direction of the pushover analysis (1=X, 2=Y, 3=Z).</p></li>
+<li><p><strong>dispIncr</strong> (<em>int</em>) – Minimum number of displacement increments per half-cycle. Used
+directly when <code class="docutils literal notranslate"><span class="pre">max_step</span></code> is None, or as a lower bound when
+<code class="docutils literal notranslate"><span class="pre">max_step</span></code> is set. A value of 5-10 is typical.</p></li>
+<li><p><strong>max_step</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em><em>, </em><em>default=None</em>) – Maximum displacement increment size per analysis step [m]. When
+set, <code class="docutils literal notranslate"><span class="pre">numIncr</span></code> for each half-cycle is computed as
+<code class="docutils literal notranslate"><span class="pre">max(dispIncr,</span> <span class="pre">ceil(excursion</span> <span class="pre">/</span> <span class="pre">max_step))</span></code>, so larger cycles
+are automatically subdivided more finely and all loops stay smooth.
+For example, setting <code class="docutils literal notranslate"><span class="pre">max_step</span> <span class="pre">=</span> <span class="pre">ref_disp</span> <span class="pre">*</span> <span class="pre">0.1</span></code> limits each
+step to 10% of the reference displacement. Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> to
+use a fixed <code class="docutils literal notranslate"><span class="pre">dispIncr</span></code> for every half-cycle.</p></li>
+<li><p><strong>phi</strong> (<em>list</em><em> of </em><em>floats</em>) – The lateral load pattern shape vector (scaled by mass).</p></li>
+<li><p><strong>pFlag</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – If True, prints feedback during the analysis steps.</p></li>
+<li><p><strong>save_animation_path</strong> (<em>string</em><em>, </em><em>optional</em><em>,</em>) – If provided, the path to save the animation
+(e.g., ‘cpo.gif’ or ‘cpo.mp4’).</p></li>
+<li><p><strong>ansys_soe</strong> (<em>string</em><em>, </em><em>optional</em><em>, </em><em>default='BandGeneral'</em>) – System of equations solver.</p></li>
+<li><p><strong>constraints_handler</strong> (<em>string</em><em>, </em><em>optional</em><em>, </em><em>default='Transformation'</em>) – Constraint handler method.</p></li>
+<li><p><strong>numberer</strong> (<em>string</em><em>, </em><em>optional</em><em>, </em><em>default='RCM'</em>) – The numberer method.</p></li>
+<li><p><strong>test_type</strong> (<em>string</em><em>, </em><em>optional</em><em>, </em><em>default='NormDispIncr'</em>) – Convergence test type.</p></li>
+<li><p><strong>init_tol</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=1.0e-5</em>) – The initial tolerance for convergence.</p></li>
+<li><p><strong>init_iter</strong> (<em>int</em><em>, </em><em>optional</em><em>, </em><em>default=1000</em>) – The maximum number of iterations for the solver.</p></li>
+<li><p><strong>algorithm_type</strong> (<em>string</em><em>, </em><em>optional</em><em>, </em><em>default='KrylovNewton</em>) – The solution algorithm type.</p></li>
+<li><p><strong>save_animation_path</strong> – If provided, saves the figure to this path (e.g., ‘cpo.gif’)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>cpo_dict</strong> – A dictionary containing all the analysis results.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition-theoretical-background admonition">
+<p class="admonition-title">Theoretical Background</p>
+<p>The cyclic pushover (CPO) analysis applies a lateral load pattern
+<span class="math notranslate nohighlight">\(\phi\)</span> (scaled by the floor masses) under displacement control at the
+control node, following a reversed-cyclic protocol instead of a single
+monotonic excursion. Each cycle level <span class="math notranslate nohighlight">\(i\)</span> reaches a target
+displacement</p>
+<div class="math notranslate nohighlight">
+\[\delta_i = \mu_i \, \delta_{ref}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\delta_{ref}\)</span> is the reference displacement <code class="docutils literal notranslate"><span class="pre">ref_disp</span></code> (e.g.
+the yield displacement) and <span class="math notranslate nohighlight">\(\mu_i\)</span> the ductility levels in
+<code class="docutils literal notranslate"><span class="pre">mu_levels</span></code>. Every half-cycle is subdivided into at least <code class="docutils literal notranslate"><span class="pre">dispIncr</span></code>
+increments; if <code class="docutils literal notranslate"><span class="pre">max_step</span></code> is given, the number of increments is
+<span class="math notranslate nohighlight">\(\max(\texttt{dispIncr}, \lceil \text{excursion}/\texttt{max\_step}
+\rceil)\)</span> so larger cycles are integrated with the same resolution.</p>
+<p>The resulting hysteresis loops expose strength degradation, stiffness
+deterioration, pinching and the energy dissipation capacity of the storey
+springs, which a monotonic pushover cannot show. Collapse is detected as in
+the other analyses: through the MinMax material limit and an independent
+cross-check of the nodal inter-storey displacement.</p>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">compile_model</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">do_gravity_analysis</span><span class="p">()</span>
+<span class="n">periods</span><span class="p">,</span> <span class="n">mode_shapes</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">do_modal_analysis</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">cpo_dict</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">do_cpo_analysis</span><span class="p">(</span>
+    <span class="n">ref_disp</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+    <span class="n">mu_levels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+    <span class="n">push_dir</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dispIncr</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">phi</span><span class="o">=</span><span class="n">mode_shapes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">max_step</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span>
+    <span class="n">save_animation_path</span><span class="o">=</span><span class="s2">"cpo_animation.gif"</span><span class="p">,</span>  <span class="c1"># or None</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="do_spo_analysis.html" class="btn btn-neutral float-left" title="6.6. Static Pushover Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="do_nrha_analysis.html" class="btn btn-neutral float-right" title="6.8. Nonlinear Time-History Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2025, GEM Risk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
