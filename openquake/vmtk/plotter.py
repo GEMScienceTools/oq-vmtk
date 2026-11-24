@@ -1418,8 +1418,8 @@ class plotter:
 
         peak_accel_list : list of np.ndarray
             A list of arrays where each array contains peak acceleration values for each floor,
-            with the first column being the acceleration values and the second column being the
-            floor numbers.
+            with the first column being the acceleration values in g (as returned by
+            ``do_nrha_analysis``) and the second column being the floor numbers.
 
         control_nodes : list
             A list of floor numbers or nodes that represent the control points in the structure.
@@ -1470,9 +1470,8 @@ class plotter:
                      linewidth=self.line_widths['medium'],
                      linestyle='solid', color=self.colors['gem'][1], alpha=0.7)
 
-            # Process and plot Accelerations (converted to g)
-            ax2.plot([float(val) / 9.81 for val in peak_accel_list[i][:,
-                                                                      0]],
+            # Plot Accelerations (already in g, as stored by do_nrha_analysis)
+            ax2.plot([float(val) for val in peak_accel_list[i][:, 0]],
                      control_nodes,
                      linewidth=self.line_widths['medium'],
                      linestyle='solid',

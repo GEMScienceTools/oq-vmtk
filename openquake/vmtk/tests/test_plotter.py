@@ -428,6 +428,20 @@ class TestPlotDemandProfiles(unittest.TestCase):
             pFlag=False,
         )
 
+    @patch('matplotlib.pyplot.close')
+    def test_accelerations_plotted_in_g_unchanged(self, _mock_close):
+        # Peak floor accelerations are stored in g by do_nrha_analysis and
+        # must be plotted as given, not divided by 9.81 again.
+        self.pl.plot_demand_profiles(
+            self.peak_drift_list,
+            self.peak_accel_list,
+            self.control_nodes,
+            pFlag=False,
+        )
+        ax_accel = plt.gcf().axes[1]
+        for line, accel in zip(ax_accel.lines, self.peak_accel_list):
+            np.testing.assert_allclose(line.get_xdata(), accel[:, 0])
+
     @patch('matplotlib.pyplot.show')
     def test_export_path_creates_file(self, _mock_show):
         with tempfile.TemporaryDirectory() as tmp:
