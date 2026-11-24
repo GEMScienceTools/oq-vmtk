@@ -56,6 +56,9 @@
     curves (keyed `LSk`). `do_monte_carlo_simulations`,
     `validate_ds_dependence` and `calculate_costs` are removed. The cache holds
     `(realizations, n_edp)` arrays instead of per-realisation dicts.
+  - Grouping no longer drops components silently: `IDR` is treated as `PSD`,
+    and every `(EDP, Typology)` pair present gets its own group (e.g.
+    `'PFA, S'`), after the usual `'PSD, S'`, `'PSD, NS'`, `'PFA, NS'`.
   - `grouping_flag=False` works (it raised `AttributeError`), and importing
     the module no longer silences all Python warnings.
   - Demo inventories gain examples of each damage state hierarchy; the
@@ -65,6 +68,9 @@
   as points.
 
 ### Fixed
+- `plotter.plot_demand_profiles` plots peak floor accelerations as given, in
+  g. `do_nrha_analysis` already stores them in g, so the extra division by
+  9.81 drew the profiles about ten times too small.
 - `postprocessor.process_msa_results` optimises the log of the median. In IM
   units the MLE was badly scaled and could stop short of the optimum when
   the median lay far above the stripe median (e.g. 4.3 g instead of 3.7 g),
