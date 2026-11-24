@@ -208,6 +208,20 @@ class TestSLFGeneratorInit(unittest.TestCase):
         out, _ = _make_model(grouping_flag=False).generate()
         self.assertEqual(list(out), ["psd"])
 
+    def test_grouping_keeps_every_component(self):
+        rows = [_row(1, [0.01], [0.4], [100], [0.3], ["Normal"],
+                     edp="IDR", typology="S", group=None),
+                _row(2, [0.01], [0.4], [100], [0.3], ["Normal"],
+                     edp="PSD", typology="NS", group=None),
+                _row(3, [0.5], [0.4], [100], [0.3], ["Normal"],
+                     edp="PFA", typology="S", group=None)]
+        model = slfgenerator(pd.DataFrame(rows), "PSD", realizations=20,
+                             seed=0)
+        groups = {k: list(v["Component ID"])
+                  for k, v in model.component_groups.items()}
+        self.assertEqual(groups, {"PSD, S": [1], "PSD, NS": [2],
+                                  "PFA, S": [3]})
+
     def test_id_to_pos_matches_row_order(self):
         self.assertEqual(_make_model().id_to_pos, {1: 0, 2: 1, 3: 2})
 

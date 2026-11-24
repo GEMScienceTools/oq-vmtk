@@ -516,8 +516,12 @@ class slfgenerator:
         for column in ("EDP", "Typology"):
             if column in self.component_data:
                 self.component_data[column] = self.component_data[column].map(
-                    lambda s: s.lower() if isinstance(s, str) else s
+                    lambda s: s.strip().lower() if isinstance(s, str) else s
                 )
+        if "EDP" in self.component_data:
+            # IDR and PSD are the same demand parameter
+            self.component_data["EDP"] = self.component_data["EDP"].replace(
+                "idr", "psd")
 
         self.edp_range = self._define_edp_range(edp_range)
         self._get_component_data()
@@ -916,11 +920,13 @@ class slfgenerator:
     def _group_components(self):
         """Partition components into performance groups.
 
-        Groups are formed by ``(EDP, Typology)`` pairs, giving up to three
-        buckets: ``'PSD, S'``, ``'PSD, NS'`` and ``'PFA, NS'``. If explicit
-        ``Performance Group`` values are present (more than one) they
-        override this grouping. With ``grouping_flag=False`` all components
-        form one group, keyed by the EDP of the first row.
+        Groups are formed by ``(EDP, Typology)`` pairs and labelled e.g.
+        ``'PSD, S'``, ``'PSD, NS'``, ``'PFA, NS'`` (``IDR`` counts as
+        ``PSD``); every pair present in the inventory gets a group, so no
+        component is left out. If explicit ``Performance Group`` values are
+        present (more than one) they override this grouping. With
+        ``grouping_flag=False`` all components form one group, keyed by the
+        EDP of the first row.
         """
         data = self.component_data
         if "Performance Group" not in data:
@@ -932,12 +938,15 @@ class slfgenerator:
             self.component_groups = {data["EDP"].iloc[0]: data}
             return
 
-        edp_groups = data.groupby(["EDP", "Typology"])
-        buckets = {"PSD, S": ("psd", "s"), "PSD, NS": ("psd", "ns"),
-                   "PFA, NS": ("pfa", "ns")}
+        # the usual groups first, in this order, then any other pair present
+        usual = [("psd", "s"), ("psd", "ns"), ("pfa", "ns")]
+        edp_groups = data.groupby(["EDP", "Typology"], sort=False)
+        keys = ([k for k in usual if k in edp_groups.groups]
+                + [k for k in edp_groups.groups if k not in usual])
         self.component_groups = {
-            label: edp_groups.get_group(key)
-            for label, key in buckets.items() if key in edp_groups.groups
+            f"{str(edp).upper()}, {str(typ).upper()}": edp_groups.get_group(
+                (edp, typ))
+            for edp, typ in keys
         }
         if data["Performance Group"].nunique() > 1:
             self.component_groups = {
